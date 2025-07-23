@@ -8,4 +8,7 @@ enum UserType: string
     case ADMIN = 'ADMIN';
     case NURSING = 'NURSING';
     case NURSING_HOME = 'NURSING_HOME';
+    case GUEST = 'GUEST';
+    case MEMBER = 'MEMBER';
+    case API = 'API';
 }
