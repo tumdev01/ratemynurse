@@ -1,22 +1,22 @@
 version: '3.8'
 
 services:
-  wordpress:
-    image: wordpress:6.5-php8.2-apache
-    container_name: rmn_wp_frontend
-    ports:
-      - "3000:80"
-    volumes:
-      - ./frontend/wordpress:/var/www/html
-    environment:
-      WORDPRESS_DB_HOST: rmn_wp_db:3306
-      WORDPRESS_DB_NAME: wp_db
-      WORDPRESS_DB_USER: wp_user
-      WORDPRESS_DB_PASSWORD: wp_secret
-    depends_on:
-      - rmn_wp_db
-    networks:
-      - internal
+  # wordpress:
+  #   image: wordpress:6.5-php8.2-apache
+  #   container_name: rmn_wp_frontend
+  #   ports:
+  #     - "3000:80"
+  #   volumes:
+  #     - ./frontend/wordpress:/var/www/html
+  #   environment:
+  #     WORDPRESS_DB_HOST: rmn_wp_db:3306
+  #     WORDPRESS_DB_NAME: wp_db
+  #     WORDPRESS_DB_USER: wp_user
+  #     WORDPRESS_DB_PASSWORD: wp_secret
+  #   depends_on:
+  #     - rmn_wp_db
+  #   networks:
+  #     - internal
 
   laravel:
     build:
@@ -40,18 +40,18 @@ services:
     networks:
       - internal
 
-  rmn_wp_db:
-    image: mysql:8.0
-    container_name: rmn_wp_db
-    volumes:
-      - wp_data:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root_wp
-      MYSQL_DATABASE: wp_db
-      MYSQL_USER: wp_user
-      MYSQL_PASSWORD: wp_secret
-    networks:
-      - internal
+  # rmn_wp_db:
+  #   image: mysql:8.0
+  #   container_name: rmn_wp_db
+  #   volumes:
+  #     - wp_data:/var/lib/mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root_wp
+  #     MYSQL_DATABASE: wp_db
+  #     MYSQL_USER: wp_user
+  #     MYSQL_PASSWORD: wp_secret
+  #   networks:
+  #     - internal
 
   rmn_laravel_db:
     image: mysql:8.0
@@ -65,9 +65,11 @@ services:
       MYSQL_PASSWORD: laravel_secret
     networks:
       - internal
+    ports:
+      - "3306:3306"
 
 volumes:
-  wp_data:
+  # wp_data:
   laravel_data:
 
 networks:
