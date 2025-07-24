@@ -22,7 +22,8 @@ class NursingRepository extends BaseRepository
         return User::query()
             ->select([
                 'users.id',
-                'users.name',
+                'users.firstname',
+                'users.lastname',
                 'users.email'
             ])
             ->where('user_type', UserType::NURSING)
