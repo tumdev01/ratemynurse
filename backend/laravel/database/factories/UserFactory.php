@@ -13,11 +13,15 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
+            'firstname' => $this->faker->name(),
+            'lastname'  => $this->faker->lastname(),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('1'), // รหัสผ่าน '1' hash เดียวกัน
-            'user_type' => 'ADMIN', // ค่าดีฟอลต์ ถ้าอยากเปลี่ยนให้ seed ระบุค่าเอง
+            'password' => static::$password ??= Hash::make('1'),
+            'user_type' => 'ADMIN',
+            'status' => 1,
+            'religion' => 'BUDDHIST',
+            'phone' => '0' . $this->faker->randomNumber(9, true),
             'remember_token' => Str::random(10),
         ];
     }

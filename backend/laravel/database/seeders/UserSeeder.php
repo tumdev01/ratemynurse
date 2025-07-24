@@ -11,11 +11,20 @@ class UserSeeder extends Seeder
     public function run()
     {
         // สร้าง Admin (user_type=ADMIN จาก factory)
-        User::factory()->create();
+        User::factory()->create([
+            'firstname' => 'Admin',
+            'lastname' => 'Manager',
+            'email' => 'admin@mail.com',
+            'password' => Hash::make('securepassword'),
+            'user_type' => 'ADMIN',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
 
         // สร้าง user api กำหนดค่าเจาะจง
         User::factory()->create([
-            'name' => 'api',
+            'firstname' => 'api',
+            'lastname' => 'development',
             'email' => 'api@mail.com',
             'password' => Hash::make('1'),
             'user_type' => 'API',
