@@ -17,24 +17,19 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // หาผู้ใช้จาก email
         $user = User::where('email', $request->email)->first();
 
-        // เช็ค user และ password
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Invalid credentials.'
             ], 401);
         }
 
-        // สร้าง token (ชื่อ 'api-token')
         $token = $user->createToken('api-token')->plainTextToken;
 
-        // ส่ง token กลับ
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user,
         ]);
     }
 
