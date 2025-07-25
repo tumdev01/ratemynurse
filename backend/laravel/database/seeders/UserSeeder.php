@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@mail.com',
             'password' => Hash::make('securepassword'),
             'user_type' => 'ADMIN',
+            'status' => 1,
             'email_verified_at' => now(),
             'remember_token' => \Illuminate\Support\Str::random(10),
         ]);
@@ -28,6 +29,7 @@ class UserSeeder extends Seeder
             'email' => 'api@mail.com',
             'password' => Hash::make('1'),
             'user_type' => 'API',
+            'status' => '1',
             'email_verified_at' => now(),
             'remember_token' => \Illuminate\Support\Str::random(10),
         ]);
