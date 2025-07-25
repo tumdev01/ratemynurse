@@ -19,8 +19,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('1'),
             'user_type' => 'ADMIN',
-            'status' => 1,
-            'religion' => 'BUDDHIST',
+            'status' => 0,
+            // 'religion' => 'BUDDHIST',
             'phone' => '0' . $this->faker->randomNumber(9, true),
             'remember_token' => Str::random(10),
         ];
