@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('password');
             $table->string('user_type');
             $table->boolean('status');
-            $table->string('religion');
             $table->string('phone');
             $table->rememberToken();
             $table->timestamps();
