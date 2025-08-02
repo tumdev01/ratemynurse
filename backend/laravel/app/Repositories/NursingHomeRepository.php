@@ -10,14 +10,13 @@ class NursingHomeRepository
     {
         $query = NursingHome::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,main-phone,facebook,website,address',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day',
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name'
             ])
             ->select([
                 'users.id',
-                'users.email'
             ])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0);
