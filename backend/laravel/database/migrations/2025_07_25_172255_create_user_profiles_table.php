@@ -20,7 +20,22 @@ return new class extends Migration
             $table->string('gender')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->string('nationality')->default('THAI');
+
+            $table->double('cost')->default(0.00);
+
+            $table->foreignId('sub_district_id')->nullable()
+                ->references('id')->on('sub_districts')
+                ->cascadeOnUpdate()->nullOnDelete();
+            $table->foreignId('district_id')->nullable()
+                ->references('id')->on('districts')
+                ->cascadeOnUpdate()->nullOnDelete();
+            $table->foreignId('province_id')->nullable()
+                ->references('id')->on('provinces')
+                ->cascadeOnUpdate()->nullOnDelete();
+            $table->string('zipcode');
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
