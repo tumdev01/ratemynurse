@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             SubDistrictSeeder::class,
             UserSeeder::class,
             RateSeeder::class,
+            NursingHomeProfilesSeeder::class,
         ]);
     }
 }

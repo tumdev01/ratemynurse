@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_profiles', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id')->nullable(); // make nullable
+        Schema::create('member_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id')->unique();
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
-            $table->string('religion');
-            $table->string('about')->nullable();
-            $table->string('gender')->nullable();
-            $table->date('date_of_birth')->nullable();
-            $table->string('nationality')->default('THAI');
-            $table->double('cost')->default(0.00);
+
+            $table->string('about');
+            $table->string('email');
+            $table->string('phone');
+            $table->string('gender');
+            $table->date('date_of_birth');
+            $table->string('address');
+
             $table->foreignId('sub_district_id')->nullable()
                 ->references('id')->on('sub_districts')
                 ->cascadeOnUpdate()->nullOnDelete();
@@ -32,8 +35,18 @@ return new class extends Migration
                 ->cascadeOnUpdate()->nullOnDelete();
             $table->string('zipcode');
 
+            // Contact person
+            $table->string('contact_person_name');
+            $table->string('contact_person_phone');
+            $table->string('contact_person_relation');
+
+            $table->json('revices_requuired');
+
+            $table->boolean('privacy')->default(0);
+            $table->boolean('policy')->default(0);
+            $table->boolean('newsletter')->default(0);
+
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -42,6 +55,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_profiles');
+        Schema::dropIfExists('member_profiles');
     }
 };

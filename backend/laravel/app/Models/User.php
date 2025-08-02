@@ -12,39 +12,52 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email', 'password', 'user_type',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
-    public function profile()
+    // public function profile()
+    // {
+    //     return $this->hasOne(UserProfile::class);
+    // }
+
+    public function nursing()
     {
-        return $this->hasOne(UserProfile::class);
+        return $this->hasOne(Nursing::class, 'user_id', 'id');
+    }
+    
+    public function nursingHome()
+    {
+        return $this->hasOne(NursingHomeProfile::class);
+    }
+
+    // เช็ค type
+    public function isNursing()
+    {
+        return $this->user_type === 'NURSING';
+    }
+
+    public function isNursingHome()
+    {
+        return $this->user_type === 'NURSING_HOME';
+    }
+
+    // ดึง profile ตาม user_type
+    public function realProfile()
+    {
+        return match ($this->user_type) {
+            'NURSING' => $this->nursing(),
+            'NURSING_HOME' => $this->nursingHome(),
+            default => null,
+        };
     }
 }
