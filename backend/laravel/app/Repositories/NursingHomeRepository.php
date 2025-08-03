@@ -19,7 +19,8 @@ class NursingHomeRepository
                 'users.id',
             ])
             ->whereNull('deleted_at')
-            ->where('status', '!=', 0);
+            ->where('status', '!=', 0)
+            ->where('user_type', 'NURSING_HOME');
 
         if (!empty($filters['limit']) && is_numeric($filters['limit'])) {
             $query->limit((int) $filters['limit']);

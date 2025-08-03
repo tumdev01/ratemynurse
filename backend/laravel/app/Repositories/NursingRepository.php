@@ -10,17 +10,17 @@ class NursingRepository
     {
         return Nursing::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name',
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name'
             ])
             ->select([
                 'users.id',
-                'users.firstname',
-                'users.lastname',
-                'users.email'
             ])
+            ->whereNull('deleted_at')
+            ->where('status', '!=', 0)
+            ->where('user_type', 'NURSING')
             ->get();
     }
 }

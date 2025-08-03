@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('nursing_profiles', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->unique();
+            $table->string('name');
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->string('religion');
-            $table->string('about')->nullable();
+            $table->text('about')->nullable();
             $table->string('gender')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->string('nationality')->default('THAI');

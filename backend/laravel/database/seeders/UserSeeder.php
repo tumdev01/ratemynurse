@@ -36,16 +36,95 @@ class UserSeeder extends Seeder
         ]);
 
         // สร้าง user แบบสุ่ม 10 คน user_type = NURSING, รหัสผ่าน = '1'
-        User::factory()->count(10)->create([
-            'user_type' => 'NURSING',
-            'status' => 1,
+        User::factory()->create([
+            'id' => '3',
+            'firstname' => 'อุณณัญวร',
+            'lastname' => 'จันทร์สว่าง (อุณ)',
+            'email' => 'test1@mail.com',
             'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
         ]);
 
         User::factory()->create([
+            'id' => '4',
+            'firstname' => 'นันทิชา',
+            'lastname' => 'ธรรมภักดิ์ (ปาย)',
+            'email' => 'test2@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '5',
+            'firstname' => 'สุรพล',
+            'lastname' => 'จันทร์สว่างวงศ์ (แทน)',
+            'email' => 'test3@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '6',
+            'firstname' => 'ชุติภรณ์',
+            'lastname' => 'รักดี (ชุติ)',
+            'email' => 'test4@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '13',
             'firstname' => 'Diana Garden Resort Pattaya',
             'lastname' => 'Diana Garden Resort Pattaya',
-            'email' => 'diana_garden_resort@mail.com',
+            'email' => 'test5@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING_HOME->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '14',
+            'firstname' => 'บ้านลลิสาเนอร์ซิ่งโฮม สาขาเชียงราย',
+            'lastname' => 'บ้านลลิสาเนอร์ซิ่งโฮม สาขาเชียงราย',
+            'email' => 'test6@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING_HOME->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '15',
+            'firstname' => 'บ้านลลิสา สาขาพิษณุโลก',
+            'lastname' => 'บ้านลลิสา สาขาพิษณุโลก',
+            'email' => 'test7@mail.com',
+            'password' => Hash::make('1'),
+            'user_type' => UserType::NURSING_HOME->value,
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'id' => '16',
+            'firstname' => 'บ้านลลิสา สาขากำแพงเพชร',
+            'lastname' => 'บ้านลลิสา สาขากำแพงเพชร',
+            'email' => 'test8@mail.com',
             'password' => Hash::make('1'),
             'user_type' => UserType::NURSING_HOME->value,
             'status' => '1',

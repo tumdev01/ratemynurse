@@ -26012,7 +26012,7 @@ class SubDistrictSeeder extends Seeder
             ],
             [
                 'id' => 620101,
-                'name' => 'ในเมือง',
+                'name' => 'ตำบลในเมือง',
                 'district_id' => 6201,
             ],
             [
