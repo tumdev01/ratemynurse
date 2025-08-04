@@ -33,7 +33,7 @@ return new class extends Migration
                 ->references('id')->on('provinces')
                 ->cascadeOnUpdate()->nullOnDelete();
             $table->string('zipcode');
-
+            $table->boolean('certified')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

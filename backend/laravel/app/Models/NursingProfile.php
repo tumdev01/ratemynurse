@@ -29,6 +29,7 @@ class NursingProfile extends Model
         'district_id',
         'sub_district_id',
         'zipcode',
+        'certified'
     ];
 
     /**

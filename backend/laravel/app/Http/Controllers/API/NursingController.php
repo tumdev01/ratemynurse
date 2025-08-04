@@ -18,8 +18,9 @@ class NursingController extends Controller {
     public function getNursing(Request $request)
     {
         $limit = $request->input('limit');
+        $certified = $request->input('certified') ?? false;
 
-        $nursings = $this->nursing_repository->getNursing(['limit' => $limit]);
+        $nursings = $this->nursing_repository->getNursing(['limit' => $limit, 'certified' => $certified]);
         return response()->json($nursings);
     }
 }
