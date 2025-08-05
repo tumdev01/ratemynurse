@@ -21,6 +21,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     // Nursing
     Route::post('/nursings', [NursingController::class, 'getNursing']);
-
+    Route::post('/nursings/all', [NursingController::class, 'getNursingPagination']);
     Route::post('/nursing-homes', [NursingHomeController::class, 'getNursingHomes']);
 });

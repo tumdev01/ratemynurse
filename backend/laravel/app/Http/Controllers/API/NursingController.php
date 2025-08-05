@@ -23,4 +23,20 @@ class NursingController extends Controller {
         $nursings = $this->nursing_repository->getNursing(['limit' => $limit, 'certified' => $certified]);
         return response()->json($nursings);
     }
+
+    public function getNursingPagination(Request $request)
+    {
+        $limit = $request->input('limit');
+        $certified = $request->input('certified');
+        $order = $request->input('order');
+        $orderby = $request->input('orderby');
+
+        $nursings = $this->nursing_repository->getNursingPagination([
+            'limit' => $limit,
+            'certified' => $certified,
+            'orderby' => $orderby,
+            'order' => $order
+        ]);
+        return response()->json($nursings);
+    }
 }
