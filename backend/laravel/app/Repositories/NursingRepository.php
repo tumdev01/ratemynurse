@@ -36,31 +36,60 @@ class NursingRepository
         return $query->get();
     }
 
+    // public function getNursingPagination(array $filters = [])
+    // {
+    //     $order = Arr::get($filters, 'order', 'DESC');
+    //     $orderby = Arr::get($filters, 'orderby', 'created_at');
+    //     $query = Nursing::query()
+    //     ->with([
+    //         'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
+    //         'profile.province:id,name',
+    //         'profile.district:id,name',
+    //         'profile.subDistrict:id,name'
+    //     ])
+    //     ->select([
+    //         'users.id'
+    //     ])
+    //     ->whereNull('deleted_at')
+    //     ->where('status', '!=', 0)
+    //     ->where('user_type', 'NURSING')
+    //     ->orderBy($orderby, $order);
+
+    //     if (!empty($filters['offset'])) {
+    //         // $query->whereHas('profile', function ($q) {
+    //         //     $q->where('certified', 1);
+    //         // });
+    //     }
+
+    //     return $query->get();
+    // }
     public function getNursingPagination(array $filters = [])
     {
         $order = Arr::get($filters, 'order', 'DESC');
         $orderby = Arr::get($filters, 'orderby', 'created_at');
+        $limit = Arr::get($filters, 'limit', 10); // ตั้งค่า default limit
+        $certified = Arr::get($filters, 'certified');
+
         $query = Nursing::query()
-        ->with([
-            'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
-            'profile.province:id,name',
-            'profile.district:id,name',
-            'profile.subDistrict:id,name'
-        ])
-        ->select([
-            'users.id'
-        ])
-        ->whereNull('deleted_at')
-        ->where('status', '!=', 0)
-        ->where('user_type', 'NURSING')
-        ->orderBy($orderby, $order);
+            ->with([
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
+                'profile.province:id,name',
+                'profile.district:id,name',
+                'profile.subDistrict:id,name'
+            ])
+            ->select(['users.id'])
+            ->whereNull('deleted_at')
+            ->where('status', '!=', 0)
+            ->where('user_type', 'NURSING')
+            ->orderBy($orderby, $order);
 
-        if (!empty($filters['offset'])) {
-            // $query->whereHas('profile', function ($q) {
-            //     $q->where('certified', 1);
-            // });
+        if (!empty($certified)) {
+            $query->whereHas('profile', function ($q) use ($certified) {
+                $q->where('certified', $certified);
+            });
         }
-
-        return $query->get();
+        
+        return $query->paginate($limit);
     }
+
 }
