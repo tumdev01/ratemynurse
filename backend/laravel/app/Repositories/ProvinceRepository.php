@@ -14,11 +14,10 @@ class ProvinceRepository extends BaseRepository
         $term = isset($filters['term']) ? $filters['term'] : '';
         return $this->cacheForever('provinces', function () use ($term) {
             return Province::query()
-                ->select(['id', 'name'])
+                ->select(['id', 'name', 'code', 'zone'])
                 ->when($term, function($q) use ($term){
                     return $q->where('name', 'like', '%'.$term.'%');
                 })
-                ->orderBy('id')
                 ->orderBy('name')
                 ->get();
         });

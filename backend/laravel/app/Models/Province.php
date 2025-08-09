@@ -9,6 +9,8 @@ class Province extends Model
 {
     public $timestamps = false;
 
+    protected $table = "provinces";
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany|District[]
      */

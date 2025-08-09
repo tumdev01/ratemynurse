@@ -154,6 +154,8 @@ class NursingHomeCreateRequest extends FormRequest
             'district_id' => ['nullable', 'integer'],
             'sub_district_id' => ['nullable', 'integer'],
             'zipcode' => ['nullable', 'string', 'regex:/^\d{5}$/'],
+            'map' => ['nullable', 'string'],
+            'youtube_url' => ['nullable', 'string']
         ];
     }
 

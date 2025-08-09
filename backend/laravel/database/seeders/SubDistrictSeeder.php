@@ -37265,7 +37265,6 @@ class SubDistrictSeeder extends Seeder
                 return str_starts_with($sub_district['id'], '50');
             });
         }
-
         foreach (array_chunk($sub_districts, 500) as $sub_district) {
             \App\Models\SubDistrict::query()->insert($sub_district);
         }

@@ -25,6 +25,8 @@ class Rate extends Model
         'user_id',
         'scores',
         'text',
+        'name',
+        'description',
         'user_type'
     ];
 

@@ -11,18 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rates', function (Blueprint $table) {
+        Schema::create('nursing_home_rooms', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->unsignedBigInteger('user_id')->nullable(); // make nullable
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
-            $table->integer('scores')->default(1);
+            
             $table->string('name');
-            $table->string('description');
-            $table->string('text');   
-            $table->string('user_type');
-            $table->timestamps();
+            $table->text('description');
+            $table->double('cost');
+
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rates');
+        Schema::dropIfExists('nursing_home_rooms');
     }
 };

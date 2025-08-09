@@ -27,9 +27,10 @@ class NursingRepository
             $query->limit((int) $filters['limit']);
         }
 
-        if (!empty($filters['certified'])) {
-            $query->whereHas('profile', function ($q) {
-                $q->where('certified', 1);
+        if (isset($filters['certified'])) {
+            $certified = (int) $filters['certified'];
+            $query->whereHas('profile', function ($q) use ($certified) {
+                $q->where('certified', $certified);
             });
         }
 
@@ -68,8 +69,7 @@ class NursingRepository
         $order = Arr::get($filters, 'order', 'DESC');
         $orderby = Arr::get($filters, 'orderby', 'created_at');
         $limit = Arr::get($filters, 'limit', 10); // ตั้งค่า default limit
-        $certified = Arr::get($filters, 'certified');
-
+        $certified = Arr::get($filters, 'certified', 0);
         $query = Nursing::query()
             ->with([
                 'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
@@ -80,15 +80,14 @@ class NursingRepository
             ->select(['users.id'])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
-            ->where('user_type', 'NURSING')
             ->orderBy($orderby, $order);
 
-        if (!empty($certified)) {
+        if (isset($filters['certified'])) {
+            $certified = (int) $filters['certified'];
             $query->whereHas('profile', function ($q) use ($certified) {
                 $q->where('certified', $certified);
             });
         }
-        
         return $query->paginate($limit);
     }
 

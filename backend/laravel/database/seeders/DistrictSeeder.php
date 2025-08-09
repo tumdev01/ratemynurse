@@ -4669,7 +4669,6 @@ class DistrictSeeder extends Seeder
                 return str_starts_with($district['id'], '50');
             });
         }
-
         foreach (array_chunk($districts, 500) as $district) {
             \App\Models\District::query()->insert($district);
         }

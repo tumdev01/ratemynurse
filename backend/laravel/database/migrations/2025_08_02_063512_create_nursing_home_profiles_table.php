@@ -19,13 +19,13 @@ return new class extends Migration
                 
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('main-phone')->nullable();
-            $table->string('res-phone')->nullable();
+            $table->string('main_phone')->nullable();
+            $table->string('res_phone')->nullable();
             $table->string('facebook')->nullable();
             $table->string('website')->nullable();
             $table->string('address')->nullable();
 
-            // Nursing Home license info
+            // Nursing Home license info ข้อมูลใบอนุญาตและการรับรอง
             $table->string('license_no')->nullable();
             $table->date('license_start_date')->nullable();
             $table->date('license_exp_date')->nullable();
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('certificates')->nullable();
             $table->string('hospital_no')->nullable();
 
-            // Additional Info
+            // Additional Info ข้อมูลผู้รับผิดชอบ
             $table->string('manager_name')->nullable();
             $table->string('graduated')->nullable();
             $table->string('graduated_paper')->nullable();
@@ -47,7 +47,15 @@ return new class extends Migration
             $table->string('assist_expert')->nullable();
             $table->string('assist_phone')->nullable();
 
-            // Home Accommodation
+            // บริการและการดูแล
+            // ประเภทบริการ 
+            $table->json('home_service_type')->nullable();
+            $table->string('etc_service')->nullable();
+
+            // บริการเสริม
+            $table->json('additional_service_type')->nullable();
+
+            // Home Accommodation สิ่งอำนวยความสะดวกและอุปกรณ์
             $table->integer('building_no')->default(0);
             $table->integer('total_room')->default(0);
             $table->integer('private_room_no')->default(0);
@@ -57,31 +65,10 @@ return new class extends Migration
             $table->double('area')->default(0.00);
 
             // ห้องพิเศษและสิ่งอำนวยความสะดวก
-            $table->boolean('nurse_station')->default(0);
-            $table->boolean('emergency_room')->default(0);
-            $table->boolean('examination_room')->default(0);
-            $table->boolean('medicine_room')->default(0);
-            $table->boolean('kitchen_cafeteria')->default(0);
-            $table->boolean('dining_room')->default(0);
-            $table->boolean('activity_room')->default(0);
-            $table->boolean('physical_therapy_room')->default(0);
-            $table->boolean('meeting_room')->default(0);
-            $table->boolean('office_room')->default(0);
-            $table->boolean('laundry_room')->default(0);
+            $table->json('special_facilities')->nullable();
 
             // สิ่งอำนวยความสะดวกทั่วไป
-            $table->boolean('elevator')->default(0);
-            $table->boolean('wheelchair_ramp')->default(0);
-            $table->boolean('bathroom_grab_bar')->default(0);
-            $table->boolean('emergency_bell')->default(0);
-            $table->boolean('camera')->default(0);
-            $table->boolean('fire_extinguishing_system')->default(0);
-            $table->boolean('backup_generator')->default(0);
-            $table->boolean('air_conditioner')->default(0);
-            $table->boolean('garden_area')->default(0);
-            $table->boolean('parking')->default(0);
-            $table->boolean('wifi_internet')->default(0);
-            $table->boolean('central_television')->default(0);
+            $table->json('facilities')->nullable();
 
             // ยานพาหนะและอุปกรณ์พิเศษ
             $table->boolean('ambulance')->default(0);
@@ -140,6 +127,12 @@ return new class extends Migration
                 ->cascadeOnUpdate()->nullOnDelete();
             $table->string('zipcode');
 
+            $table->boolean('certified')->default(0);
+
+            $table->string('youtube_url')->nullable();
+
+            $table->string('map')->nullable();
+     
             $table->timestamps();
             $table->softDeletes();
         });

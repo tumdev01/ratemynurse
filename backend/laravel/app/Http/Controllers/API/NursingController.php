@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Nursing;
 use App\Repositories\NursingRepository;
+use App\Enums\ExpertiseType;
+use App\Enums\ZoneType;
+use App\Repositories\ProvinceRepository;
 
 class NursingController extends Controller {
     protected $nursing_repository;
-
-    public function __construct(NursingRepository $nursing_repository)
+    protected $province_repository;
+    public function __construct(NursingRepository $nursing_repository, ProvinceRepository $province_repository)
     {
         $this->nursing_repository = $nursing_repository;
+        $this->province_repository= $province_repository;
     }
 
     public function getNursing(Request $request)
@@ -52,7 +56,6 @@ class NursingController extends Controller {
             'orderby' => $orderby,
             'order' => $order
         ]);
-        
         return response()->json([
             'data' => $nursings->items(),
             'total' => $nursings->total(),
@@ -60,6 +63,29 @@ class NursingController extends Controller {
             'current_page' => $nursings->currentPage(),
             'last_page' => $nursings->lastPage(),
         ]);
+    }
+
+    public function getFilterElements()
+    {
+        $expertise = ExpertiseType::list();
+
+        return response()->json([
+            'expertises' => $expertise
+        ]);
+    }
+
+    public function getLocations()
+    {
+        $provinces = $this->province_repository->getProvinceDropdown();
+        $provincesGroupBy = $provinces->groupBy('zone');
+        $result = $provincesGroupBy->toArray();
+        return response()->json([
+            'data' => $result
+        ]);
+    }
+
+    public function getNursingByLocation(Request $request) {
+        dd($request->all());
     }
 
 }

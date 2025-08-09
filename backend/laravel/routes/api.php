@@ -22,5 +22,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Nursing
     Route::post('/nursings', [NursingController::class, 'getNursing']);
     Route::post('/nursings/all', [NursingController::class, 'getNursingPagination']);
+    Route::get('/nursing-filter-elements', [NursingController::class, 'getFilterElements']);
+    // NursingHome
     Route::post('/nursing-homes', [NursingHomeController::class, 'getNursingHomes']);
+    Route::post('/nursing-homes-listing', [NursingHomeController::class,'getNuringHomePagination']);
+    Route::get('/nursing-homes/{id}', [NursingHomeController::class,'getNursingHome']);
+
+    //Main Menu Nursing
+    Route::get('nursing-locations', [NursingController::class, 'getLocations']);
 });
