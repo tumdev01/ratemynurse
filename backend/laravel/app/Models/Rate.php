@@ -41,4 +41,14 @@ class Rate extends Model
         'scores' => 'integer',
         'text' => 'string',
     ];
+
+    /**
+     * Get the user that owns the Rate
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

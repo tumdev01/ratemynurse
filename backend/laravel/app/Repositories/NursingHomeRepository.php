@@ -72,18 +72,21 @@ class NursingHomeRepository
     {
         $query = NursingHome::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities',
                 'profile.province:id,name',
                 'profile.district:id,name',
-                'profile.subDistrict:id,name'
+                'profile.subDistrict:id,name',
+                'rates:user_id,scores,text,name,description'
             ])
-            ->select([
-                'users.id',
-            ])
+            ->withAvg('rates as average_score', 'scores') // ✅ ค่าเฉลี่ยคะแนน
+            ->withCount('rates as review_count')          // ✅ จำนวนรีวิว
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
-            ->where('id' , $id)
-            ->where('user_type', 'NURSING_HOME');
-        return $query->first();
+            ->where('id', $id)
+            ->where('user_type', 'NURSING_HOME')
+            ->first();
+
+        return $query;
     }
+
 }

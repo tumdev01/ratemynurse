@@ -25,11 +25,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    // public function profile()
-    // {
-    //     return $this->hasOne(UserProfile::class);
-    // }
-
     public function nursing()
     {
         return $this->hasOne(Nursing::class, 'user_id', 'id');
@@ -59,5 +54,15 @@ class User extends Authenticatable
             'NURSING_HOME' => $this->nursingHome(),
             default => null,
         };
+    }
+
+    /**
+     * Get all of the rates for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function rates()
+    {
+        return $this->hasMany(Rate::class, 'user_id', 'id');
     }
 }
