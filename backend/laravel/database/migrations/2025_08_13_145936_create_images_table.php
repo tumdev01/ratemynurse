@@ -11,19 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('nursing_home_rooms', function (Blueprint $table) {
+        Schema::create('images', function (Blueprint $table) {
             $table->id();
-
+            
             $table->unsignedBigInteger('user_id')->nullable(); // make nullable
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
-            
-            $table->string('name');
-            $table->text('description');
-            $table->double('cost');
-            $table->string('cover')->nullable(); // cover image
 
-            $table->softDeletes();
+            $table->string('type'); // [NURING, NURSING_HOME, NURSING_HOME_ROOM]
+            $table->string('name');
+            $table->string('path');
+            $table->string('filetype');
+            $table->boolean('is_cover')->default(0);
             $table->timestamps();
         });
     }
@@ -33,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('nursing_home_rooms');
+        Schema::dropIfExists('images');
     }
 };
