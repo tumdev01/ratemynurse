@@ -205,18 +205,6 @@ class UserSeeder extends Seeder
         ]);
 
         User::factory()->create([
-            'id' => '23',
-            'firstname' => 'อมเรศ',
-            'lastname' => 'แก้วประทุม (ตั้ม)',
-            'email' => 'tum.test@mail.com',
-            'password' => Hash::make('1'),
-            'user_type' => UserType::NURSING->value,
-            'status' => '1',
-            'email_verified_at' => now(),
-            'remember_token' => \Illuminate\Support\Str::random(10),
-        ]);
-
-        User::factory()->create([
             'id' => '24',
             'firstname' => 'สมศรี',
             'lastname' => 'การเรียนดี',

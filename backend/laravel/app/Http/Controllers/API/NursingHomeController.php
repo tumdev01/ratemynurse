@@ -30,12 +30,13 @@ class NursingHomeController extends Controller {
         $certified = $request->input('certified');
         $orderby  = $request->input('order_by');
         $order     = $request->input('order');
-
+        $province  = $request->input('province');
         $homes = $this->nursing_home_repository->getNuringHomePagination([
             'limit' => $limit,
             'certified' => $certified,
             'orderby' => $orderby,
-            'order' => $order
+            'order' => $order,
+            'province' => $province
         ]);
         
         return response()->json([

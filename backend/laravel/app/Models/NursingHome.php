@@ -17,4 +17,14 @@ class NursingHome extends User
     {
         return $this->hasOne(NursingHomeProfile::class, 'user_id', 'id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class, 'user_id', 'id')->where('is_cover', false);
+    }
+
+    public function coverImage()
+    {
+        return $this->hasOne(Image::class, 'user_id', 'id')->where('is_cover', true);
+    }
 }

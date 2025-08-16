@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\NursingHome;
+use App\Models\Province;
 use Illuminate\Support\Arr;
 
 class NursingHomeRepository
@@ -11,14 +12,19 @@ class NursingHomeRepository
     {
         $query = NursingHome::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities',
                 'profile.province:id,name',
                 'profile.district:id,name',
-                'profile.subDistrict:id,name'
+                'profile.subDistrict:id,name',
+                'rates:user_id,scores,text,name,description',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover'
             ])
             ->select([
                 'users.id',
             ])
+            ->withAvg('rates as average_score', 'scores')
+            ->withCount('rates as review_count')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('user_type', 'NURSING_HOME');
@@ -47,14 +53,19 @@ class NursingHomeRepository
 
         $query = NursingHome::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities',
                 'profile.province:id,name',
                 'profile.district:id,name',
-                'profile.subDistrict:id,name'
+                'profile.subDistrict:id,name',
+                'rates:user_id,scores,text,name,description',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover'
             ])
             ->select([
                 'users.id',
             ])
+            ->withAvg('rates as average_score', 'scores')
+            ->withCount('rates as review_count')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('user_type', 'NURSING_HOME');
@@ -65,7 +76,14 @@ class NursingHomeRepository
                 $q->where('certified', $certified);
             });
         }
-        return $query->paginate($limit);
+
+        if(isset($filters['province'])) {
+            $province_id = Province::where('code', $filters['province'])->value('id');
+            $query->whereHas('profile', function ($q) use ($province_id){
+                $q->where('province_id', $province_id);
+            });
+        }
+        return $query->orderBy($orderby, $order)->paginate($limit);
     }
 
     public function getInfo(int $id) 
@@ -76,10 +94,12 @@ class NursingHomeRepository
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description'
+                'rates:user_id,scores,text,name,description',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover'
             ])
-            ->withAvg('rates as average_score', 'scores') // ✅ ค่าเฉลี่ยคะแนน
-            ->withCount('rates as review_count')          // ✅ จำนวนรีวิว
+            ->withAvg('rates as average_score', 'scores')
+            ->withCount('rates as review_count')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('id', $id)

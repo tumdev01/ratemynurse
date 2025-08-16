@@ -14,14 +14,15 @@ class NursingRepository
                 'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
                 'profile.province:id,name',
                 'profile.district:id,name',
-                'profile.subDistrict:id,name'
+                'profile.subDistrict:id,name',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover'
             ])
             ->select([
                 'users.id',
             ])
             ->whereNull('deleted_at')
-            ->where('status', '!=', 0)
-            ->where('user_type', 'NURSING');
+            ->where('status', '!=', 0);
         
         if (!empty($filters['limit']) && is_numeric($filters['limit'])) {
             $query->limit((int) $filters['limit']);
@@ -33,7 +34,6 @@ class NursingRepository
                 $q->where('certified', $certified);
             });
         }
-
         return $query->get();
     }
 
@@ -75,7 +75,9 @@ class NursingRepository
                 'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
                 'profile.province:id,name',
                 'profile.district:id,name',
-                'profile.subDistrict:id,name'
+                'profile.subDistrict:id,name',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover'
             ])
             ->select(['users.id'])
             ->whereNull('deleted_at')
