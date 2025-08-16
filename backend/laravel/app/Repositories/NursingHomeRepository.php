@@ -46,14 +46,14 @@ class NursingHomeRepository
 
     public function getNuringHomePagination(array $filters = [])
     {
-        $order = Arr::get($filters, 'order', 'DESC');
-        $orderby = Arr::get($filters, 'orderby', 'created_at');
+        $orderby = Arr::get($filters, 'orderby', 'created_at') ?: 'created_at';
+        $order   = Arr::get($filters, 'order', 'DESC');
         $limit = Arr::get($filters, 'limit', 8); // ตั้งค่า default limit
-        $certified = Arr::get($filters, 'certified', 0);
+        $certified = Arr::get($filters, 'certified');
 
         $query = NursingHome::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities',
+                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities,certified',
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
@@ -70,12 +70,24 @@ class NursingHomeRepository
             ->where('status', '!=', 0)
             ->where('user_type', 'NURSING_HOME');
 
-        if (isset($filters['certified'])) {
-            $certified = (int) $filters['certified'];
-            $query->whereHas('profile', function ($q) use ($certified) {
-                $q->where('certified', $certified);
-            });
+        if (array_key_exists('certified', $filters)) {
+            $certified = $filters['certified'];
+
+            if (is_null($certified) || $certified === 'null') {
+                // ถ้าเป็น null → เอาทั้ง 0 และ 1
+                $query->whereHas('profile', function ($q) {
+                    $q->whereIn('certified', [0, 1]);
+                });
+            } else {
+                $certified = filter_var($certified, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                $query->whereHas('profile', function ($q) use ($certified) {
+                    $q->where('certified', $certified ? 1 : 0);
+                });
+            }
         }
+
+
 
         if(isset($filters['province'])) {
             $province_id = Province::where('code', $filters['province'])->value('id');
