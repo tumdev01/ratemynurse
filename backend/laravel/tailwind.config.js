@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class', // เปิดใช้งาน dark mode แบบใช้ class 'dark'
+  darkMode: 'class',
   content: [
     './resources/**/*.blade.php',
     './resources/**/*.js',
@@ -8,6 +8,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        base: ['1rem', { lineHeight: '1.75rem' }], // กำหนด base = 18px
+      },
       colors: {
         primary: {
           50: '#eff6ff',
@@ -24,40 +27,32 @@ module.exports = {
         },
       },
       fontFamily: {
-        body: [
-          'Inter',
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'system-ui',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'Noto Sans',
-          'sans-serif',
-          'Apple Color Emoji',
-          'Segoe UI Emoji',
-          'Segoe UI Symbol',
-          'Noto Color Emoji',
-        ],
-        sans: [
-          'Inter',
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'system-ui',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'Noto Sans',
-          'sans-serif',
-          'Apple Color Emoji',
-          'Segoe UI Emoji',
-          'Segoe UI Symbol',
-          'Noto Color Emoji',
-        ],
+      body: [
+        'Noto Sans Thai',
+        'Inter',
+        'ui-sans-serif',
+        'system-ui',
+        '-apple-system',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'Noto Sans',
+        'sans-serif',
+      ],
+      sans: [
+        'Noto Sans Thai',
+        'Inter',
+        'ui-sans-serif',
+        'system-ui',
+        '-apple-system',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'Noto Sans',
+        'sans-serif',
+      ],
       },
     },
   },

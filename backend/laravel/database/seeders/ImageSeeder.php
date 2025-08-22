@@ -13,29 +13,26 @@ class ImageSeeder extends Seeder
         $userIds = [3,4,5,6,24,25,26,27,28,29];
 
         foreach ($userIds as $id) {
-            $pattern = public_path("images/{$id}.{png,PNG,jpg,JPG}");
-            $files = glob($pattern, GLOB_BRACE);
+            $sourcePath = public_path("images/{$id}.png");
 
-            foreach ($files as $sourcePath) {
-                if (!is_file($sourcePath)) continue;
+            if (!File::exists($sourcePath)) continue;
 
-                $extension = File::extension($sourcePath);
-                $hashedName = md5(uniqid($id, true)) . '.' . $extension;
-                $destPath = 'images/' . $hashedName;
-                $destFullPath = public_path($destPath);
+            $extension = File::extension($sourcePath);
+            $hashedName = md5(uniqid($id, true)) . '.' . $extension;
+            $destPath = 'images/' . $hashedName;
+            $destFullPath = public_path($destPath);
 
-                File::ensureDirectoryExists(dirname($destFullPath));
-                File::copy($sourcePath, $destFullPath);
+            File::ensureDirectoryExists(dirname($destFullPath));
+            File::copy($sourcePath, $destFullPath);
 
-                Image::create([
-                    'user_id'  => $id,
-                    'type'     => 'NURSING',
-                    'name'     => (string) $id,
-                    'path'     => $destPath,
-                    'filetype' => 'image/' . strtolower($extension),
-                    'is_cover' => true,
-                ]);
-            }
+            Image::create([
+                'user_id' => $id,
+                'type' => 'NURSING',
+                'name' => (string)$id,
+                'path' => $destPath,
+                'filetype' => 'image/png',
+                'is_cover' => true,
+            ]);
         }
 
         // Nursing Home 

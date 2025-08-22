@@ -13,6 +13,12 @@ class NursingHome extends User
         });
     }
 
+    // Accessor สำหรับ name ของ Nursing Home
+    public function getNameAttribute()
+    {
+        return $this->profile?->name; // null-safe operator
+    }
+
     public function profile()
     {
         return $this->hasOne(NursingHomeProfile::class, 'user_id', 'id');

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NursingHomeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -18,4 +19,7 @@ Auth::routes(['register'=> false]);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/nursing-home', [NursingHomeController::class, 'index'])->name('nursinghome.index');
+    Route::get('/nursing-homes/', [NursingHomeController::class, 'getNursingHomePagination'])->name('nursing-homes.data');
 });
