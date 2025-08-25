@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "bootstrap": "^5.3.6"
+    "bootstrap": "^5.3.6",
+    "flatpickr": "^4.6.13"
   }
 }

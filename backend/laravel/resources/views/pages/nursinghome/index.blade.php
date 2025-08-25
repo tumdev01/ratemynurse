@@ -4,12 +4,13 @@
 <div class="p-4 sm:ml-64">
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
         <h1>รายการ บ้านพักผู้สูงอายุ</h1>
-        <a href="#" class="text-blue-600 hover:underline">เพิ่มใหม่</a>
+        <a href="{{ route('nursing-home.create') }}" class="text-blue-600 hover:underline">เพิ่มใหม่</a>
     </div>
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg opacity-0" id="nursingHomesTableWrapper">
         <table id="nursingHomesTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
+                    <th class="px-6 py-3"></th>
                     <th class="px-6 py-3">รูปภาพ</th>
                     <th class="px-6 py-3">ชื่อ</th>
                     <th class="px-6 py-3">คะแนนเฉลี่ย</th>
@@ -36,6 +37,7 @@ $(function() {
         autoWidth: false, // ปิด auto width ของ DataTables
         responsive: true, // ถ้าใช้ responsive
         ajax: '{{ route("nursing-homes.data") }}',
+        order: [[0, 'desc']], // <--- 4 คือ column index ของ 'id' (ลำดับเริ่ม 0)
         language: {
             decimal:        "",
             emptyTable:     "ไม่มีข้อมูลในตาราง",
@@ -61,15 +63,22 @@ $(function() {
             }
         },
         columns: [
+            { data: 'id', name: 'id', searchable: false, orderable: true, visible: false }, // ซ่อนแต่ sort ได้
             { data: 'cover_image', name: 'cover_image', orderable: false, searchable: false },
             { data: 'name', name: 'profile.name' },
             { data: 'average_score', name: 'average_score' },
             { data: 'review_count', name: 'review_count' },
-            { data: 'action', name: 'action', orderable: false, searchable: false }
+            {
+                data: 'id', name: 'id', searchable: false, orderable: false, render: function (data, type, row) {
+                    let url = "{{ route('nursing-home.edit', ':id') }}"; // ใส่ placeholder
+                    url = url.replace(':id', data); // แทนที่ด้วยค่าจริง
+                    return `<a href="${url}">แก้ไข</a>`;
+                }
+            },
         ],
         columnDefs: [
             {
-                targets: 0,
+                targets: 1,
                 className: 'text-center',
                 render: function(data) {
                     // ตรวจสอบให้แน่ใจว่า data เป็น URL ของภาพเท่านั้น

@@ -4,9 +4,9 @@ namespace App\Enums;
 
 final class AdditionalServiceType
 {
-    const SINGLE = 'บริการอาหาร';
-    const RESORT = 'บริการรับส่ง';
-    const MULTI = 'ซักรีด';
+    const FOOD = 'บริการอาหาร';
+    const TRANSPORTATION = 'บริการรับส่ง';
+    const LAUNDRY = 'ซักรีด';
     const RECREATIONAL_ACTIVITIES = 'กิจกรรมนันทนาการ';
     const SOCIAL_WORK_ACTIVITIES = 'กิจกรรมสังคมสงเคราะห์';
     const SPIRITUAL_ACTIVITIES = 'กิจกรรมทางจิตวิญญาณ';

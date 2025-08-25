@@ -72,7 +72,7 @@ return new class extends Migration
 
             // ยานพาหนะและอุปกรณ์พิเศษ
             $table->boolean('ambulance')->default(0);
-            $table->integer('ambulance_amount')->default(0);
+            $table->integer('ambulance_amount')->nullable()->default(0);
             $table->boolean('van_shuttle')->default(0);
             $table->string('special_medical_equipment')->nullable();
 
@@ -128,11 +128,10 @@ return new class extends Migration
             $table->string('zipcode');
 
             $table->boolean('certified')->default(0);
-
             $table->string('youtube_url')->nullable();
-
             $table->string('map')->nullable();
-     
+            $table->text('map_embed')->nullable();
+            $table->string('coords')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

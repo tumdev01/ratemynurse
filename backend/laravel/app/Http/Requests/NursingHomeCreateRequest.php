@@ -26,27 +26,27 @@ class NursingHomeCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => [
-                'required',
-                'integer',
-                Rule::unique('nursing_home_profiles', 'user_id')
-                    ->where('type', UserType::NURSING_HOME->value)
-                    ->whereNull('deleted_at'),
-            ],
-            'name' => ['required', 'string', 'max:50'],
+            // 'user_id' => [
+            //     'required',
+            //     'integer',
+            //     Rule::unique('nursing_home_profiles', 'user_id')
+            //         ->where('type', UserType::NURSING_HOME->value)
+            //         ->whereNull('deleted_at'),
+            // ],
+            'name' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:255'],
 
-            'main-phone' => [
+            'main_phone' => [
                 'required',
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'main-phone')->whereNull('deleted_at'),
+                Rule::unique('nursing_home_profiles', 'main_phone')->whereNull('deleted_at'),
             ],
-            'res-phone' => [
-                'required',
+            'res_phone' => [
+                'nullable',
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'res-phone')->whereNull('deleted_at'),
+                Rule::unique('nursing_home_profiles', 'res_phone')->whereNull('deleted_at'),
             ],
 
             'facebook' => ['nullable', 'string', 'url'],
@@ -57,13 +57,12 @@ class NursingHomeCreateRequest extends FormRequest
             'license_exp_date' => ['nullable', 'date'],
             'license_by' => ['nullable', 'string', 'max:100'],
 
-            'certificates' => ['nullable', 'array'],
-            'certificates.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png'],
+            'certificates' => ['nullable', 'string'],
 
             'hospital_no' => ['nullable', 'string', 'max:100'],
             'manager_name' => ['nullable', 'string', 'max:100'],
             'graduated' => ['nullable', 'string', 'max:100'],
-            'graduated_paper' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png'],
+            'graduated_paper' => ['nullable', 'string'],
             'exp_year' => ['nullable', 'integer', 'min:0', 'max:100'],
 
             'manager_phone' => ['nullable', 'string', 'regex:/^\d{10}$/'],
@@ -134,11 +133,11 @@ class NursingHomeCreateRequest extends FormRequest
             'delivery_fee' => ['nullable', 'numeric', 'min:0'],
 
             // Support
-            'laundry_service' => ['nullable', 'boolean'],
+            'laundry_service' => ['nullable', 'numeric'],
             'social_security' => ['nullable', 'boolean'],
             'private_health_insurance' => ['nullable', 'boolean'],
             'installment' => ['nullable', 'boolean'],
-            'payment_methods' => ['nullable', 'array'],
+            'payment_methods' => ['nullable', 'string'],
             'payment_methods.*' => ['string'],
 
             // Description
@@ -155,7 +154,8 @@ class NursingHomeCreateRequest extends FormRequest
             'sub_district_id' => ['nullable', 'integer'],
             'zipcode' => ['nullable', 'string', 'regex:/^\d{5}$/'],
             'map' => ['nullable', 'string'],
-            'youtube_url' => ['nullable', 'string']
+            'youtube_url' => ['nullable', 'string'],
+            'map_embed' => ['nullable', 'string'],
         ];
     }
 
@@ -182,7 +182,6 @@ class NursingHomeCreateRequest extends FormRequest
             'main-phone.regex' => 'เบอร์โทรหลักต้องมี 10 หลัก และเป็นตัวเลขเท่านั้น',
             'main-phone.unique' => 'เบอร์โทรหลักนี้ถูกใช้ไปแล้ว',
 
-            'res-phone.required' => 'กรุณาระบุเบอร์โทรสำรอง',
             'res-phone.string' => 'เบอร์โทรสำรองต้องเป็นข้อความ',
             'res-phone.regex' => 'เบอร์โทรสำรองต้องมี 10 หลัก และเป็นตัวเลขเท่านั้น',
             'res-phone.unique' => 'เบอร์โทรสำรองนี้ถูกใช้ไปแล้ว',
@@ -202,11 +201,6 @@ class NursingHomeCreateRequest extends FormRequest
             'license_start_date.date' => 'วันที่เริ่มต้นใบอนุญาตไม่ถูกต้อง',
             'license_exp_date.date' => 'วันหมดอายุใบอนุญาตไม่ถูกต้อง',
             'license_by.max' => 'หน่วยงานที่ออกใบอนุญาตต้องไม่เกิน 100 ตัวอักษร',
-
-            // Files
-            'certificates.array' => 'ใบประกาศต้องอยู่ในรูปแบบรายการไฟล์',
-            'certificates.*.file' => 'ไฟล์ใบประกาศแต่ละรายการต้องเป็นไฟล์',
-            'certificates.*.mimes' => 'ใบประกาศต้องเป็นไฟล์ประเภท pdf, jpg, jpeg หรือ png',
 
             'graduated_paper.file' => 'ไฟล์ใบจบการศึกษาต้องเป็นไฟล์',
             'graduated_paper.mimes' => 'ใบจบการศึกษาต้องเป็น pdf, jpg, jpeg หรือ png',

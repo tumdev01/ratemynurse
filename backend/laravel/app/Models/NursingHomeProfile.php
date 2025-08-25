@@ -93,7 +93,9 @@ class NursingHomeProfile extends Model
         'zipcode',
         'certified',
         'youtube_url',
-        'map'
+        'map',
+        'map_embed',
+        'coords'
     ];
 
     /**
@@ -195,7 +197,8 @@ class NursingHomeProfile extends Model
         'zipcode' => 'string',
         'certified' => 'boolean',
         'youtube_url' => 'string',
-        'map' => 'string'
+        'map' => 'string',
+        'map_embed'=> 'string',
     ];
 
     /**

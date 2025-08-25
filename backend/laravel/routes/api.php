@@ -4,7 +4,8 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProvinceController;
-
+use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\SubDistrictController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,3 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/provinces', [ProvinceController::class, 'getProvinces']);
 });
+
+
+Route::get('provinces_list', [ProvinceController::class, 'getProvinces']);
+Route::get('districts_list/{province_id}', [DistrictController::class, 'getDistrictsByProvinceId'])
+    ->where('province_id', '\d+');
+Route::get('sub_districts_list/{district_id}', [SubDistrictController::class, 'getSubDistrictsByDistrictId'])
+    ->where('district_id', '\d+');

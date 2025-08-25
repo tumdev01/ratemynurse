@@ -1,7 +1,7 @@
 <?php
 namespace App\Enums;
 
-final class HomeServiceType extends Enum
+final class HomeServiceType
 {
     const DAYCARE = 'การดูแลประจำวัน (Day Care)';
     const RESIDENTIAL_CARE = 'การดูแลแบบพักอาศัย';
