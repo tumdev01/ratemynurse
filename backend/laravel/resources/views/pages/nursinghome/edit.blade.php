@@ -321,7 +321,7 @@
                             ประเภทบริการ
                         </div>
                         @php
-                            $selectedKeys = array_column($nursinghome->profile->home_service_type, 'key');
+                            $selectedKeys = array_column($nursinghome->profile->home_service_type ?? [], 'key');
                         @endphp
                         <div class="grid grid-cols-2 gap-[32px]">
                             
