@@ -22,4 +22,13 @@ class ProvinceRepository extends BaseRepository
                 ->get();
         });
     }
+
+    public function getProvinceById(int $id) {
+        return $this->Cache::forever('province', function () use ($id) {
+            return Province::query()
+            ->select('name')
+            ->where('id', $id)
+            ->get();
+        });
+    }
 }

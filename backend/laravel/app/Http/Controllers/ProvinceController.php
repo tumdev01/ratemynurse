@@ -19,4 +19,8 @@ class ProvinceController extends Controller
         $provinces = $this->province_repository->getProvinceDropdown($request->all());
         return ProvinceResource::collection($provinces);
     }
+
+    public function getProvinceById(int $id) {
+        return $this->province_repository->getProvinceById((int) $id);
+    }
 }

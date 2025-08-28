@@ -5,21 +5,23 @@
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
 
 
-        <form id="registerNurse" method="post" action="{{ route('nursing-home.store') }}" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto">
+        <form id="registerNurse" method="post" action="{{ route('nursing-home.store') }}" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="coords" value="">
+            <input type="hidden" id="provinceTxt" value="">
+            <input type="hidden" id="districtTxt" value="">
+            <input type="hidden" id="subDistrictTxt" value="">
+            @if(session('error'))
+                <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
+                    <span>
+                        {{ session('error') }}
+                    </span>
+                 </div>
+            @endif
             <div class="flex flex-col justify-start bg-[#F0F9F4] p-[16px] rounded-md">
                 <span class="htitle text-[16px] md:text-lg text-[#286F51]">สร้างสมาชิกผู้ให้บริการ บ้านพักดูแลผู้สูงอายุ</span>
                 <span class="text-[#8C8A94]">กรุณากรอกข้อมูลให้ครบถ้วน เพื่อสร้างบัญชี</span>
             </div>
-            <!-- <div class="flex flex-column items-center">
-                <div id="avatar" class="mb-[24px]">
-                    <img src="https://i0.wp.com/ratemynurse.org/wp-content/uploads/2025/08/UserAvatar.webp?fit=102%2C102&amp;ssl=1" class="ct-image" srcset="" sizes="(max-width: 102px) 100vw, 102px">
-                </div>
-                <span class="avar_h text-green-30 text-lg font-semibold mb-[12px]">รูปโปรไฟล์ของคุณ</span>
-                <span>ไฟล์ .jpg, .png, .gif ขนาดไม่เกิน 5MB</span>
-                <input type="file" id="hiddenProfileUpload" name="user_profile" style="display:none" />
-            </div> -->
             @if ($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
                     <ul>
@@ -124,7 +126,7 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="weight">จังหวัด <span class="req">*</span></label>
-                            <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()">
+                            <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()" required>
                                 @if(!empty(old('province_id')))
                                     <option value="{{ old('province_id') }}" selected></option>
                                 @endif
@@ -132,7 +134,7 @@
                         </div>
                         <div class="flex flex-col">
                             <label for="height">อำเภอ/เขต <span class="req">*</span></label>
-                            <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()">
+                            <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()" required>
                                 @if(!empty(old('district_id')))
                                     <option value="{{ old('district_id') }}" selected></option>
                                 @endif
@@ -143,7 +145,7 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
-                            <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()">
+                            <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()" required>
                                 @if(!empty(old('sub_district_id')))
                                     <option value="{{ old('sub_district_id') }}" selected></option>
                                 @endif
@@ -862,10 +864,11 @@
                         <label class="mb-2" for="address">Cover Image / Gallery</label>
                         <div class="border border-dashed rounded-lg h-[130px] flex justify-center items-center">
                             <div id="certificate_upload" class="flex flex-row gap-[16px] justify-center">
-                                <img src="https://ratemynurse.org/wp-content/uploads/2025/08/upload2.png" loading="lazy" width="70" height="67">
+                                <img id="avatar" src="https://ratemynurse.org/wp-content/uploads/2025/08/upload2.png" loading="lazy" width="70" height="67">
                                 <div class="flex flex-col">
                                     <label class="text-sm font-semibold">คลิกเพื่ออัปโหลดไฟล์</label>
                                     <span class="text-xs">รองรับ .JPG, .PNG, .PDF | ขนาดไม่เกิน 5 MB</span>
+                                    <input type="file" id="hiddenProfileUpload" name="profiles[]" multiple style="display:none">
                                 </div>
                             </div>
                         </div>
@@ -910,6 +913,8 @@
                         </div>
                         @endif
                     </div>
+
+                    <div id="profiles_preview" class="flex flex-col"></div>
                     
                     <span class="w-full min-h-[1px] divider clear-both"></span>
 
@@ -1147,14 +1152,26 @@
                             params: params.data // ส่ง query ไปกับ request เช่น search, pagination
                         })
                         .then(function (response) {
-                            success({
-                                results: response.data.data.map(function (item) {
-                                    return {
-                                        text: item.name,
-                                        id: item.id
-                                    };
-                                })
+                            const results = response.data.data.map(function (item) {
+                                return {
+                                    text: item.name,
+                                    id: item.id
+                                };
                             });
+
+                            // ถ้าอยากเซ็ตค่า textbox ตอนเลือก dropdown ให้ทำใน event ของ select2
+                            $(id).on('select2:select', function (e) {
+                                const data = e.params.data;
+                                if(id === '#province') {
+                                    $('#provinceTxt').val(data.text);
+                                } else if (id === '#district') {
+                                    $('#districtTxt').val(data.text);
+                                } else if(id === '#sub_district') {
+                                    $('#subDistrictTxt').val(data.text);
+                                }
+                            });
+
+                            success({ results: results });
                         })
                         .catch(function (error) {
                             failure(error);
@@ -1165,6 +1182,7 @@
                 }
             });
         }
+
 
     </script>
 
@@ -1215,9 +1233,17 @@
                 onReady (_, d) {
                     month = null
                 },
-            })
+            });
+
+            let provinceTxt = $('#provinceTxt').val() ?? '';
+            $('#province:selected').html(provinceTxt);
+
+            let districtTxt = $('#districtTxt').val() ?? '';
+            $('#district:selected').html(districtTxt);
+
+            let subDistrictTxt = $('#subDistrictTxt').val() ?? '';
+            $('#sub_district:selected').html(subDistrictTxt);
         })
-    
     </script>    
 
     <script>
@@ -1238,5 +1264,34 @@
 
         // render ตอน input change
         document.getElementById('map_embed').addEventListener('input', renderMap);
+    </script>
+
+    <script>
+        document.getElementById('avatar').addEventListener('click', () => {
+            document.getElementById('hiddenProfileUpload').click();
+        });
+
+        // จับ event เมื่อเลือกไฟล์
+        document.getElementById('hiddenProfileUpload').addEventListener('change', (event) => {
+            const files = event.target.files;
+            let preview = document.getElementById('profiles_preview');
+            if (files.length > 0) {
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith("image/")) {
+                        let reader = new FileReader();
+                        reader.onload = (e) => {
+                            let img = document.createElement("img");
+                            img.src = e.target.result;
+                            img.style.width = "100px";
+                            img.style.height = "100px";
+                            img.style.objectFit = "cover";
+                            img.style.borderRadius = "8px";
+                            preview.appendChild(img); // เพิ่มเข้าไปเรื่อยๆ
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
     </script>
 @endsection
