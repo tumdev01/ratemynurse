@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="p-4 sm:ml-64">
+    @include('pages.nursinghome.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
 
         <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto">

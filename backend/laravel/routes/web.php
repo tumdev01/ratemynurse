@@ -21,9 +21,16 @@ Auth::routes(['register'=> false]);
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/nursing-home', [NursingHomeController::class, 'index'])->name('nursinghome.index');
     Route::get('/nursing-homes/', [NursingHomeController::class, 'getNursingHomePagination'])->name('nursing-homes.data');
-    Route::get('/nursing-home/{id}/edit', [NursingHomeController::class, 'edit'])->where('id', '[0-9]+')->name('nursing-home.edit');
-    Route::get('/nursing-home/create', [NursingHomeController::class, 'create'])->name('nursing-home.create');
-    Route::post('/nursing-home/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
+
+    Route::prefix('nursing-home')->group(function() {
+        Route::get('/', [NursingHomeController::class, 'index'])->name('nursinghome.index');
+        Route::get('/{id}/staffs', [NursingHomeController::class, 'editStaff'])->where('id', '[0-9]+')->name('nursing-home.edit-staff');
+        Route::get('/{id}/edit', [NursingHomeController::class, 'edit'])->where('id', '[0-9]+')->name('nursing-home.edit');
+        Route::get('/create', [NursingHomeController::class, 'create'])->name('nursing-home.create');
+        Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
+    });
+
+    
+    
 });

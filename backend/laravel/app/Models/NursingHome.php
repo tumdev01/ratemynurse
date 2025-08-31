@@ -33,4 +33,9 @@ class NursingHome extends User
     {
         return $this->hasOne(Image::class, 'user_id', 'id')->where('is_cover', true);
     }
+
+    public function staffs()
+    {
+        return $this->hasMany(NursingHomeStaff::class, 'user_id', 'id');
+    }
 }

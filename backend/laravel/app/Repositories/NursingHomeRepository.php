@@ -146,4 +146,5 @@ class NursingHomeRepository
             ->make(true);
     }
 
+    
 }

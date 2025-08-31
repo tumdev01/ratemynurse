@@ -250,6 +250,11 @@ class NursingHomeController extends Controller {
        
     }
 
+    public function editStaff(Int $id) {
+        $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
+        return view('pages.nursinghome.staff', compact('nursinghome'));
+    }
+
     public function edit(Int $id) {
         $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
         if($nursinghome->profile->home_service_type) {
