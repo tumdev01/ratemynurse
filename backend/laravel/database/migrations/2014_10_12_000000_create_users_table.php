@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('user_type');
             $table->boolean('status');
-            $table->string('phone');
+            $table->string('phone')->unique();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

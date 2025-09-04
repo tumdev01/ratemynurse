@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NursingHomeController;
 use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\EmployeeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -31,6 +32,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
     });
 
-    
+    Route::prefix('employee')->group(function() {
+        Route::get('create', [EmployeeController::class, 'create'])->name('employee.create');
+        Route::post('create', [EmployeeController::class, 'store'])->name('employee.store');
+    });
     
 });

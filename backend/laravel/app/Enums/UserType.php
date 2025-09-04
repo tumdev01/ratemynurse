@@ -11,4 +11,5 @@ enum UserType: string
     case GUEST = 'GUEST';
     case MEMBER = 'MEMBER';
     case API = 'API';
+    case EMPLOYEE = 'EMPLOYEE';
 }

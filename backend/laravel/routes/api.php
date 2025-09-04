@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubDistrictController;
+use App\Http\Controllers\API\OtpController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,9 +18,9 @@ use App\Http\Controllers\SubDistrictController;
 |
 */
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     // Nursing
     Route::post('/nursings', [NursingController::class, 'getNursing']);
     Route::post('/nursings/all', [NursingController::class, 'getNursingPagination']);
@@ -43,3 +44,7 @@ Route::get('sub_districts_list/{district_id}', [SubDistrictController::class, 'g
     ->where('district_id', '\d+');
 
 Route::get('/province/{id}', [ProvinceController::class, 'getProvinceById']);
+
+Route::post('/otp/request', [OtpController::class, 'requestOtp']);
+Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
+Route::middleware('auth:sanctum')->get('/me', [OtpController::class, 'me']);
