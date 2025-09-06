@@ -28,8 +28,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [NursingHomeController::class, 'index'])->name('nursinghome.index');
         Route::get('/{id}/staffs', [NursingHomeController::class, 'editStaff'])->where('id', '[0-9]+')->name('nursing-home.edit-staff');
         Route::get('/{id}/edit', [NursingHomeController::class, 'edit'])->where('id', '[0-9]+')->name('nursing-home.edit');
+        Route::post('/{id}/edit', [NursingHomeController::class, 'update'])->where('id', '[0-9]+')->name('nursing-home.update');
         Route::get('/create', [NursingHomeController::class, 'create'])->name('nursing-home.create');
         Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
+        Route::post('/image/{id}/cover', [NursingHomeController::class, 'updateCover'])->name('nursinghome.image.cover');
+
     });
 
     Route::prefix('employee')->group(function() {

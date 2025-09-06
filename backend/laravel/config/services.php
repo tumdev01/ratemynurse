@@ -36,5 +36,8 @@ return [
         'api_secret' => env('SMS_SECRET'),
         'sender' => env('SMS_SENDER'),
     ],
+    'internal' => [
+        'token' => env('INTERNAL_API_TOKEN'),
+    ],
 
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Repositories\NursingHomeRepository;
 use App\Http\Requests\NursingHomeCreateRequest;
+use App\Http\Requests\NursingHomeUpdateRequest;
 use App\Models\NursingHome;
 use App\Models\NursingHomeProfile;
 use App\Models\Image;
@@ -266,8 +267,39 @@ class NursingHomeController extends Controller {
         return view('pages.nursinghome.edit', compact('nursinghome'));
     }
 
+    public function update(NursingHomeUpdateRequest $request, int $id)
+    {
+        $result = $this->nursing_home_repository->updateNursingHomeData($request, $id);
+
+        if ($result['status'] === 'success') {
+            return redirect()
+                ->back() // กลับไปหน้าเดิม
+                ->with('success', $result['message']); // แสดง flash message
+        }
+
+        return redirect()
+            ->back()
+            ->withErrors($result['errors'] ?? ['เกิดข้อผิดพลาดไม่ทราบสาเหตุ']);
+    }
+
+
     public function getNursingHomePagination(Request $request, NursingHomeRepository $repo) {
         $filters = $request->only(['certified','province','orderby','order']);
         return $this->nursing_home_repository->getNursingHomeDataTable($filters);
     }
+
+    public function updateCover(Request $request, $id)
+    {
+        $image = Image::findOrFail($id);
+        Image::where('type', 'NURSING_HOME')
+            ->where('user_id', $image->user_id)
+            ->update(['is_cover' => 0]);
+
+        $image->is_cover = $request->is_cover;
+        $image->save();
+
+        return response()->json(['success' => true]);
+    }
+
+
 }

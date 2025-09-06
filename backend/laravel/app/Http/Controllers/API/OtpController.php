@@ -28,7 +28,7 @@ class OtpController extends Controller
             $user = User::where('phone', $request->phone)->firstOrFail();
 
             // สร้าง OTP 6 หลัก หมดอายุ 30 วินาที
-            $otp = $this->otp->generate($user->id, $request->phone, 6, 30);
+            $otp = $this->otp->generate($user->id, $request->phone, 5, 30);
 
             // ส่ง OTP
             $smsService = new SmsService();
@@ -54,7 +54,7 @@ class OtpController extends Controller
     }
 
     // Step 2: Verify OTP
-    public function verifyOtp(VerifyOtpRequest $request)
+    public function verifyOtp(\App\Http\Requests\API\VerifyOtpRequest $request)
     {
         $userOrStatus = $this->otp->verify($request->phone, $request->otp);
 

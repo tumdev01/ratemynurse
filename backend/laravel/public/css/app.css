@@ -596,12 +596,6 @@ video {
 .mb-6 {
   margin-bottom: 1.5rem;
 }
-.mb-\[12px\] {
-  margin-bottom: 12px;
-}
-.mb-\[24px\] {
-  margin-bottom: 24px;
-}
 .ml-2 {
   margin-left: 0.5rem;
 }
@@ -1091,10 +1085,6 @@ video {
 }
 .text-base {
   font-size: 1rem;
-  line-height: 1.75rem;
-}
-.text-lg {
-  font-size: 1.125rem;
   line-height: 1.75rem;
 }
 .text-sm {

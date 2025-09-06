@@ -6,9 +6,14 @@ use Illuminate\Support\Str;
 
 class OtpService
 {
-    public function generate($id, $identifier, $length = 6, $ttl = 60)
+    public function generate($id, $identifier, $length = 5, $ttl = 60)
     {
-        $otp = str_pad(random_int(0, pow(10, $length)-1), $length, '0', STR_PAD_LEFT);
+        $otp = str_pad(
+            random_int(0, (int) pow(10, $length) - 1), 
+            $length, 
+            '0', 
+            STR_PAD_LEFT
+        );
 
         DB::table('otps')->insert([
             'user_identifier' => $identifier,

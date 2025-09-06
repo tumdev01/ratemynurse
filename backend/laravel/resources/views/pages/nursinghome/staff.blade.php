@@ -9,7 +9,7 @@
     </div>
 
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto">
+        <form id="nursingHomeStaff" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="" enctype="multipart/form-data">
             @csrf
             <div class="flex flex-col justify-start bg-[#F0F9F4] p-[16px] rounded-md">
                 <span class="htitle text-[16px] md:text-lg text-[#286F51]">สร้างทีมงาน บ้านพักดูแลผู้สูงอายุ</span>
@@ -18,15 +18,15 @@
 
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
-                    <label for="main_phone">ชื่อ <span class="req">*</span></label>
-                    <input required type="text" name="main_phone" id="main_phone" maxlength="10" placeholder="เบอร์โทรศัพท์หลัก"
-                        class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->main_phone }}"/>
+                    <label for="name">ชื่อ-สกุล <span class="req">*</span></label>
+                    <input required type="text" name="name" id="name" maxlength="10" placeholder="ชื่อ-สกุล ทีมงาน"
+                        class="border rounded-lg px-3 py-2"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
-                    <label for="res_phone">ตำแหน่งรับผิดชอบ</label>
-                    <input required type="text" name="res_phone" id="res_phone" maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง"
-                        class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->res_phone }}"/>
+                    <label for="responsibility">ตำแหน่งรับผิดชอบ</label>
+                    <input required type="text" name="responsibility" id="responsibility" maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง"
+                        class="border rounded-lg px-3 py-2"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -39,6 +39,7 @@
                         <div class="flex flex-col">
                             <label class="text-sm font-semibold">คลิกเพื่ออัปโหลดไฟล์</label>
                             <span class="text-xs">รองรับ .JPG, .PNG | ขนาดไม่เกิน 5 MB</span>
+                            <input type="file" id="hiddenProfileUpload" name="image" style="display:none">
                         </div>
                     </div>
                 </div>
@@ -77,5 +78,33 @@
 
 @endsection
 @section('javascript')
-  
+<script>
+    const nursinghomeId = {{ $nursinghome->id }};
+    document.getElementById('avatar').addEventListener('click', () => {
+        document.getElementById('hiddenProfileUpload').click();
+    });
+
+    // จับ event เมื่อเลือกไฟล์
+    document.getElementById('hiddenProfileUpload').addEventListener('change', (event) => {
+        const files = event.target.files;
+        let preview = document.getElementById('profiles_preview');
+        if (files.length > 0) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith("image/")) {
+                    let reader = new FileReader();
+                    reader.onload = (e) => {
+                        let img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.style.width = "100px";
+                        img.style.height = "100px";
+                        img.style.objectFit = "cover";
+                        img.style.borderRadius = "8px";
+                        preview.appendChild(img); // เพิ่มเข้าไปเรื่อยๆ
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script> 
 @endsection

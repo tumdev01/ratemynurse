@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     Route::get('nursing-locations', [NursingController::class, 'getLocations']);
 
     Route::get('/provinces', [ProvinceController::class, 'getProvinces']);
+
 });
 
 
@@ -47,4 +48,12 @@ Route::get('/province/{id}', [ProvinceController::class, 'getProvinceById']);
 
 Route::post('/otp/request', [OtpController::class, 'requestOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
-Route::middleware('auth:sanctum')->get('/me', [OtpController::class, 'me']);
+Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
+    return $request->user();
+});
+
+Route::middleware(['verify.internal.token'])->group(function () {
+    Route::prefix('nursing-home')->group(function() {
+        Route::post('/create', [NursingHomeController::class, 'store']);
+    });
+});
