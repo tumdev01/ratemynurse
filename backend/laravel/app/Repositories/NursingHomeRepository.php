@@ -6,12 +6,14 @@ use App\Models\NursingHome;
 use App\Models\NursingHomeProfile;
 use App\Models\Province;
 use App\Models\Image;
+use App\Models\NursingHomeStaff;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Yajra\DataTables\DataTables;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Http\Requests\NursingHomeUpdateRequest;
+use App\Http\Requests\NursingHomeCreateStaffRequest;
 
 class NursingHomeRepository
 {
@@ -359,5 +361,68 @@ class NursingHomeRepository
         }
     }
 
+    public function createStaff(NursingHomeCreateStaffRequest $request, Int $id)
+    {
+        try {
+            $data = $request->validated();
+            $user = User::findOrFail($id);
+            DB::transaction(function () use ($request, $user) {
+                if ($user && $user->id) {
+                    $staff = NursingHomeStaff::create(
+                        [
+                            'user_id' => $user->id,
+                            'name' => $request->name,
+                            'responsibility' => $request->responsibility,
+                        ]
+                    );
 
+                    if ($request->hasFile('image')) {
+                        $image = $request->image;
+
+                        if ($image->isValid()) {
+                            $filename = time() . '_' . $image->getClientOriginalName();
+
+                            $sourcePath = $image->getRealPath();
+                            $extension = $image->getClientOriginalExtension();
+                            $hashedName = md5(uniqid($user->id, true)) . '.' . $extension;
+                            $destPath = 'images/' . $hashedName;
+                            $destFullPath = public_path($destPath);
+
+                            File::ensureDirectoryExists(dirname($destFullPath));
+                            File::copy($sourcePath, $destFullPath);
+
+                            $staff->image = $destPath;
+                            $staff->save();
+                        }
+                    }
+                }
+            });
+
+            return [
+                'status'      => 'success',
+                'status_code' => 200,
+                'message'     => 'Staff uploaded successfully'
+            ];
+
+        } catch (ModelNotFoundException $e) {
+            return [
+                'status'      => 'error',
+                'status_code' => 404,
+                'errors'      => [
+                    'message' => 'User not found',
+                ],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status'      => 'error',
+                'status_code' => 500,
+                'errors'      => [
+                    'message' => $e->getMessage(),
+                    'code'    => $e->getCode(),
+                    'file'    => $e->getFile(),
+                    'line'    => $e->getLine(),
+                ],
+            ];
+        }
+    }
 }

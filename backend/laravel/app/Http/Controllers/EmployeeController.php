@@ -5,6 +5,10 @@ use App\Http\Requests\EmployeeCreateRequest;
 use Illuminate\Database\QueryException;
 
 class EmployeeController extends Controller {
+
+    public function index() {
+        return view('pages.employee.index');
+    }
     
     public function create() {
         return view('pages.employee.create');

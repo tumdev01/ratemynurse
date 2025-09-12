@@ -35,6 +35,28 @@ class UserSeeder extends Seeder
             'remember_token' => \Illuminate\Support\Str::random(10),
         ]);
 
+        User::factory()->create([
+            'firstname' => 'Editor1',
+            'lastname' => 'Manager',
+            'email' => 'editor1@mail.com',
+            'password' => Hash::make('securepassword'),
+            'user_type' => 'ADMIN',
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'firstname' => 'Editor2',
+            'lastname' => 'Manager',
+            'email' => 'editor2@mail.com',
+            'password' => Hash::make('securepassword'),
+            'user_type' => 'ADMIN',
+            'status' => '1',
+            'email_verified_at' => now(),
+            'remember_token' => \Illuminate\Support\Str::random(10),
+        ]);
+
         // สร้าง user แบบสุ่ม 10 คน user_type = NURSING, รหัสผ่าน = '1'
         User::factory()->create([
             'id' => '3',

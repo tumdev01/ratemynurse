@@ -32,18 +32,20 @@
                         <img class="w-10 h-10 rounded-full object-cover" src="{{ asset('images/main-logo.png') }}" alt="user photo">
                     </div>
                     <div class="px-4 py-3 text-gray-900 dark:text-white">
-                        <div>Admin</div>
+                        <div>{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</div>
                     </div>
                 </button>
 
                 <!-- Dropdown menu -->
                 <div id="dropdownAvatar" class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
                     <div class="px-4 py-3 text-gray-900 dark:text-white">
-                        <div>Bonnie Green</div>
-                        <div class="font-medium truncate">name@flowbite.com</div>
+                        <div class="font-medium truncate">{{ Auth::user()->email }}</div>
                     </div>
                     <div class="py-2">
-                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign out</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="px-4 py-3 text-gray-900 dark:text-white">Logout</button>
+                        </form>
                     </div>
                 </div>
 
@@ -56,5 +58,12 @@
         </main>
     </div>
     @yield('javascript')
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+    function logout() {
+        axios.post("api/logout", {}, {
+        });
+    };
+    </script>
 </body>
 </html>

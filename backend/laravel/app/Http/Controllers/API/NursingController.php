@@ -28,21 +28,6 @@ class NursingController extends Controller {
         return response()->json($nursings);
     }
 
-    // public function getNursingPagination(Request $request)
-    // {
-    //     $limit = $request->input('limit');
-    //     $certified = $request->input('certified');
-    //     $order = $request->input('order');
-    //     $orderby = $request->input('orderby');
-
-    //     $nursings = $this->nursing_repository->getNursingPagination([
-    //         'limit' => $limit,
-    //         'certified' => $certified,
-    //         'orderby' => $orderby,
-    //         'order' => $order
-    //     ]);
-    //     return response()->json($nursings);
-    // }
     public function getNursingPagination(Request $request)
     {
         $limit = $request->input('limit', 10);
@@ -86,6 +71,12 @@ class NursingController extends Controller {
 
     public function getNursingByLocation(Request $request) {
         dd($request->all());
+    }
+
+    public function getNursingById(Int $id)
+    {
+        $result = $this->nursing_repository->getNursingById((int) $id);
+        return response()->json($result);
     }
 
 }

@@ -16,10 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
+            $table->integer('author_id')->default(0);
             $table->integer('scores')->default(1);
+            $table->string('scores_for');
             $table->string('name');
             $table->string('description');
-            $table->string('text');   
+            $table->string('text');
             $table->string('user_type');
             $table->timestamps();
             $table->softDeletes();

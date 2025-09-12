@@ -31,8 +31,6 @@
                     </ul>
                 </div>
             @endif
-
-
             <div id="frm">
                 <!-- Personal Info -->
                 <div id="frm_personal" class="flex flex-col gap-[32px]">

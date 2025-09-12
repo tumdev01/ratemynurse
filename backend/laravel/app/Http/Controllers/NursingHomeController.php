@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 use App\Repositories\NursingHomeRepository;
 use App\Http\Requests\NursingHomeCreateRequest;
 use App\Http\Requests\NursingHomeUpdateRequest;
+use App\Http\Requests\NursingHomeCreateStaffRequest;
 use App\Models\NursingHome;
 use App\Models\NursingHomeProfile;
+use App\Models\NursingHomeStaff;
 use App\Models\Image;
 use App\Enums\UserType;
 use App\Enums\HomeServiceType;
@@ -256,6 +258,19 @@ class NursingHomeController extends Controller {
         return view('pages.nursinghome.staff', compact('nursinghome'));
     }
 
+    public function createStaff(NursingHomeCreateStaffRequest $request,Int $id)
+    {
+        $response = $this->nursing_home_repository->createStaff($request, $id);
+        if ($response['status'] === 'success') {
+            return redirect()
+                ->back() // กลับไปหน้าเดิม
+                ->with('success', $response['message']); // แสดง flash message
+        }
+        return redirect()
+            ->back()
+            ->withErrors($response['errors'] ?? ['เกิดข้อผิดพลาดไม่ทราบสาเหตุ']);
+    }
+
     public function edit(Int $id) {
         $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
         if($nursinghome->profile->home_service_type) {
@@ -301,5 +316,17 @@ class NursingHomeController extends Controller {
         return response()->json(['success' => true]);
     }
 
+    public function deleteStaff($id)
+    {
+        $staff = NursingHomeStaff::findOrFail($id);
+        $staff->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function review($id) 
+    {
+        $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
+        return view('pages.nursinghome.rate', compact('nursinghome'));
+    }
 
 }

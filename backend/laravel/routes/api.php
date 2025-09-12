@@ -23,6 +23,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     // Nursing
     Route::post('/nursings', [NursingController::class, 'getNursing']);
+    Route::get('/nursing/{id}', [NursingController::class, 'getNursingById']); // get Nursing Info/Detail by Nurse ID
     Route::post('/nursings/all', [NursingController::class, 'getNursingPagination']);
     Route::get('/nursing-filter-elements', [NursingController::class, 'getFilterElements']);
     // NursingHome

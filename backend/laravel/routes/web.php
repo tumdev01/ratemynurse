@@ -27,17 +27,30 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('nursing-home')->group(function() {
         Route::get('/', [NursingHomeController::class, 'index'])->name('nursinghome.index');
         Route::get('/{id}/staffs', [NursingHomeController::class, 'editStaff'])->where('id', '[0-9]+')->name('nursing-home.edit-staff');
+        Route::post('/{id}/staff/create', [NursingHomeController::class, 'createStaff'])->where('id', '[0-9]+')->name('nursing-home.crete-staff');
+        Route::delete('/staff/{id}/delete', [NursingHomeController::class, 'deleteStaff'])->where('id', '[0-9]+')->name('nursing-home.delete-staff');
+
         Route::get('/{id}/edit', [NursingHomeController::class, 'edit'])->where('id', '[0-9]+')->name('nursing-home.edit');
         Route::post('/{id}/edit', [NursingHomeController::class, 'update'])->where('id', '[0-9]+')->name('nursing-home.update');
         Route::get('/create', [NursingHomeController::class, 'create'])->name('nursing-home.create');
         Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
         Route::post('/image/{id}/cover', [NursingHomeController::class, 'updateCover'])->name('nursinghome.image.cover');
 
+        Route::get('/{id}/rate', [NursingHomeController::class, 'review'])->where('id', '[0-9]+')->name('nursing-home.edit-rate');
     });
 
-    Route::prefix('employee')->group(function() {
+    Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {
+        Route::get('/', [EmployeeController::class, 'index'])->name('employee.index');
         Route::get('create', [EmployeeController::class, 'create'])->name('employee.create');
         Route::post('create', [EmployeeController::class, 'store'])->name('employee.store');
     });
     
 });
+
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/'); // Redirect to your desired page after logout
+})->name('logout');
