@@ -28,21 +28,34 @@ class RateCreateRequest extends FormRequest
             'author_id' => [
                 'required',
                 function ($attribute, $value, $fail) {
-                    if ((int) $value === 0) {
-                        return true; // allow admin case
+                    $userId = $this->input('user_id');
+                    $authorId = (int) $value;
+
+                    if ($authorId === 0) {
+                        return true; // allow admin
                     }
 
-                    $exists = \App\Models\User::where('id', $value)
+                    // ตรวจสอบซ้ำ
+                    $exists = \App\Models\Rate::where('user_id', $userId)
+                        ->where('author_id', $authorId)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('คุณได้ให้คะแนนผู้ใช้คนนี้แล้ว');
+                    }
+
+                    // ตรวจสอบว่า author เป็น MEMBER
+                    $isMember = \App\Models\User::where('id', $authorId)
                         ->where('user_type', UserType::MEMBER->value)
                         ->exists();
 
-                    if (! $exists) {
+                    if (!$isMember) {
                         $fail('author_id ต้องเป็นสมาชิกประเภท MEMBER หรือ 0 (admin)');
                     }
                 },
             ],
-            'scores' => ['required', 'integer', 'min:1', 'max:5'],
-            'scores_for' => ['required'],
+            'scores' => ['required', 'array'],
+            'scores.*' => ['required', 'integer', 'min:1', 'max:5'],
             'text' => ['required'],
             'name' => ['required'],
             'description' => ['required'],

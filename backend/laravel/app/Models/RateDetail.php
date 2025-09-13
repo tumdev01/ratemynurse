@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RateDetail extends Model
 {
@@ -14,6 +15,6 @@ class RateDetail extends Model
 
     public function rate(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Rate::class);
     }
 }

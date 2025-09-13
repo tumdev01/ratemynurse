@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('rate_details', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('rate_id');
             $table->foreign('rate_id')->references('id')->on('rates')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->integer('scores')->default(1);
