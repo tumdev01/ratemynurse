@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NursingHomeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\MemberController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('employee.index');
         Route::get('create', [EmployeeController::class, 'create'])->name('employee.create');
         Route::post('create', [EmployeeController::class, 'store'])->name('employee.store');
+    });
+
+    Route::prefix('member')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {
+        Route::get('create', [MemberController::class, 'create'])->name('member.create');
     });
     
 });

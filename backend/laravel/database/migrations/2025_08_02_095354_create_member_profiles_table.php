@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
 
+            $table->string('name');
             $table->string('about');
             $table->string('email');
             $table->string('phone');
@@ -40,7 +41,7 @@ return new class extends Migration
             $table->string('contact_person_phone');
             $table->string('contact_person_relation');
 
-            $table->json('revices_requuired');
+            $table->json('services_required');
 
             $table->boolean('privacy')->default(0);
             $table->boolean('policy')->default(0);
