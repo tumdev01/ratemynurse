@@ -23,8 +23,8 @@ class Rate extends Model
      */
     protected $fillable = [
         'user_id',
-        'scores',
         'text',
+        'author_id',
         'name',
         'description',
         'user_type'
@@ -37,8 +37,10 @@ class Rate extends Model
      */
     protected $casts = [
         'user_id' => 'integer',
+        'author_id' => 'integer',
+        'name' => 'string',
+        'description' => 'string',
         'user_type' => 'string',
-        'scores' => 'integer',
         'text' => 'string',
     ];
 
@@ -50,5 +52,10 @@ class Rate extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function rate_details(): HasMany
+    {
+        return $this->hasMany(RateDetail::class, 'rate_id', 'id');
     }
 }

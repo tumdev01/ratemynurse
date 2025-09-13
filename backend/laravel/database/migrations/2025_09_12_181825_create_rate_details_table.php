@@ -11,18 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rates', function (Blueprint $table) {
+        Schema::create('rate_details', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')->references('id')->on('users')
+            $table->foreign('rate_id')->references('id')->on('rates')
                 ->onDelete('cascade')->onUpdate('cascade');
-            $table->integer('author_id')->default(0);
-            $table->string('name');
-            $table->string('description');
-            $table->string('text');
-            $table->string('user_type');
+            $table->integer('scores')->default(1);
+            $table->string('scores_for');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -31,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rates');
+        Schema::dropIfExists('rate_details');
     }
 };

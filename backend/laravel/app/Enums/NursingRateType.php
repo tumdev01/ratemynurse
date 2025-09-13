@@ -1,7 +1,7 @@
 <?php
 namespace App\Enums;
 
-final class RateType extends Enum
+final class NursingRateType extends Enum
 {
     const SERVICE = 'การบริการ';
     const COMMUNICATION = 'การสื่อสาร';

@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
             DistrictSeeder::class,
             SubDistrictSeeder::class,
             UserSeeder::class,
-            RateSeeder::class,
             NursingHomeProfilesSeeder::class,
             NursingProfilesSeeder::class,
             ImageSeeder::class

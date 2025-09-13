@@ -7,6 +7,7 @@ use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubDistrictController;
 use App\Http\Controllers\API\OtpController;
+use App\Http\Controllers\API\RateController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -35,6 +36,8 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     Route::get('nursing-locations', [NursingController::class, 'getLocations']);
 
     Route::get('/provinces', [ProvinceController::class, 'getProvinces']);
+
+    Route::post('/rate', [RateController::class, 'create']);
 
 });
 
