@@ -24,6 +24,8 @@ class RateCreateRequest extends FormRequest
                     ]);
                 }),
             ],
+            'scores' => ['min:1', 'max:5', 'required', 'integer'],
+            'scores_for' => ['required'],
             'author_id' => ['required'],
             'text' => ['required'],
             'name' => ['required'],

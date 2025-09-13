@@ -29,6 +29,8 @@ class RateDetailCreateRequest extends FormRequest
     {
         return [
             '*.required' => 'ไม่สามารถเว้นว่างได้',
+            'scores.min' => 'ค่าต่ำที่สุดต้องเป็น 1',
+            'scores.max' => 'ค่าสูงสุดไม่เกิน 5',
             '*.integer' => 'ต้องเป็นจำนวนเต็ม',
         ];
     }
