@@ -39,6 +39,7 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
 
     Route::post('/rate', [RateController::class, 'create']);
 
+    Route::get('/members', [MemberController::class, 'getMembers']);
 });
 
 
@@ -47,7 +48,6 @@ Route::get('districts_list/{province_id}', [DistrictController::class, 'getDistr
     ->where('province_id', '\d+');
 Route::get('sub_districts_list/{district_id}', [SubDistrictController::class, 'getSubDistrictsByDistrictId'])
     ->where('district_id', '\d+');
-
 Route::get('/province/{id}', [ProvinceController::class, 'getProvinceById']);
 
 Route::post('/otp/request', [OtpController::class, 'requestOtp']);

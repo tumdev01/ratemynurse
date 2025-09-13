@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->integer('author_id')->default(0);
-            $table->unique(['user_id', 'author_id'], 'unique_user_author');
             $table->string('name');
             $table->string('description');
             $table->string('text');

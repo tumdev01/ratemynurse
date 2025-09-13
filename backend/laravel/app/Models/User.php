@@ -35,6 +35,11 @@ class User extends Authenticatable
         return $this->hasOne(NursingHomeProfile::class);
     }
 
+    public function member()
+    {
+        return $this->hasOne(MemberProfile::class, 'user_id', id);
+    }
+
     // เช็ค type
     public function isNursing()
     {
@@ -46,12 +51,18 @@ class User extends Authenticatable
         return $this->user_type === 'NURSING_HOME';
     }
 
+    public function isMember()
+    {
+        return $this->user_type === 'MEMBER';
+    }
+
     // ดึง profile ตาม user_type
     public function realProfile()
     {
         return match ($this->user_type) {
             'NURSING' => $this->nursing(),
             'NURSING_HOME' => $this->nursingHome(),
+            'MEMBER' => $this->member(),
             default => null,
         };
     }

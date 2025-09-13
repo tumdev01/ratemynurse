@@ -66,13 +66,10 @@ class NursingHomeRepository
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description',
                 'images:user_id,path,is_cover',
                 'coverImage:user_id,path,is_cover'
             ])
             ->select(['users.id'])
-            ->withAvg('rates as average_score', 'scores')
-            ->withCount('rates as review_count')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('user_type', 'NURSING_HOME');
@@ -98,26 +95,41 @@ class NursingHomeRepository
 
     public function getInfo(int $id) 
     {
-        $query = NursingHome::query()
+        $nursingHome = NursingHome::query()
             ->with([
                 'profile',
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description',
+                'rates',
+                'rates.rate_details:rate_id,scores,scores_for',
                 'images:id,user_id,path,is_cover',
                 'coverImage:id,user_id,path,is_cover'
             ])
-            ->withAvg('rates as average_score', 'scores')
-            ->withCount('rates as review_count')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('id', $id)
             ->where('user_type', 'NURSING_HOME')
             ->first();
 
-        return $query;
+        if (!$nursingHome) {
+            return null;
+        }
+
+        // รวม rate_details ทั้งหมดสำหรับ global average
+        $allDetails = $nursingHome->rates->flatMap->rate_details;
+        $nursingHome->global_avg = $allDetails->avg('scores');
+
+        // เพิ่ม avg_scores ให้แต่ละ rate
+        $nursingHome->rates->transform(function ($rate) {
+            $rateDetails = $rate->rate_details;
+            $rate->avg_scores = $rateDetails->avg('scores');
+            return $rate;
+        });
+
+        return $nursingHome;
     }
+
 
     public function getNursingHomeDataTable(array $filters = [])
     {
@@ -130,13 +142,10 @@ class NursingHomeRepository
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description',
                 'images:user_id,path,is_cover',
                 'coverImage:user_id,path,is_cover'
             ])
             ->select(['users.id'])
-            ->withAvg('rates as average_score', 'scores')
-            ->withCount('rates as review_count')
             ->whereNull('users.deleted_at')
             ->where('users.status', '!=', 0)
             ->where('users.user_type', 'NURSING_HOME');

@@ -13,6 +13,7 @@ use App\Enums\UserType;
 use App\Enums\HomeServiceType;
 use App\Enums\AdditionalServiceType;
 use App\Enums\SpecialFacilityType;
+use App\Enums\NursingHomeRateType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -325,8 +326,9 @@ class NursingHomeController extends Controller {
 
     public function review($id) 
     {
+        $choices = NursingHomeRateType::list();
         $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
-        return view('pages.nursinghome.rate', compact('nursinghome'));
+        return view('pages.nursinghome.rate', compact('nursinghome', 'choices'));
     }
 
 }
