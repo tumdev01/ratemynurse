@@ -17,6 +17,7 @@ use App\Http\Requests\NursingHomeCreateStaffRequest;
 use App\Enums\SpecialFacilityType;
 use App\Enums\HomeServiceType;
 use App\Enums\AdditionalServiceType;
+use App\Enums\FacilityType;
 
 class NursingHomeRepository
 {
@@ -146,7 +147,6 @@ class NursingHomeRepository
         return $nursingHome;
     }
 
-
     public function getNursingHomeDataTable(array $filters = [])
     {
         $orderby = Arr::get($filters, 'orderby', 'id') ?: 'id';
@@ -186,7 +186,6 @@ class NursingHomeRepository
             ->make(true);
     }
 
-
     public function updateNursingHomeData(NursingHomeUpdateRequest  $request, Int $id)
     {
         try {
@@ -215,7 +214,6 @@ class NursingHomeRepository
                     if ($request->additional_service_type) {
                         $pre_additional_service_type = [];
                         $allServices = AdditionalServiceType::list();
-
                         foreach ($request->additional_service_type as $serviceKey) {
                             if (isset($allServices[$serviceKey])) {
                                 $pre_additional_service_type[] = [
@@ -224,7 +222,6 @@ class NursingHomeRepository
                                 ];
                             }
                         }
-
                         $additional_service_type = json_encode($pre_additional_service_type);
                     }
 
@@ -246,7 +243,7 @@ class NursingHomeRepository
                     $facilities = null;
                     if ($request->facilities) {
                         $pre_facilities = [];
-                        $allServices = SpecialFacilityType::list();
+                        $allServices = FacilityType::list();
                         foreach ($request->facilities as $serviceKey) {
                             if (isset($allServices[$serviceKey])) {
                                 $pre_facilities[] = [

@@ -27,9 +27,8 @@ class NursingHomeUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'description' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
             'main_phone' => [
-                'required',
                 'string',
                 'regex:/^\d{10}$/',
                 Rule::unique('nursing_home_profiles', 'main_phone')

@@ -149,7 +149,7 @@
 
                     <div class="flex flex-col">
                         <label for="map">แผนที่</label>
-                        <input required type="text" name="map" id="map"
+                        <input type="text" name="map" id="map"
                             class="border rounded-lg px-3 py-2 mb-2" value="{{ $nursinghome->profile->map }}"/>
                         <div id="map_show" class="bg-gray-100 border rounded-lg h-96 mb-4">
                             @if($nursinghome->profile->map_embed)
@@ -168,13 +168,13 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="license_no">เลขที่ใบอนุญาตประกอบกิจการ <span class="req">*</span></label>
-                            <input required type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
+                            <input type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('license_no', $nursinghome->profile->license_no ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="license_start_date">วันที่ออกใบอนุญาต <span class="req">*</span></label>
-                            <input required type="date" name="license_start_date" id="license_start_date" placeholder="วว/ดด/ปปปป"
+                            <input type="date" name="license_start_date" id="license_start_date" placeholder="วว/ดด/ปปปป"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('license_start_date', $nursinghome->profile->license_start_date ?? '') }}"/>
                                 
@@ -185,13 +185,13 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="license_exp_date">วันที่หมดอายุ <span class="req">*</span></label>
-                            <input required type="text" name="license_exp_date" id="license_exp_date" placeholder="วว/ดด/ปปปป"
+                            <input type="text" name="license_exp_date" id="license_exp_date" placeholder="วว/ดด/ปปปป"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('license_exp_date', $nursinghome->profile->license_exp_date ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="license_by">หน่วยงานที่ออกใบอนุญาต <span class="req">*</span></label>
-                            <input required type="text" name="license_by" id="license_by" placeholder="เช่น กรมการแพทย์ กระทรวงสาธารณสุข"
+                            <input type="text" name="license_by" id="license_by" placeholder="เช่น กรมการแพทย์ กระทรวงสาธารณสุข"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('license_by', $nursinghome->profile->license_by ?? '') }}"/>
                         </div>
@@ -201,13 +201,13 @@
 
                         <div class="flex flex-col">
                             <label for="certificates">มาตรฐานการรับรอง (ถ้ามี)</label>
-                            <input required type="text" name="certificates" id="certificates" placeholder="เช่น มาตรฐาน HA, JCI (ถ้ามี)"
+                            <input type="text" name="certificates" id="certificates" placeholder="เช่น มาตรฐาน HA, JCI (ถ้ามี)"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('certificates', $nursinghome->profile->certificates ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="hospital_no">หมายเลขประจำสถานพยาบาล (ถ้ามี)</label>
-                            <input required type="text" name="hospital_no" id="hospital_no" placeholder="รหัสสถานพยาบาล (ถ้ามี)"
+                            <input type="text" name="hospital_no" id="hospital_no" placeholder="รหัสสถานพยาบาล (ถ้ามี)"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('hospital_no', $nursinghome->profile->hospital_no ?? '') }}"/>
                         </div>
@@ -228,13 +228,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="manager_name">ชื่อ-นามสกุล <span class="req">*</span></label>
-                                <input required type="text" name="manager_name" id="manager_name" placeholder="ชื่อ-นามสกุล ผู้อำนวยการ"
+                                <input type="text" name="manager_name" id="manager_name" placeholder="ชื่อ-นามสกุล ผู้อำนวยการ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_name', $nursinghome->profile->manager_name ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="graduated">คุณวุฒิการศึกษา <span class="req">*</span></label>
-                                <input required type="text" name="graduated" id="graduated" placeholder="เช่น ปริญญาตรี พยาบาลศาสตร์"
+                                <input type="text" name="graduated" id="graduated" placeholder="เช่น ปริญญาตรี พยาบาลศาสตร์"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('graduated', $nursinghome->profile->graduated ?? '') }}"/>
                             </div>
@@ -263,13 +263,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="manager_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
-                                <input required type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
+                                <input type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_phone', $nursinghome->profile->manager_phone ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="manager_email">อีเมลส่วนตัว <span class="req">*</span></label>
-                                <input required type="text" name="manager_email" id="manager_email" placeholder="example@gmail.com"
+                                <input type="text" name="manager_email" id="manager_email" placeholder="example@gmail.com"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_email', $nursinghome->profile->manager_email ?? '') }}"/>
                             </div>
@@ -284,13 +284,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="assist_name">ชื่อ-นามสกุล แพทย์	<span class="req">*</span></label>
-                                <input required type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
+                                <input type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_name', $nursinghome->profile->assist_name ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_no">เลขที่ใบอนุญาตแพทย์ <span class="req">*</span></label>
-                                <input required type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
+                                <input type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_no', $nursinghome->profile->assist_no ?? '') }}"/>
                             </div>
@@ -299,13 +299,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="assist_expert">ความเชี่ยวชาญ <span class="req">*</span></label>
-                                <input required type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
+                                <input type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_expert', $nursinghome->profile->assist_expert ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
-                                <input required type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
+                                <input type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_phone', $nursinghome->profile->assist_phone ?? '') }}"/>
                             </div>
@@ -325,7 +325,10 @@
                             ประเภทบริการ
                         </div>
                             @php
-                                $home_service_type_checked = old('home_service_type') ?? []; // array ของค่าที่ติ๊กตอน submit
+                                $home_service_type_checked = old('home_service_type') 
+                                    ?? (is_array($nursinghome->profile->home_service_type ?? null) 
+                                        ? array_column($nursinghome->profile->home_service_type, 'key') 
+                                        : []);
                             @endphp
                         <div class="grid grid-cols-2 gap-[32px]">
                             
@@ -382,7 +385,7 @@
                         </div>
                         <div class="flex flex-row flex-wrap gap-[32px]">
                             @php
-                                $additional_service_type_check = old('additional_service_type', $nursinghome->profile->additional_service_type ?? '') ?? [];
+                                $additional_service_type_check = array_column($nursinghome->profile->additional_service_type, 'key');
                             @endphp
                             <div class="flex flex-row gap-[8px] items-center">
                                 <input type="checkbox" name="additional_service_type[]" value="FOOD"
@@ -806,7 +809,7 @@
                         </div>
                         <div class="w-full">
                             <label>วิธีการชำระเงิน</label>
-                            <input required type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods', $nursinghome->profile->payment_methods ?? '') }}">
+                            <input type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods', $nursinghome->profile->payment_methods ?? '') }}">
                         </div>
                     </div>
                     
