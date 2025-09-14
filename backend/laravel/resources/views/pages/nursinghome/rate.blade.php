@@ -9,7 +9,7 @@
     </div>
 
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="frmRate" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="" enctype="multipart/form-data">
+        <form id="frmRate" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{route('nursing-home.edit-rate.save', $nursinghome->id)}}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="user_id" value="{{ $nursinghome->id }}">
             <input type="hidden" name="user_type" value="NURSING_HOME">
@@ -17,6 +17,13 @@
                 <span class="htitle text-[16px] md:text-lg text-[#286F51]">เพิ่มรีวิว {{ $nursinghome->firstname }}</span>
                 <span class="text-[#8C8A94]">กรุณากรอกข้อมูลให้ครบถ้วน</span>
             </div>
+
+            @if (session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 p-3 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+            
             @if ($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
                     <ul>
@@ -40,18 +47,26 @@
                     <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="main_phone">ค้นหาผู้ให้คะแนน <span class="req">*</span></label>
-                            <select name="author_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></select>
+                            <select name="author_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                <option selected value="0">สร้างในฐานะ Admin</option>
+                            </select>
                             <label class="explain text-xs py-2 text-gray-300">เว้นว่าง หากไม่ต้องการระบุ หรือ กำลังเพิ่มในฐานะผู้ดูแลระบบ</label>
                             <label class="error text-xs text-red-600 py-2"></label>
                         </div>
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="description">บริการที่ใช้ <span class="req">*</span></label>
-                            <input required type="text" name="description" id="description" maxlength="10" placeholder="ระบุบริการที่ใช้ เช่น ผู้ใช้บริการบ้านพักผู้สูงอายุ"
+                            <input required type="text" name="description" id="description" maxlength="50" placeholder="ระบุบริการที่ใช้ เช่น ผู้ใช้บริการบ้านพักผู้สูงอายุ"
                                 class="border rounded-lg px-3 py-2" value="{{ old('description') }}"/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
                     </div>
-                    
+
+                    <div class="flex flex-col">
+                        <label for="name">ชื่อผู้รีวิว <span class="req">*</span></label>
+                        <input required type="text" name="name" id="name" maxlength="50" placeholder="ระบุชื่อผู้เขียนรีวิว"
+                                class="border rounded-lg px-3 py-2" value="{{ old('description') }}"/>
+                    </div>
+
                     <div class="flex flex-col">
                         <label for="text">ข้อความ <span class="req">*</span></label>
                         <textarea required id="text" name="text" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ข้อความรีวิว">{{ old('text') ?? '' }}</textarea>
@@ -74,6 +89,9 @@
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button type="submit" class="w-[200px] h-[48px] rounded-lg bg-[#286F51] text-white" name="save_rate" id="save_rate_btn">{{ __('บันทึก') }}</button>
                     </div>
                 </div>
             </div>
@@ -160,5 +178,7 @@
     const nursinghomeId = {{ $nursinghome->id }};
 
     ajaxCallDropdownOption('#author_id', '/api/members', 'กรุณาเลือกสมาชิก');
+
+    
 </script> 
 @endsection

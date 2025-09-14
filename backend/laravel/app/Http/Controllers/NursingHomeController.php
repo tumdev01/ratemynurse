@@ -5,6 +5,7 @@ use App\Repositories\NursingHomeRepository;
 use App\Http\Requests\NursingHomeCreateRequest;
 use App\Http\Requests\NursingHomeUpdateRequest;
 use App\Http\Requests\NursingHomeCreateStaffRequest;
+use App\Http\Requests\RateCreateRequest;
 use App\Models\NursingHome;
 use App\Models\NursingHomeProfile;
 use App\Models\NursingHomeStaff;
@@ -19,13 +20,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\QueryException;
+use App\Repositories\RateRepository;
 
 class NursingHomeController extends Controller {
     protected $nursing_home_repository;
+    protected $rate_repository;
 
-    public function __construct(NursingHomeRepository $nursing_home_repository)
+    public function __construct(NursingHomeRepository $nursing_home_repository, RateRepository $rate_repository)
     {
         $this->nursing_home_repository = $nursing_home_repository;
+        $this->rate_repository = $rate_repository;
     }
     public function index() {
         return view('pages.nursinghome.index');
@@ -329,6 +333,21 @@ class NursingHomeController extends Controller {
         $choices = NursingHomeRateType::list();
         $nursinghome = $this->nursing_home_repository->getInfo((int) $id);
         return view('pages.nursinghome.rate', compact('nursinghome', 'choices'));
+    }
+
+    public function reviewCreate(RateCreateRequest $request)
+    {
+        $result = $this->rate_repository->create($request->all());
+        $result = $result->getData(true);
+        if ($result['status'] === 'success') {
+            return redirect()
+                ->back() // กลับไปหน้าเดิม
+                ->with('success', $result['message']); // แสดง flash message
+        }
+
+        return redirect()
+            ->back()
+            ->withErrors($result['errors'] ?? ['เกิดข้อผิดพลาดไม่ทราบสาเหตุ']);
     }
 
 }

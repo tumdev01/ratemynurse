@@ -43,6 +43,7 @@ class RateRepository extends BaseRepository
 
             return response()->json([
                 'status' => 'success',
+                'message' => 'บันทึกสำเร็จ'
             ], 200);
 
         } catch (\Illuminate\Database\QueryException $e) {

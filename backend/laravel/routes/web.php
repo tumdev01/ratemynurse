@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/image/{id}/cover', [NursingHomeController::class, 'updateCover'])->name('nursinghome.image.cover');
 
         Route::get('/{id}/rate', [NursingHomeController::class, 'review'])->where('id', '[0-9]+')->name('nursing-home.edit-rate');
+        Route::post('/{id}/rate', [NursingHomeController::class, 'reviewCreate'])->where('id', '[0-9]+')->name('nursing-home.edit-rate.save');
     });
 
     Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {
