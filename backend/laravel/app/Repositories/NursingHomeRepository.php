@@ -20,23 +20,27 @@ class NursingHomeRepository
     public function getNursingHomes(array $filters = [])
     {
         $query = NursingHome::query()
-            ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities',
-                'profile.province:id,name',
-                'profile.district:id,name',
-                'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description',
-                'images:user_id,path,is_cover',
-                'coverImage:user_id,path,is_cover'
-            ])
-            ->select([
-                'users.id',
-            ])
-            ->withAvg('rates as average_score', 'scores')
-            ->withCount('rates as review_count')
-            ->whereNull('users.deleted_at')
-            ->where('users.status', '!=', 0)
-            ->where('users.user_type', 'NURSING_HOME');
+        ->with([
+            'profile:user_id,zipcode,province_id,district_id,sub_district_id,name,description,cost_per_day,cost_per_month,home_service_type,special_facilities,facilities,certified',
+            'profile.province:id,name',
+            'profile.district:id,name',
+            'profile.subDistrict:id,name',
+            'images:user_id,path,is_cover',
+            'coverImage:user_id,path,is_cover',
+            'rates',
+            'rates.rate_details:rate_id,scores,scores_for',
+        ])
+        ->withCount('rates as review_count') // จำนวนรีวิว
+        ->addSelect('users.*') // เลือกทุกคอลัมน์จาก users
+        ->selectSub(function ($q) {
+            $q->from('rate_details')
+            ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+            ->selectRaw('AVG(rate_details.scores)')
+            ->whereColumn('rates.user_id', 'users.id');
+        }, 'average_score')
+        ->whereNull('deleted_at')
+        ->where('status', '!=', 0)
+        ->where('user_type', 'NURSING_HOME');
 
         if (!empty($filters['limit']) && is_numeric($filters['limit'])) {
             $query->limit((int) $filters['limit']);
@@ -67,9 +71,18 @@ class NursingHomeRepository
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
                 'images:user_id,path,is_cover',
-                'coverImage:user_id,path,is_cover'
+                'coverImage:user_id,path,is_cover',
+                'rates',
+                'rates.rate_details:rate_id,scores,scores_for',
             ])
-            ->select(['users.id'])
+            ->withCount('rates as review_count') // จำนวนรีวิว
+            ->addSelect(['users.id'])
+            ->selectSub(function ($q) {
+            $q->from('rate_details')
+                ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+                ->selectRaw('AVG(rate_details.scores)')
+                ->whereColumn('rates.user_id', 'users.id');
+            }, 'average_score')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('user_type', 'NURSING_HOME');
@@ -143,25 +156,33 @@ class NursingHomeRepository
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
                 'images:user_id,path,is_cover',
-                'coverImage:user_id,path,is_cover'
+                'coverImage:user_id,path,is_cover',
+                'rates',
+                'rates.rate_details:rate_id,scores,scores_for',
             ])
             ->select(['users.id'])
             ->whereNull('users.deleted_at')
             ->where('users.status', '!=', 0)
             ->where('users.user_type', 'NURSING_HOME');
 
-        // ... filters ...
-
         return DataTables::of($query)
             ->addColumn('name', fn($n) => optional($n->profile)->name ?? '-')
             ->addColumn('cover_image', fn($n) => $n->coverImage ? $n->coverImage->full_path : '')
-            ->addColumn('average_score', fn($n) => number_format($n->average_score, 2))
-            ->addColumn('review_count', fn($n) => $n->review_count)
+            ->addColumn('average_score', function ($n) {
+                $allDetails = $n->rates->flatMap->rate_details; // รวม rate_details ทั้งหมด
+                return $allDetails->count() > 0 
+                    ? number_format($allDetails->avg('scores'), 2) 
+                    : '-';
+            })
+            ->addColumn('review_count', function ($n) {
+                return $n->rates->count();
+            })
             ->addColumn('action', fn($n) => '<a href="#" class="text-blue-600 hover:underline">แก้ไข</a>')
             ->rawColumns(['cover_image', 'action'])
             ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
             ->make(true);
     }
+
 
     public function updateNursingHomeData(NursingHomeUpdateRequest  $request, Int $id)
     {
@@ -171,6 +192,7 @@ class NursingHomeRepository
             DB::transaction(function () use ($request, $user) {
                 if ($user && $user->id) {
                     $home_service_type = null;
+
                     if ($request->home_service_type) {
                         $pre_home_service_type = [];
                         $allServices = HomeServiceType::list();
@@ -186,9 +208,11 @@ class NursingHomeRepository
                     }
 
                     $additional_service_type = null;
+
                     if ($request->additional_service_type) {
                         $pre_additional_service_type = [];
                         $allServices = AdditionalServiceType::list();
+
                         foreach ($request->additional_service_type as $serviceKey) {
                             if (isset($allServices[$serviceKey])) {
                                 $pre_additional_service_type[] = [
@@ -197,6 +221,7 @@ class NursingHomeRepository
                                 ];
                             }
                         }
+
                         $additional_service_type = json_encode($pre_additional_service_type);
                     }
 
