@@ -14,6 +14,9 @@ use Yajra\DataTables\DataTables;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Http\Requests\NursingHomeUpdateRequest;
 use App\Http\Requests\NursingHomeCreateStaffRequest;
+use App\Enums\SpecialFacilityType;
+use App\Enums\HomeServiceType;
+use App\Enums\AdditionalServiceType;
 
 class NursingHomeRepository
 {
