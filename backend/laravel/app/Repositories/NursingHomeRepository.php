@@ -121,7 +121,8 @@ class NursingHomeRepository
                 'rates',
                 'rates.rate_details:rate_id,scores,scores_for',
                 'images:id,user_id,path,is_cover',
-                'coverImage:id,user_id,path,is_cover'
+                'coverImage:id,user_id,path,is_cover',
+                'staffs'
             ])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
