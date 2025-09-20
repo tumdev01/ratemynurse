@@ -21,8 +21,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('main_phone')->nullable();
             $table->string('res_phone')->nullable();
-            $table->string('facebook')->nullable();
-            $table->string('website')->nullable();
+            $table->text('facebook')->nullable();
+            $table->text('website')->nullable();
             $table->string('address')->nullable();
 
             // Nursing Home license info ข้อมูลใบอนุญาตและการรับรอง

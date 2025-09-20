@@ -44,8 +44,8 @@ class NursingHomeUpdateRequest extends FormRequest
                 ->whereNull('deleted_at'),
             ],
 
-            'facebook' => ['nullable', 'string', 'url'],
-            'website' => ['nullable', 'string', 'url'],
+            'facebook' => ['nullable', 'url'],
+            'website'  => ['nullable', 'url'],
             'address' => ['nullable', 'string', 'max:255'],
             'license_no' => ['nullable', 'string', 'max:50'],
             'license_start_date' => ['nullable', 'date'],

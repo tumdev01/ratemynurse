@@ -34,7 +34,7 @@ class NursingHomeCreateRequest extends FormRequest
             //         ->whereNull('deleted_at'),
             // ],
             'name' => ['required', 'string', 'max:100'],
-            'description' => ['required', 'string', 'max:255'],
+            'description' => ['string'],
 
             'main_phone' => [
                 'required',
@@ -49,8 +49,8 @@ class NursingHomeCreateRequest extends FormRequest
                 Rule::unique('nursing_home_profiles', 'res_phone')->whereNull('deleted_at'),
             ],
 
-            'facebook' => ['nullable', 'string', 'url'],
-            'website' => ['nullable', 'string', 'url'],
+            'facebook' => ['nullable', 'url'],
+            'website'  => ['nullable', 'url'],
             'address' => ['nullable', 'string', 'max:255'],
             'license_no' => ['nullable', 'string', 'max:50'],
             'license_start_date' => ['nullable', 'date'],

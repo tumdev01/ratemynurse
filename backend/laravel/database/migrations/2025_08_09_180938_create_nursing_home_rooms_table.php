@@ -20,8 +20,8 @@ return new class extends Migration
             
             $table->string('name');
             $table->text('description');
-            $table->double('cost');
-            $table->string('cover')->nullable(); // cover image
+            $table->double('cost_per_day');
+            $table->double('cost_per_month');
 
             $table->softDeletes();
             $table->timestamps();

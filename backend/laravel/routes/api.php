@@ -8,6 +8,7 @@ use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubDistrictController;
 use App\Http\Controllers\API\OtpController;
 use App\Http\Controllers\API\RateController;
+use App\Http\Controllers\API\JobController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -40,6 +41,13 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     Route::post('/rate', [RateController::class, 'create']);
 
     Route::get('/members', [MemberController::class, 'getMembers']);
+
+    Roiute::get('/job-filter', [JobController::class, 'jobFilters']);
+});
+
+
+Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
+    Route::post('/member', [MemberController::class, 'getMemberDetail']);
 });
 
 

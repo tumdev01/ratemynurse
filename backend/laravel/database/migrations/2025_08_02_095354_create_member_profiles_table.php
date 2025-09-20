@@ -46,7 +46,7 @@ return new class extends Migration
             $table->boolean('privacy')->default(0);
             $table->boolean('policy')->default(0);
             $table->boolean('newsletter')->default(0);
-
+            $table->softDeletes();
             $table->timestamps();
         });
     }

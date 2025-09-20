@@ -3,7 +3,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
+use App\Models\User;
 class OtpService
 {
     public function generate($id, $identifier, $length = 5, $ttl = 60)
