@@ -6,6 +6,7 @@ final class ServicePackage extends Enum
     const DAILY = 'รายวัน';
     const WEEKLY= 'รายสัปดาห์';
     const MONTHLY = 'รายเดือน';
+    const YEARLY = 'รายปี';
 
     public static function list(): array
     {
