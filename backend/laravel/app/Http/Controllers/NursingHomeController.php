@@ -302,7 +302,6 @@ class NursingHomeController extends Controller {
             ->withErrors($result['errors'] ?? ['เกิดข้อผิดพลาดไม่ทราบสาเหตุ']);
     }
 
-
     public function getNursingHomePagination(Request $request, NursingHomeRepository $repo) {
         $filters = $request->only(['certified','province','orderby','order']);
         return $this->nursing_home_repository->getNursingHomeDataTable($filters);

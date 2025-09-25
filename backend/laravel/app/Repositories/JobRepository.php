@@ -4,6 +4,7 @@ namespace App\Repositories;
 use Illuminate\Support\Arr;
 use App\Models\Job;
 use App\Models\User;
+use Yajra\DataTables\DataTables;
 
 class JobRepository extends BaseRepository {
     public function store(array $params)
@@ -80,6 +81,25 @@ class JobRepository extends BaseRepository {
             ->when($created_at, fn($q) => $q->whereDate('created_at', '>=', $created_at));
         return $job->orderBy($order_by, $order)
                 ->paginate($limits, ['*'], 'page', $page ?? 1);
+    }
+
+    public function getJobDataTable(array $filters = [])
+    {
+        $orderby = Arr::get($filters, 'orderby', 'id') ?: 'id';
+        $order   = Arr::get($filters, 'order', 'DESC');
+
+        $query = Job::query()
+            ->with([
+                'province:id,name',
+                'district:id,name'
+            ])
+            ->whereNull('deleted_at');
+
+        return DataTables::of($query)
+            ->addColumn('action', fn($n) => '<a href="#" class="text-blue-600 hover:underline">แก้ไข</a>')
+            ->rawColumns(['action'])
+            ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
+            ->make(true);
     }
 
 }

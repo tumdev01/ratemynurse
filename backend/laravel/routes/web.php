@@ -6,6 +6,7 @@ use App\Http\Controllers\NursingHomeController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\JobController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -50,6 +51,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('member')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {
         Route::get('create', [MemberController::class, 'create'])->name('member.create');
+    });
+
+    Route::get('/jobs', [JobController::class, 'jobPagination'])->name('job.pagination');
+    Route::prefix('job')->group(function() {
+        Route::get('/', [JobController::class, 'index'])->name('job.index');
     });
     
 });
