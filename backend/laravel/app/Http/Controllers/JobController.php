@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Repositories\JobRepository;
+use App\Models\Job;
 
 class JobController extends Controller 
 {
@@ -38,4 +39,28 @@ class JobController extends Controller
                 ->with('error', $e->getMessage());
         }
     }
+
+    public function edit(Int $id)
+    {
+        dd($id);
+        $job = Job::where('id', $id)->first();
+        return view('pages.job.edit', compact('job'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:OPEN,CLOSED,EXPIRED',
+        ]);
+
+        $job = Job::findOrFail($id);
+        $job->status = $request->status;
+        $job->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "อัพเดทสถานะงาน #{$id} สำเร็จ",
+        ]);
+    }
+
 }

@@ -58,6 +58,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [JobController::class, 'index'])->name('job.index');
         Route::get('/create', [JobController::class, 'create'])->name('job.create');
         Route::post('/store', [JobController::class, 'store'])->name('job.store');
+        Route::get('/{id}/edit', [JobController::class, 'edit'])->where('id', '[0-9]+')->name('job.edit');
+        Route::post('/{id}/status-update', [JobController::class, 'updateStatus'])->where('id', '[0-9]+')->name('job.status-update');
     });
     
 });
