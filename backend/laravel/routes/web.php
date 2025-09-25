@@ -56,6 +56,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/jobs', [JobController::class, 'jobPagination'])->name('job.pagination');
     Route::prefix('job')->group(function() {
         Route::get('/', [JobController::class, 'index'])->name('job.index');
+        Route::get('/create', [JobController::class, 'create'])->name('job.create');
+        Route::post('/store', [JobController::class, 'store'])->name('job.store');
     });
     
 });

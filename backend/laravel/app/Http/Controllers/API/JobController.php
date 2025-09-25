@@ -18,13 +18,30 @@ class JobController extends Controller {
         dd($request->all());
     }
 
-    public function store(JobCreateRequest $request)
+    /*public function store(JobCreateRequest $request)
     {
         $data = $request->validated(); // รวม user_id แล้ว
 
         $result = $this->job_repository->store($data);
 
         return response()->json($result);
+    }*/
+
+    public function store(Request $request, JobRepository $repo)
+    {
+        try {
+            $data = $request->validated(); // รวม user_id แล้ว
+            $result = $repo->store($data);
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'บันทึกสำเร็จ',
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function getJobList(Request $request)

@@ -7,12 +7,14 @@ use App\Models\User;
 use Yajra\DataTables\DataTables;
 
 class JobRepository extends BaseRepository {
+    /*
     public function store(array $params)
     {
         try {
+
             $user = User::findOrFail(Arr::get($params, 'user_id'));
 
-            $job = Job::create([
+            return Job::create([
                 'user_id' => $user->id,
                 'name' => Arr::get($params, 'name'),
                 'service_type' => Arr::get($params, 'service_type'),
@@ -30,17 +32,35 @@ class JobRepository extends BaseRepository {
                 'lineid' => Arr::get($params, 'lineid') ?? NULL
             ]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'บันทึกสำเร็จ'
-            ], 200);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+    */
+    public function store(array $params)
+    {
+        $user = User::findOrFail(Arr::get($params, 'user_id'));
+
+        return Job::create([
+            'user_id'        => $user->id,
+            'name'           => Arr::get($params, 'name'),
+            'service_type'   => Arr::get($params, 'service_type'),
+            'hire_type'      => Arr::get($params, 'hire_type'),
+            'cost'           => Arr::get($params, 'cost'),
+            'start_date'     => Arr::get($params, 'start_date'),
+            'description'    => Arr::get($params, 'description'),
+            'address'        => Arr::get($params, 'address'),
+            'province_id'    => Arr::get($params, 'province_id'),
+            'district_id'    => Arr::get($params, 'district_id'),
+            'sub_district_id'=> Arr::get($params, 'sub_district_id'),
+            'phone'          => Arr::get($params, 'phone'),
+            'email'          => Arr::get($params, 'email') ?? null,
+            'facebook'       => Arr::get($params, 'facebook') ?? null,
+            'lineid'         => Arr::get($params, 'lineid') ?? null,
+        ]);
     }
 
     public function getJobPagination(array $filters = [])
@@ -95,8 +115,70 @@ class JobRepository extends BaseRepository {
             ])
             ->whereNull('deleted_at');
 
+        $labels = [
+            'DAILY'   => 'รายวัน',
+            'WEEKLY'  => 'รายสัปดาห์',
+            'MONTHLY' => 'รายเดือน',
+            'YEARLY'  => 'รายปี',
+        ];
+
+        $statusLabels = [
+            'OPEN'   => 'เปิดรับ',
+            'CLOSED' => 'ปิดรับ',
+            'EXPIRED'=> 'หมดอายุ',
+        ];
+
         return DataTables::of($query)
+            // แสดง action
             ->addColumn('action', fn($n) => '<a href="#" class="text-blue-600 hover:underline">แก้ไข</a>')
+
+            // แสดง hire_type เป็น label
+            ->editColumn('hire_type', function ($row) use ($labels) {
+                return $labels[$row->hire_type] ?? $row->hire_type;
+            })
+
+            // ให้ค้นหา hire_type ได้ทั้ง key และ label
+            ->filterColumn('hire_type', function ($query, $keyword) use ($labels) {
+                $reverse = array_flip($labels);
+                $query->where(function($q) use ($keyword, $reverse) {
+                    $q->where('hire_type', 'like', "%{$keyword}%");
+                    foreach ($reverse as $label => $key) {
+                        if (str_contains($label, $keyword)) {
+                            $q->orWhere('hire_type', $key);
+                        }
+                    }
+                });
+            })
+
+            // สร้าง column virtual ชื่อ location รวม province + district
+            ->addColumn('location', function ($row) {
+                $province = $row->province->name ?? '';
+                $district = $row->district->name ?? '';
+                return $province && $district ? "{$province}, {$district}" : ($province ?: ($district ?: '-'));
+            })
+
+            // ให้ค้นหา location ได้ทั้งจังหวัดและอำเภอ
+            ->filterColumn('location', function ($query, $keyword) {
+                $query->whereHas('province', function($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%");
+                })
+                ->orWhereHas('district', function($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%");
+                });
+            })
+
+            // เพิ่ม filter สำหรับ status (ค้นหาจาก label)
+            ->filterColumn('status', function($query, $keyword) use ($statusLabels) {
+                $reverse = array_flip($statusLabels); // label => DB value
+                $query->where(function($q) use ($keyword, $reverse, $statusLabels) {
+                    foreach ($statusLabels as $dbValue => $label) {
+                        if (str_contains($label, $keyword)) {
+                            $q->orWhere('status', $dbValue);
+                        }
+                    }
+                });
+            })
+
             ->rawColumns(['action'])
             ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
             ->make(true);
