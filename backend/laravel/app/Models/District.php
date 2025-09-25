@@ -44,4 +44,14 @@ class District extends Model
     {
         return $this->hasMany(SubDistrict::class);
     }
+
+    /**
+     * Get all of the jobs for the District
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'district_id');
+    }
 }

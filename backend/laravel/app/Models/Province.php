@@ -19,4 +19,14 @@ class Province extends Model
         return $this->hasMany(District::class);
     }
 
+    /**
+     * Get all of the jobs for the Province
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'province_id');
+    }
+
 }

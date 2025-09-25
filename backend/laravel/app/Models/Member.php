@@ -34,4 +34,9 @@ class Member extends User
         return $this->hasOne(Image::class, 'user_id', 'id')->where('is_cover', true);
     }
 
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'user_id', 'id');
+    }
+
 }
