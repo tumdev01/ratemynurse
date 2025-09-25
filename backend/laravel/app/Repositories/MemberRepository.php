@@ -12,6 +12,7 @@ class MemberRepository
                 'images',
                 'coverImage'
             ])
+            ->addSelect('users.*')
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('id', $id)

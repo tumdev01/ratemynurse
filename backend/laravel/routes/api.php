@@ -42,12 +42,14 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
 
     Route::get('/members', [MemberController::class, 'getMembers']);
 
-    Roiute::get('/job-filter', [JobController::class, 'jobFilters']);
+    //Roiute::get('/job-filter', [JobController::class, 'jobFilters']);
 });
 
 
 Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
-    Route::post('/member', [MemberController::class, 'getMemberDetail']);
+    Route::post('/info', [MemberController::class, 'getUserInfo']);
+    Route::post('/job/create', [JobController::class, 'store']);
+    Route::post('/job/user/job-list', [JobController::class, 'getJobList']);
 });
 
 
@@ -68,4 +70,9 @@ Route::middleware(['verify.internal.token'])->group(function () {
     Route::prefix('nursing-home')->group(function() {
         Route::post('/create', [NursingHomeController::class, 'store']);
     });
+    Route::post('/job/job-list', [JobController::class, 'getJobList']);
+});
+
+Route::post('/debug', function (\Illuminate\Http\Request $request) {
+    return response()->json($request->headers->all());
 });
