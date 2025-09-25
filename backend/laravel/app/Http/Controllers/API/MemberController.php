@@ -14,7 +14,7 @@ class MemberController extends Controller
         $this->member_repository = $member_repository;
     }
 
-    public function getMemberDetail(Request $request)
+    public function getUserInfo(Request $request)
     {
         $member = $request->user();
         $result = $this->member_repository->getUser($member->id);
