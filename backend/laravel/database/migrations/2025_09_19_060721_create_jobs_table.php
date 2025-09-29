@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('service_type');
             $table->string('hire_type');
+            $table->string('hire_rule');
+            $table->string('care_type');
             $table->double('cost');
             $table->date('start_date');
             $table->text('description');
