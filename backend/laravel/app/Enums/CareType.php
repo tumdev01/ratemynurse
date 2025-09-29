@@ -8,6 +8,7 @@ final class CareType
     const NA = 'พนักงานผู้ช่วยการพยาบาล (NA)';
     const CG = 'คนดูแล';
     const MAID= 'แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)';
+    const ETC = 'อื่นๆ';
 
     public static function list(): array
     {
