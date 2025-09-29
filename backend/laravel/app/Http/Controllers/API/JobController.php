@@ -71,4 +71,14 @@ class JobController extends Controller {
             ], 500);
         }
     }
+
+    public function getJob(Int $id) 
+    {
+        $job = $this->job_repository->getJob((int) $id);
+        return response()->json([
+            'success' => true,
+            'message' => 'success',
+            'results' => $job
+        ], 200);
+    }
 }

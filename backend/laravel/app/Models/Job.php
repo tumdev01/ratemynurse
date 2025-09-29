@@ -62,4 +62,24 @@ class Job extends Model
     {
         return $this->belongsTo(District::class, 'district_id');
     }
+
+    /**
+     * Get the user that owns the Job
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function sub_district(): BelongsTo
+    {
+        return $this->belongsTo(SubDistrict::class, 'sub_district_id');
+    }
+
+    /**
+     * Get the user that owns the Job
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function profile(): BelongsTo
+    {
+        return $this->belongsTo(MemberProfile::class, 'user_id', 'user_id');
+    }
 }

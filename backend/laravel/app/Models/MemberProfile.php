@@ -89,5 +89,10 @@ class MemberProfile extends Model
         return $this->belongsTo(SubDistrict::class, 'sub_district_id', 'id');
     }
 
+    public function job()
+    {
+        return $this->belongsTo(Job::class, 'user_id', 'id');
+    }
+
 
 }

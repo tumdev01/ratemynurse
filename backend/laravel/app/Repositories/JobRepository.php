@@ -7,39 +7,21 @@ use App\Models\User;
 use Yajra\DataTables\DataTables;
 
 class JobRepository extends BaseRepository {
-    /*
-    public function store(array $params)
+
+    public function getJob(Int $id)
     {
-        try {
-
-            $user = User::findOrFail(Arr::get($params, 'user_id'));
-
-            return Job::create([
-                'user_id' => $user->id,
-                'name' => Arr::get($params, 'name'),
-                'service_type' => Arr::get($params, 'service_type'),
-                'hire_type' => Arr::get($params, 'hire_type'),
-                'cost' => Arr::get($params, 'cost'),
-                'start_date' => Arr::get($params, 'start_date'),
-                'description' => Arr::get($params, 'description'),
-                'address' => Arr::get($params, 'address'),
-                'province_id' => Arr::get($params, 'province_id'),
-                'district_id' => Arr::get($params, 'district_id'),
-                'sub_district_id' => Arr::get($params, 'sub_district_id'),
-                'phone' => Arr::get($params, 'phone'),
-                'email' => Arr::get($params, 'email') ?? NULL,
-                'facebook' => Arr::get($params, 'facebook') ?? NULL,
-                'lineid' => Arr::get($params, 'lineid') ?? NULL
-            ]);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
+        return Job::query()
+        ->with([
+            'province:id,name',
+            'district:id,name',
+            'sub_district:id,name',
+            'user'
+        ])
+        ->where('id', (int) $id)
+        ->whereNull('deleted_at')
+        ->first();
     }
-    */
+
     public function store(array $params)
     {
         $user = User::findOrFail(Arr::get($params, 'user_id'));

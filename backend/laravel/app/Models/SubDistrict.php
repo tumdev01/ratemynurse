@@ -34,4 +34,9 @@ class SubDistrict extends Model
     {
         return $this->belongsTo(District::class);
     }
+
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'sub_district_id');
+    }
 }

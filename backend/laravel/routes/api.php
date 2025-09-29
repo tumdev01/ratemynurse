@@ -71,6 +71,7 @@ Route::middleware(['verify.internal.token'])->group(function () {
         Route::post('/create', [NursingHomeController::class, 'store']);
     });
     Route::post('/job/job-list', [JobController::class, 'getJobList']);
+    Route::get('/job/{id}', [JobController::class, 'getJob']);
 });
 
 Route::post('/debug', function (\Illuminate\Http\Request $request) {
