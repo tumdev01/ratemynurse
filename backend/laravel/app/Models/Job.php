@@ -19,6 +19,8 @@ class Job extends Model
         'name',
         'service_type',
         'hire_type',
+        'hire_rule',
+        'care_type',
         'cost',
         'start_date',
         'description',

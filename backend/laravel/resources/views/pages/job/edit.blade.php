@@ -4,7 +4,7 @@
 <div class="p-4 sm:ml-64">
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
         
-        <form id="jobCreate" method="post" action="{{ route('job.store') }}" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto">
+        <form id="jobCreate" method="post" action="{{ route('job.update', $job->id) }}" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto">
             <input type="hidden" name="user_id" value="{{ auth()->id() }}">
             @csrf
                 @if(session('error'))
@@ -30,7 +30,7 @@
 
                 <div class="flex flex-col">
                     <label for="name" class="font-medium">ชื่อประกาศ <span class="req">*</span></label>
-                    <input class="border rounded-lg px-3 py-2" type="text" name="name" id="name" placeholder="ฉันหา..." value="{{ old('name') }}" required>
+                    <input class="border rounded-lg px-3 py-2" type="text" name="name" id="name" placeholder="ฉันหา..." value="{{ old('name') ?? $job->name }}" required>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px]">
@@ -38,20 +38,20 @@
                         <label for="service_type" class="font-medium">ประเภทบริการ <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="service_type" id="service_type" required>
                             <option class="disabled selected hidden">ประเภทบริการ</option>
-                            <option value="NURSING" {{ old('service_type') == 'NURSING' ? 'selected' : '' }}>พยาบาล</option>
-                            <option value="NURSING_HOME" {{ old('service_type') == 'NURSING_HOME' ? 'selected' : '' }}>ศูนย์ดูแล</option>
+                            <option value="NURSING" {{ old('service_type') == 'NURSING' || $job->service_type == 'NURSING' ? 'selected' : '' }}>พยาบาล</option>
+                            <option value="NURSING_HOME" {{ old('service_type') == 'NURSING_HOME' || $job->service_type == 'NURSING_HOME' ? 'selected' : '' }}>ศูนย์ดูแล</option>
                         </select>
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="care_type" class="font-medium">ประเภทคนดูแล <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="care_type" id="care_type" required>
                             <option class="disabled selected hidden">เช่น พยาบาลวิชาชีพ คนดูแล อื่นๆ</option>
-                            <option value="RN" {{ old('care_type') == 'RN' ? 'selected' : '' }}>พยาบาลวิชาชีพ (RN)</option>
-                            <option value="PN" {{ old('care_type') == 'PN' ? 'selected' : '' }}>ผู้ช่วยพยาบาล (PN)</option>
-                            <option value="NA" {{ old('care_type') == 'NA' ? 'selected' : '' }}>พนักงานผู้ช่วยการพยาบาล (NA)</option>
-                            <option value="CG" {{ old('care_type') == 'CG' ? 'selected' : '' }}>คนดูแล (CG)</option>
-                            <option value="MAIN" {{ old('care_type') == 'MAIN' ? 'selected' : '' }}>แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)</option>
-                            <option value="ETC" {{ old('care_type') == 'ETC' ? 'selected' : '' }}>อื่นๆ</option>
+                            <option value="RN" {{ old('care_type') == 'RN' || $job->care_type == 'RN' ? 'selected' : '' }}>พยาบาลวิชาชีพ (RN)</option>
+                            <option value="PN" {{ old('care_type') == 'PN' || $job->care_type == 'PN' ? 'selected' : '' }}>ผู้ช่วยพยาบาล (PN)</option>
+                            <option value="NA" {{ old('care_type') == 'NA' || $job->care_type == 'NA' ? 'selected' : '' }}>พนักงานผู้ช่วยการพยาบาล (NA)</option>
+                            <option value="CG" {{ old('care_type') == 'CG' || $job->care_type == 'CG' ? 'selected' : '' }}>คนดูแล (CG)</option>
+                            <option value="MAIN" {{ old('care_type') == 'MAIN' || $job->care_type == 'MAIN' ? 'selected' : '' }}>แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)</option>
+                            <option value="ETC" {{ old('care_type') == 'ETC' || $job->care_type == 'ETC' ? 'selected' : '' }}>อื่นๆ</option>
                         </select>
                     </div>
                     
@@ -62,18 +62,18 @@
                         <label for="hire_type" class="font-medium">ระยะเวลาจ้าง <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="hire_type" id="hire_type" required>
                             <option class="disabled selected hidden">เช่น รายวัน/สัปดาห์/เดือน/ปี</option>
-                            <option value="DAILY" {{ old('hire_type') == 'DAILY' ? 'selected' : '' }}>รายวัน</option>
-                            <option value="MONTHLY" {{ old('hire_type') == 'MONTHLY' ? 'selected' : '' }}>รายเดือน</option>
+                            <option value="DAILY" {{ old('hire_type') == 'DAILY' || $job->hire_type == 'DAILY' ? 'selected' : '' }}>รายวัน</option>
+                            <option value="MONTHLY" {{ old('hire_type') == 'MONTHLY' || $job->hire_type == 'MONTHLY' ? 'selected' : '' }}>รายเดือน</option>
                         </select>
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="hire_rule" class="font-medium">ลักษณะการจ้าง <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="hire_rule" id="hire_rule" required>
                             <option class="disabled selected hidden">เช่น อยู่ประจำ ค้างคืน ชั่วคราว ไปกลับ</option>
-                            <option value="FULL_STAY" {{ old('hire_url') == 'FULL_STAY' ? 'selected' : '' }}>อยู่ประจำ ค้างคืน</option>
-                            <option value="FULL_ROUND" {{ old('hire_url') == 'FULL_ROUND' ? 'selected' : '' }}>อยู่ประจำ ไปกลับ</option>
-                            <option value="PART_STAY" {{ old('hire_url') == 'PART_STAY' ? 'selected' : '' }}>ชั่วคราว ค้างคืน</option>
-                            <option value="PART_ROUND" {{ old('hire_url') == 'PART_ROUND' ? 'selected' : '' }}>ชั่วคราว ไปกลับ</option>
+                            <option value="FULL_STAY" {{ old('hire_rule') == 'FULL_STAY' || $job->hire_rule == 'FULL_STAY' ? 'selected' : '' }}>อยู่ประจำ ค้างคืน</option>
+                            <option value="FULL_ROUND" {{ old('hire_rule') == 'FULL_ROUND' || $job->hire_rule == 'FULL_ROUND' ? 'selected' : '' }}>อยู่ประจำ ไปกลับ</option>
+                            <option value="PART_STAY" {{ old('hire_rule') == 'PART_STAY' || $job->hire_rule == 'PART_STAY' ? 'selected' : '' }}>ชั่วคราว ค้างคืน</option>
+                            <option value="PART_ROUND" {{ old('hire_rule') == 'PART_ROUND' || $job->hire_rule == 'PART_ROUND' ? 'selected' : '' }}>ชั่วคราว ไปกลับ</option>
                         </select>
                     </div>
                 </div>
@@ -81,13 +81,13 @@
                 <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="service_type" class="font-medium">งบประมาณ <span class="req">*</span></label>
-                        <input class="border rounded-lg px-3 py-2" type="number" name="cost" placeholder="฿ งบประมาณ" value="{{ old('cost') }}">
+                        <input class="border rounded-lg px-3 py-2" type="number" name="cost" placeholder="฿ งบประมาณ" value="{{ old('cost') ?? $job->cost }}">
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="start_date">วันที่เริ่มงาน <span class="req">*</span></label>
                         <input required type="date" name="start_date" id="start_date" placeholder="วว/ดด/ปปปป"
                             class="border rounded-lg px-3 py-2"
-                            value="{{ old('start_date') }}"/>
+                            value="{{ old('start_date') ?? $job->start_date }}"/>
                     </div>
                 </div>
 
@@ -101,7 +101,7 @@
                         2. รายละเอียดงาน:
                             - จำนวนชั่วโมงการทำงาน: กำหนดตามความต้องการของลูกค้า
                             - สถานที่ทำงาน: บ้านลูกค้าหรือที่อยู่อาศัยที่ระบุ
-                            - เงื่อนไขการจ้างงาน: ช่วงเวลาที่สามารถทำงานได้, เงื่อนไขในการดูแลพิเศษ, ฯลฯ">{{ old('description') }}</textarea>
+                            - เงื่อนไขการจ้างงาน: ช่วงเวลาที่สามารถทำงานได้, เงื่อนไขในการดูแลพิเศษ, ฯลฯ">{{ old('description') ?? $job->description }}</textarea>
                 </div>
 
                 <span class="topic w-full flex flex-row gap-[8px] px-[12px] py-[8px] rounded-lg bg-[#286F51]">
@@ -111,35 +111,36 @@
 
                 <div class="flex flex-col">
                     <label for="address" class="font-medium">ที่อยู่ <span class="req">*</span></label>
-                    <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่">{{ old('address') }}</textarea>
+                    <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่">{{ old('address') ?? $job->address }}</textarea>
                 </div>
 
                 <div class="grid grid-cols-3 gap-[15px] md:gap-[32px]">
-                        <div class="flex flex-col">
-                            <label for="weight">จังหวัด <span class="req">*</span></label>
-                            <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()" required>
-                                @if(!empty(old('province_id')))
-                                    <option value="{{ old('province_id') }}" selected></option>
-                                @endif
-                            <select>
-                        </div>
-                        <div class="flex flex-col">
-                            <label for="height">อำเภอ/เขต <span class="req">*</span></label>
-                            <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()" required>
-                                @if(!empty(old('district_id')))
-                                    <option value="{{ old('district_id') }}" selected></option>
-                                @endif
-                            <select>
-                        </div>
-                        <div class="flex flex-col">
-                            <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
-                            <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()" required>
-                                @if(!empty(old('sub_district_id')))
-                                    <option value="{{ old('sub_district_id') }}" selected></option>
-                                @endif
-                            <select>
-                        </div>
+                    <div class="flex flex-col"> 
+                        <label for="province">จังหวัด <span class="req">*</span></label> 
+                        <select id="province" name="province_id" class="border rounded-lg px-3 py-2" required> 
+                            @if(!empty(old('province_id')) || $job->province_id) 
+                                <option value="{{ old('province_id') ?? $job->province_id }}" selected> {{ old('province_name') ?? $job->province->name ?? '' }} </option> 
+                            @endif 
+                        </select> 
                     </div>
+                    <div class="flex flex-col"> 
+                        <label for="district">อำเภอ/เขต <span class="req">*</span></label> 
+                        <select id="district" name="district_id" class="border rounded-lg px-3 py-2" required> 
+                            @if(!empty(old('district_id')) || $job->district_id ) 
+                                <option value="{{ old('district_id') ?? $job->district_id }}" selected> {{ old('district_name') ?? $job->district->name ?? '' }} </option> 
+                            @endif 
+                        </select> 
+                    </div>
+                    <div class="flex flex-col"> 
+                        <label for="sub_district">ตำบล/แขวง <span class="req">*</span></label> 
+                        <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" required> 
+                            @if(!empty(old('sub_district_id')) || $job->sub_district_id ) 
+                            <option value="{{ old('sub_district_id') ?? $job->sub_district_id }}" selected> 
+                                {{ old('sub_district_name') ?? $job->sub_district->name ?? '' }} 
+                            </option> @endif 
+                        </select> 
+                    </div>
+                </div>
 
 
                 <span class="topic w-full flex flex-row gap-[8px] px-[12px] py-[8px] rounded-lg bg-[#286F51]">
@@ -152,22 +153,22 @@
                 <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="phone" class="font-medium">เบอร์โทรศัพท์ <span class="req">*</span></label>
-                        <input class="border rounded-lg px-3 py-2" type="text" name="phone" id="phone" placeholder="เบอร์โทรศัพท์" value="{{ old('phone') }}" required>
+                        <input class="border rounded-lg px-3 py-2" type="text" name="phone" id="phone" placeholder="เบอร์โทรศัพท์" value="{{ old('phone') ?? $job->phone }}" required>
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="email" class="font-medium">อีเมล์</label>
-                        <input class="border rounded-lg px-3 py-2" id="email" name="email" placeholder="อีเมล (ไม่บังคับ)" type="email" value="{{ old('email') }}">
+                        <input class="border rounded-lg px-3 py-2" id="email" name="email" placeholder="อีเมล (ไม่บังคับ)" type="email" value="{{ old('email') ?? $job->email }}">
                     </div>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="facebook" class="font-medium flex flex-row gap-[4px]"><img src="https://ratemynurse.org/wp-content/uploads/2025/09/facebook.webp" width="20" height="20"> Facebook</label>
-                        <input class="border rounded-lg px-3 py-2" type="text" name="facebook" placeholder="Facebook (ไม่บังคับ)" value="{{ old('facebook') }}">
+                        <input class="border rounded-lg px-3 py-2" type="text" name="facebook" placeholder="Facebook (ไม่บังคับ)" value="{{ old('facebook') ?? $job->facebook }}">
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                         <label for="line_id" class="font-medium flex flex-row gap-[4px]"><img src="https://ratemynurse.org/wp-content/uploads/2025/09/line.webp" width="21" height="20"> Line ID (ไลน์ไอดี)</label>
-                        <input class="border rounded-lg px-3 py-2" id="line_id" name="lineid" placeholder="Line ID (ไม่บังคับ)" type="text" value="{{ old('lineid') }}">
+                        <input class="border rounded-lg px-3 py-2" id="line_id" name="lineid" placeholder="Line ID (ไม่บังคับ)" type="text" value="{{ old('lineid') ?? $job->lineid }}">
                     </div>
                 </div>
 
@@ -213,27 +214,27 @@
     <script src="{{ asset('flatpickr/monthSelect/index.js') }}"></script>
     <script src="{{ asset('flatpickr/th.js') }}"></script>
     <script>
-        ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
-        let provinceTxt = '', districtTxt = '', subDistrictTxt = '', zipcodeTxt = '';
-        function handleSelectProvince() {
-            let province = $('#province option:selected');
-            provinceTxt = province.text() ?? '';
-            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
-            //getGoogleMap();
-        }
-        function handleSelectDistrict() {
-            let district = $('#district');
-            districtTxt = $('#district option:selected').text() ?? '';
-            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
-            //getGoogleMap();
-        }
+        // ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
+        // let provinceTxt = '', districtTxt = '', subDistrictTxt = '', zipcodeTxt = '';
+        // function handleSelectProvince() {
+        //     let province = $('#province option:selected');
+        //     provinceTxt = province.text() ?? '';
+        //     ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
+        //     //getGoogleMap();
+        // }
+        // function handleSelectDistrict() {
+        //     let district = $('#district');
+        //     districtTxt = $('#district option:selected').text() ?? '';
+        //     ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
+        //     //getGoogleMap();
+        // }
 
-        function handleSelectSubDistrict() {
-            let subDistrict = $('#sub_district');
-            subDistrictTxt = $('#sub_district option:selected').text() ?? '';
-            //getGoogleMap();
-        }
-
+        // function handleSelectSubDistrict() {
+        //     let subDistrict = $('#sub_district');
+        //     subDistrictTxt = $('#sub_district option:selected').text() ?? '';
+        //     //getGoogleMap();
+        // }
+        /*
         function ajaxCallDropdownOption(id, url, placeholder) {
             $(id).select2({
                 placeholder: placeholder,
@@ -273,6 +274,52 @@
                 }
             });
         }
+        */
+        function ajaxCallDropdownOption(id, url, placeholder) { 
+            $(id).select2({ 
+                placeholder: placeholder, 
+                allowClear: true, 
+                ajax: { 
+                    transport: function (params, success, failure) { 
+                        axios.get(
+                            url, { params: params.data }
+                        ) 
+                        .then(function (response) { 
+                            const results = response.data.data.map(function (item) { 
+                                return { id: item.id, text: item.name }; 
+                            }); 
+                            success({ results: results }); 
+                        }) 
+                        .catch(failure); 
+                    }, 
+                    delay: 250, 
+                    cache: true 
+                } 
+            }); 
+        }
+
+        $(function () { 
+            // init select2 
+            ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด'); 
+            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val(), 'เลือกอำเภอ/เขต'); 
+            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง'); 
+            // chain จังหวัด → อำเภอ 
+            $('#province').on('select2:select', function (e) { 
+                let data = e.params.data; 
+                $('#district').val(null).trigger('change'); 
+                // reset 
+                
+                $('#sub_district').val(null).trigger('change'); 
+                ajaxCallDropdownOption('#district', '/api/districts_list/' + data.id, 'เลือกอำเภอ/เขต'); 
+            }); 
+                
+            // chain อำเภอ → ตำบล 
+            $('#district').on('select2:select', function (e) { 
+                let data = e.params.data; 
+                $('#sub_district').val(null).trigger('change'); 
+                ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + data.id, 'เลือกตำบล/แขวง'); 
+            }); 
+        });
     </script>
     <script>
         $(function () {

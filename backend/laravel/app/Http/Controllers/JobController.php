@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Repositories\JobRepository;
 use App\Models\Job;
+use App\Http\Requests\JobUpdateRequest;
 
 class JobController extends Controller 
 {
@@ -42,9 +43,21 @@ class JobController extends Controller
 
     public function edit(Int $id)
     {
-        dd($id);
         $job = Job::where('id', $id)->first();
         return view('pages.job.edit', compact('job'));
+    }
+
+    public function update(int $id, JobUpdateRequest $request)
+    {
+        $job = Job::findOrFail($id);
+
+        $data = $request->validated();
+        $data['user_id'] = auth()->id(); // Admin จะ override ตลอด
+
+        $job->fill($data);
+        $job->save();
+
+        return redirect()->route('job.index')->with('success', 'อัปเดตงานเรียบร้อยแล้ว');
     }
 
     public function updateStatus(Request $request, $id)
