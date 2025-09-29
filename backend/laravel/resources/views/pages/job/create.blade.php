@@ -38,18 +38,42 @@
                         <label for="service_type" class="font-medium">ประเภทบริการ <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="service_type" id="service_type" required>
                             <option class="disabled selected hidden">ประเภทบริการ</option>
-                            <option value="NURSING">พยาบาล / คนดูแล</option>
-                            <option value="NURSING_HOME">ศูนย์ดูแลผู้สูงอายุ</option>
+                            <option value="NURSING" {{ old('service_type') == 'NURSING' ? 'selected' : '' }}>พยาบาล</option>
+                            <option value="NURSING_HOME" {{ old('service_type') == 'NURSING_HOME' ? 'selected' : '' }}>ศูนย์ดูแล</option>
                         </select>
                     </div>
                     <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
-                        <label for="hire_type" class="font-medium">ลักษณะการจ้าง <span class="req">*</span></label>
+                        <label for="care_type" class="font-medium">ประเภทคนดูแล <span class="req">*</span></label>
+                        <select class="border rounded-lg px-3 py-2" name="care_type" id="care_type" required>
+                            <option class="disabled selected hidden">เช่น พยาบาลวิชาชีพ คนดูแล อื่นๆ</option>
+                            <option value="RN" {{ old('care_type') == 'RN' ? 'selected' : '' }}>พยาบาลวิชาชีพ (RN)</option>
+                            <option value="PN" {{ old('care_type') == 'PN' ? 'selected' : '' }}>ผู้ช่วยพยาบาล (PN)</option>
+                            <option value="NA" {{ old('care_type') == 'NA' ? 'selected' : '' }}>พนักงานผู้ช่วยการพยาบาล (NA)</option>
+                            <option value="CG" {{ old('care_type') == 'CG' ? 'selected' : '' }}>คนดูแล (CG)</option>
+                            <option value="MAIN" {{ old('care_type') == 'MAIN' ? 'selected' : '' }}>แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)</option>
+                            <option value="ETC" {{ old('care_type') == 'ETC' ? 'selected' : '' }}>อื่นๆ</option>
+                        </select>
+                    </div>
+                    
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px]">
+                    <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
+                        <label for="hire_type" class="font-medium">ระยะเวลาจ้าง <span class="req">*</span></label>
                         <select class="border rounded-lg px-3 py-2" name="hire_type" id="hire_type" required>
                             <option class="disabled selected hidden">เช่น รายวัน/สัปดาห์/เดือน/ปี</option>
-                            <option value="DAILY">รายวัน</option>
-                            <option value="WEEKLY">รายสัปดาห์</option>
-                            <option value="MONTHLY">รายเดือน</option>
-                            <option value="YEARLY">รายปี</option>
+                            <option value="DAILY" {{ old('hire_type') == 'DAILY' ? 'selected' : '' }}>รายวัน</option>
+                            <option value="MONTHLY" {{ old('hire_type') == 'MONTHLY' ? 'selected' : '' }}>รายเดือน</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
+                        <label for="hire_rule" class="font-medium">ลักษณะการจ้าง <span class="req">*</span></label>
+                        <select class="border rounded-lg px-3 py-2" name="hire_rule" id="hire_rule" required>
+                            <option class="disabled selected hidden">เช่น อยู่ประจำ ค้างคืน ชั่วคราว ไปกลับ</option>
+                            <option value="FULL_STAY" {{ old('hire_url') == 'FULL_STAY' ? 'selected' : '' }}>อยู่ประจำ ค้างคืน</option>
+                            <option value="FULL_ROUND" {{ old('hire_url') == 'FULL_ROUND' ? 'selected' : '' }}>อยู่ประจำ ไปกลับ</option>
+                            <option value="PART_STAY" {{ old('hire_url') == 'PART_STAY' ? 'selected' : '' }}>ชั่วคราว ค้างคืน</option>
+                            <option value="PART_ROUND" {{ old('hire_url') == 'PART_ROUND' ? 'selected' : '' }}>ชั่วคราว ไปกลับ</option>
                         </select>
                     </div>
                 </div>
