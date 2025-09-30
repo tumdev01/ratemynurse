@@ -54,6 +54,7 @@ class JobRepository extends BaseRepository {
         $order        = Arr::get($filters, 'order', 'DESC');
         $order_by     = Arr::get($filters, 'order_by', 'id');
         $service_type = Arr::get($filters, 'service_type');
+        $care_type    = Arr::get($filters, 'care_type');
         $hire_type    = Arr::get($filters, 'hire_type');
         $min_cost     = Arr::get($filters, 'min_cost');   // ใช้ cost ไม่ใช่ price
         $max_cost     = Arr::get($filters, 'max_cost');
@@ -78,6 +79,7 @@ class JobRepository extends BaseRepository {
 
         // apply filters 
         $job->when($service_type, fn($q) => $q->where('service_type', $service_type))
+            ->when($care_type, fn($q) => $q->where('care_type', $care_type))
             ->when($hire_type, fn($q) => $q->where('hire_type', $hire_type))
             ->when($province_id, fn($q) => $q->where('province_id', $province_id))
             ->when($min_cost, fn($q) => $q->where('cost', '>=', $min_cost))
