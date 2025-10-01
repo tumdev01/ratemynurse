@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NursingHomeController;
+use App\Http\Controllers\NursingController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\MemberController;
@@ -41,6 +42,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/rate', [NursingHomeController::class, 'review'])->where('id', '[0-9]+')->name('nursing-home.edit-rate');
         Route::post('/{id}/rate', [NursingHomeController::class, 'reviewCreate'])->where('id', '[0-9]+')->name('nursing-home.edit-rate.save');
 
+    });
+    Route::get('/nursings', [NursingController::class, 'getNursingPagination'])->name('nursing.data');
+    Route::prefix('nursing')->group(function() {
+        Route::get('/', [NursingController::class, 'index'])->name('nursing.index');
+        Route::get('/create', [NursingController::class, 'create'])->name('nursing.create');
+        Route::post('/create', [NursingController::class, 'store'])->name('nursing.store');
+        Route::get('/{id}/edit', [NursingController::class, 'edit'])->where('id', '[0-9]+')->name('nursing.edit');
     });
 
     Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {
