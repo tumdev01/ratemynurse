@@ -9,6 +9,7 @@ use App\Http\Controllers\SubDistrictController;
 use App\Http\Controllers\API\OtpController;
 use App\Http\Controllers\API\RateController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\JobInterviewController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -52,6 +53,18 @@ Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
     Route::post('/job/user/job-list', [JobController::class, 'getJobList']);
 });
 
+// Route role only for Nursing role
+Route::middleware(['auth:sanctum', 'nursing.role'])->group(function () {
+    Route::prefix('job-nursing')->group(function(){
+        Route::post('/apply', [JobInterviewController::class, 'applyNursingJob']);
+    });
+});
+
+
+Route::middleware(['auth:sanctum', 'nursing_home.role'])->group (function () {
+    Route::get('/nursing-home/profiles', [NursingHomeController::class, 'getProfiles']);
+    Route::post('/nursing-home/profile/update', [NursingHomeController::class, 'updateProfile']);
+});
 
 Route::get('provinces_list', [ProvinceController::class, 'getProvinces']);
 Route::get('districts_list/{province_id}', [DistrictController::class, 'getDistrictsByProvinceId'])
@@ -62,6 +75,11 @@ Route::get('/province/{id}', [ProvinceController::class, 'getProvinceById']);
 
 Route::post('/otp/request', [OtpController::class, 'requestOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [UserController::class, 'getuser']);
+});
+
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return $request->user();
 });
@@ -72,7 +90,12 @@ Route::middleware(['verify.internal.token'])->group(function () {
     });
     Route::post('/job/job-list', [JobController::class, 'getJobList']);
     Route::get('/job/{id}', [JobController::class, 'getJob']);
+
+    Route::post('/member/create', [MemberController::class, 'create']);
+    Route::post('/nursinghome/create', [NursingHomeController::class, 'userCreate']);
+    Route::post('/nursinghome/profile/create', [NursingHomeController::class, 'userCreateProfile']);
 });
+
 
 Route::post('/debug', function (\Illuminate\Http\Request $request) {
     return response()->json($request->headers->all());
