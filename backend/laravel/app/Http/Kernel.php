@@ -69,6 +69,8 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'api.role' => \App\Http\Middleware\EnsureUserIsApi::class,
         'member.role' => \App\Http\Middleware\EnsureUserIsMember::class,
+        'nursing.role' => \App\Http\Middleware\EnsureUserIsNursing::class,
+        'nursing_home.role' => \App\Http\Middleware\EnsureUserIsNursingHome::class,
         'verify.internal.token' => \App\Http\Middleware\VerifyInternalApiToken::class,
         'checkUserType' => \App\Http\Middleware\CheckUserType::class,
     ];
