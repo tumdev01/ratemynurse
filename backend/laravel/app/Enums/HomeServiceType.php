@@ -11,6 +11,7 @@ final class HomeServiceType
     const REHABILITATION_PALLIATIVE_CARE = 'การบำบัดฟื้นฟู (การดูแลประคับประคอง)';
     const DEMENTIA_PATIENTS = 'การดูแลผู้ป่วยสมองเสื่อม';
     const EMERGENCY_SERVICE = 'บริการฉุกเฉิน 24 ชั่วโมง';
+    const OTHER_SERVICES = 'บริการอื่นๆ';
 
     public static function list(): array
     {
