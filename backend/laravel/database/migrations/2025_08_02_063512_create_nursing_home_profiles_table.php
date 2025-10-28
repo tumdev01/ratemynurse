@@ -18,6 +18,7 @@ return new class extends Migration
                 ->onDelete('cascade')->onUpdate('cascade');
                 
             $table->string('name');
+            $table->string('email')->nullable();
             $table->text('description')->nullable();
             $table->string('main_phone')->nullable();
             $table->string('res_phone')->nullable();
@@ -131,7 +132,9 @@ return new class extends Migration
             $table->string('youtube_url')->nullable();
             $table->string('map')->nullable();
             $table->text('map_embed')->nullable();
+            $table->boolean('map_show')->default(1);
             $table->string('coords')->nullable();
+            $table->boolean('status')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

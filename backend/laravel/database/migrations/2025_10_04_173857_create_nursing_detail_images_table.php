@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('nusing_home_room_images', function (Blueprint $table) {
+        Schema::create('nursing_detail_images', function (Blueprint $table) {
             $table->id();
-            $table->string('room_id');
-            $table->string('path'); // path of image
+            $table->unsignedBigInteger('detail_id')->nullable();
+            $table->foreign('detail_id')->references('id')->on('nursing_details')
+                ->onDelete('cascade')->onUpdate('cascade');
+            $table->string('filename');
+            $table->string('path');
             $table->string('fullpath');
-            $table->string('filetype');
-            $table->boolean('is_cover')->default(0);
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('nusing_home_room_images');
+        Schema::dropIfExists('nursing_detail_images');
     }
 };
