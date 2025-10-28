@@ -43,4 +43,9 @@ class NursingHome extends User
     {
         return $this->hasMany(Rate::class, 'user_id', 'id');
     }
+
+    public function rooms()
+    {
+        return $this->hasMany(NursingHomeRoom::class, 'user_id', 'id');
+    }
 }

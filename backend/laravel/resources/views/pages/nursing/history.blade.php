@@ -24,7 +24,7 @@
             @endif
             <input type="hidden" name="user_type" value="NURSING">
             <div class="flex flex-col justify-start bg-[#F0F9F4] p-[16px] rounded-md">
-                <span class="htitle text-[16px] md:text-lg text-[#286F51]">แก้ไขข้อมูล {{ $nursing->profile->name }}</span>
+                <span class="htitle text-[16px] md:text-lg text-[#286F51]">เพิ่มข้อมูลพยาบาล / ผู้ดูแล</span>
                 <span class="text-[#8C8A94]">กรุณากรอกข้อมูลให้ครบถ้วน</span>
             </div>
 
@@ -34,7 +34,7 @@
                         <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                     </svg>
                     <span class="text-md text-[#286F51] font-medium">
-                        ข้อมูลส่วนตัว
+                        ข้อมูลการศึกษาและใบประกอบวิชาชีพ
                     </span>
                 </div>
                 <div class="flex flex-row gap-[8px] items-center">
@@ -45,138 +45,168 @@
                 </div>
             </div>
 
+            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="graducated">วุฒิการศึกษา <span class="req">*</span></label>
+                    <select name="graducated" id="graducated" class="border rounded-lg px-3 py-2" required>
+                        <option value="JHS">มัธยมศึกษาตอนต้น (ม.3)</option>
+                        <option value="SHS">มัธยมศึกษาตอนปลาย (ม.6)</option>
+                        <option value="VOC">ประกาศนียบัตรวิชาชีพ (ปวช.)</option>
+                        <option value="HVC">ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)</option>
+                        <option value="AD">อนุปริญญา</option>
+                        <option value="BA">ปริญญาตรี</option>
+                    </select>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="edu_ins">สถานบันการศึกษา <span class="req">*</span></label>
+                    <input type="text" name="edu_ins" id="edu_ins" maxlength="10" placeholder="สถาบันการศึกษา"
+                        class="border rounded-lg px-3 py-2" value="{{ old('edu_ins') }}"/>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="graducated_year">ปีที่จบการศึกษา <span class="req">*</span></label>
+                    <select name="graducated_year" id="graducated_year" class="border rounded-lg px-3 py-2" required>
+                        @for ($year = now()->year; $year >= now()->year - 20; $year--)
+                            <option value="{{ $year + 543 }}">{{ $year + 543 }} ({{$year}})</option>
+                        @endfor
+                    </select>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="gpa">เกรดเฉลี่ยน (GPA) <span class="req">*</span></label>
+                    <input type="text" name="gpa" id="gpa" maxlength="10" placeholder="เกรดเฉลี่ย (GPA)"
+                        class="border rounded-lg px-3 py-2" value="{{ old('gpa') }}"/>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
+                <div class="w-full flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="cert_no">เลขที่ใบประกอบวิชาชีพ <span class="req">*</span></label>
+                    <input required type="text" name="cert_no" id="cert_no" maxlength="10" placeholder="เลขที่ใบประกอบวิชาชีพ"
+                        class="border rounded-lg px-3 py-2" value="{{ old('cert_no') }}"/>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="cert_date">วันที่ออกใบประกอบวิชาชีพ <span class="req">*</span></label>
+                    <input required type="text" name="cert_date" id="cert_date" placeholder="วว/ดด/ปป"
+                        class="border rounded-lg px-3 py-2" value="{{ old('cert_date') }}"/>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="cert_expire">วันหมดอายุใบประกอบวิชาชีพ <span class="req">*</span></label>
+                    <input required type="text" name="cert_expire" id="cert_expire" placeholder="วว/ดด/ปป"
+                        class="border rounded-lg px-3 py-2" value="{{ old('cert_expire') }}"/>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
             <div class="flex flex-col">
-                <div class="rounded-lg h-[130px] flex items-center">
-                    <div id="profile_upload" class="flex flex-row gap-[16px] items-center">
-                        <div id="profile-preview" class="profile-upload w-[100px] h-[100px] relative rounded-full bg-gray-100">
-                            @if($nursing->coverImage)
-                                <img class="rounded-full w-full h-full cover" src="{{ asset($nursing->coverImage->path) }}"/>
-                            @endif
-                            <img src="{{ asset('img/ph_camera-fill.svg') }}" class="w-[32px] h-[32px] absolute p-2 rounded-full bg-gray-200 bottom-0 right-0">
-                        </div>
+                <label class="mb-2 text-[#5A5A5A]" for="cvs_images">หลักฐานใบอนุญาตประกอบวิชาชีพ</label>
+                <div class="border border-dashed rounded-lg h-[130px] flex justify-center items-center">
+                    <div id="certificate_upload" class="flex flex-row gap-[16px] justify-center items-center">
+                        <img id="avatar" src="https://ratemynurse.org/wp-content/uploads/2025/08/upload2.png" loading="lazy" width="70" height="67">
                         <div class="flex flex-col gap-[8px]">
-                            <label class="text-sm font-medium text-[#1F1F1F]">รูปโปรไฟล์ของคุณ</label>
-                            <span class="text-xs text-[#8C8A94]">จำกัดการอัปโหลด 1 รูปเท่านั้นไฟล์ .jpg, .png ขนาดไม่เกิน 5MB</span>
-                            <span class="profile-upload text-[#286F51] font-medium">อัพโหลดรูปภาพ</span>
-                            <div class="upload_error text-red-500"></div>
-                            <input type="file" id="hiddenProfileUpload" name="profile_image" accept=".jpg,.jpeg,.png" style="display:none">
+                            <label class="text-sm text-[#286F51]">เพิ่มไฟล์เอกสาร</label>
+                            <span class="text-xs text-[#8C8A94]">รองรับไฟล์ .pdf, jpg, ,jpeg, .png | ขนาดไม่เกิน 5 MB</span>
+                            <input type="file" id="hiddenProfileUpload" name="cvs_images[]" multiple style="display:none">
                         </div>
                     </div>
                 </div>
                 @if ( old('coverImage') || old('images'))
                 <div id="image_listing" class="p-[16px] gap-[16px] bg-[#F8F8F8] rounded-[8px] mt-4">
+                    
                 </div>
                 @endif
             </div>
 
-            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="firstname">ชื่อจริง <span class="req">*</span></label>
-                    <input required type="text" name="firstname" id="firstname" maxlength="10" placeholder="ชื่อจริง"
-                        class="border rounded-lg px-3 py-2" value="{{ old('firstname', $nursing->firstname ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="lastname">นามสกุล <span class="req">*</span></label>
-                    <input type="text" name="lastname" id="lastname" maxlength="10" placeholder="นามสกุล"
-                        class="border rounded-lg px-3 py-2" value="{{ old('lastname', $nursing->lastname ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
+            <div class="flex flex-col gap-[8px]">
+                <label class="text-[#5A5A5A]" for="cert_etc">ใบประกาศนียบัตรเพิ่มเติม (ไม่บังคับ) <span class="req">*</span></label>
+                <textarea id="cert_etc" name="cert_etc" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น BLS, ACLS, CPN, หรือการอบรมพิเศษอื่นๆ">{{ old('address') }}</textarea>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="nickname">ชื่อเล่น <span class="req">*</span></label>
-                    <input required type="text" name="nickname" id="nickname" placeholder="ชื่อเล่น"
-                        class="border rounded-lg px-3 py-2" value="{{ old('nickname', $nursing->profile->nickname ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="gender">เพศ <span class="req">*</span></label>
-                    <select name="gender" id="gender" class="border rounded-lg px-3 py-2">
-                        <option value="MALE" @selected(old('gender', $nursing->profile->gender ?? '') == 'MALE')>ชาย</option>
-                        <option value="FEMALE" @selected(old('gender', $nursing->profile->gender ?? '') == 'FEMALE')>หญิง</option>
-                    </select>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="phone">เบอร์โทรศัพท์ <span class="req">*</span></label>
-                    <input required type="text" name="phone" id="phone" maxlength="10" placeholder="เบอร์โทรศัพท์"
-                        class="border rounded-lg px-3 py-2" value="{{ old('phone', $nursing->phone ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="email">อีเมล์ <span class="req">*</span></label>
-                    <input type="email" name="email" id="email" placeholder="อีเมล์"
-                        class="border rounded-lg px-3 py-2" value="{{ old('email', $nursing->email ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="date_of_birth">วัน/เดือน/ปีเกิด <span class="req">*</span></label>
-                    <input required type="text" name="date_of_birth" id="date_of_birth" placeholder="วว/ดด/ปป"
-                        class="border rounded-lg px-3 py-2" value="{{ old('date_of_birth', $nursing->profile->date_of_birth ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="blood">กรุ๊ปเลือด(ถ้ามี) </label>
-                    <input type="text" name="blood" id="blood" placeholder="กรุ๊ปเลือด"
-                        class="border rounded-lg px-3 py-2" value="{{ old('blood', $nursing->profile->blood ?? '') }}"/>
-                    <label class="error text-xs text-red-600"></label>
-                </div>
+            <div class="flex flex-col gap-[8px]">
+                <label class="text-[#5A5A5A]" for="extra_courses">การศึกษาต่อเนื่อง/การอบรม ในช่วง 2 ปีที่ผ่านมา (ไม่บังคับ) <span class="req">*</span></label>
+                <textarea id="extra_courses" name="extra_courses" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุหลักสูตรอบรมสัมนา หรือการศึกษาต่อเนื่องที่เข้าร่วม">{{ old('extra_courses') }}</textarea>
             </div>
 
             <div class="flex flex-row justify-between bg-[#F7FCF9] px-[12px] py-[8px] rounded-md">
                 <div class="flex flex-row gap-[8px] items-center">
-                    <img src="{{ asset('img/tabler-icon-map-2.svg') }}">
+                    <svg class="w-6 h-6 text-[#286F51]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
                     <span class="text-md text-[#286F51] font-medium">
-                        ที่อยู่ปัจจุบัน
+                        ข้อมูลการทำงาน
                     </span>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-[8px]">
-                <label for="address">ที่อยู่ <span class="req">*</span></label>
-                <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่">{{ old('address', $nursing->profile->address ?? '') }}</textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
-                <div class="flex flex-col gap-[8px]">
-                    <label for="weight">จังหวัด <span class="req">*</span></label>
-                    <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()">
-                        @if(isset($nursing->profile) && isset($nursing->profile->province) && isset($nursing->profile->province->id))
-                            <option value="{{ $nursing->profile->province->id }}" selected>{{ $nursing->profile->province->name }}</option>
-                        @endif
-                    <select>
-                </div>
-                <div class="flex flex-col gap-[8px]">
-                    <label for="height">อำเภอ/เขต <span class="req">*</span></label>
-                    <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()">
-                        @if(isset($nursing->profile) && isset($nursing->profile->district) && isset($nursing->profile->district->id))
-                            <option value="{{  $nursing->profile->district->id }}" selected>{{ $nursing->profile->district->name }}</option>
-                        @endif
-                    <select>
+            <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
+                <div class="w-full flex flex-col gap-[8px]">
+                    <label class="text-[#5A5A5A]" for="current_workplace">โรงพยาบาล/สถานพยาบาลปัจจุบัน <span class="req">*</span></label>
+                    <input required type="text" name="current_workplace" id="current_workplace" maxlength="10" placeholder="โรงพยาบาล/สถานพยาบาลปัจจุบัน"
+                        class="border rounded-lg px-3 py-2" value="{{ old('current_workplace') }}"/>
+                    <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
-                <div class="flex flex-col gap-[8px]">
-                    <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
-                    <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()">
-                        @if(isset($nursing->profile) && isset($nursing->profile->subDistrict) && isset($nursing->profile->subDistrict->id))
-                            <option value="{{  $nursing->profile->subDistrict->id }}" selected>{{ $nursing->profile->subDistrict->name }}</option>
-                        @endif
+                <div class="flex flex-col">
+                    <label class="text-[#5A5A5A]" for="department">แผนก/หน่วยงาน <span class="req">*</span></label>
+                    <select id="department" name="department" class="border rounded-lg px-3 py-2" required>
+                        <option value="">ศัลยกรรม</option>
                     <select>
                 </div>
-                <div class="flex flex-col gap-[8px]">
-                    <label for="zipcode">รหัสไปรษณีย์ <span class="req">*</span></label>
-                    <input required type="text" name="zipcode" id="zipcode" placeholder="รหัสไปรษณีย์"
-                        class="border rounded-lg px-3 py-2" value="{{ old('zipcode', $nursing->profile->zipcode ?? '') }}"/>
+                <div class="flex flex-col">
+                    <label class="text-[#5A5A5A]" for="position">ตำแหน่ง <span class="req">*</span></label>
+                    <select id="position" name="position" class="border rounded-lg px-3 py-2" required>
+                        <option value="RN">พยาบาลวิชาชีพ (RN)</option>
+                        <option value="PN">ผู้ช่วยพยาบาล (PN)</option>
+                        <option value="NA">พนักงานผู้ช่วยการพยาบาล (NA)</option>
+                        <option value="CG">คนดูแล (CG)</option>
+                        <option value="MAIN">แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)</option>
+                        <option value="ETC">อื่น</option>
+                    <select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
+                <div class="flex flex-col">
+                    <label class="text-[#5A5A5A]" for="exp">ประสบการณ์ทำงาน (ปี) <span class="req">*</span></label>
+                    <select id="exp" name="exp" class="border rounded-lg px-3 py-2" required>
+                        @for ( $i = 1; $i <= 10; $i++)    
+                            <option value="{{$i}}">{{ $i }} ปี</option>
+                        @endfor
+                    <select>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[#5A5A5A]" for="work_type">ลักษณะการทำงาน <span class="req">*</span></label>
+                    <select id="work_type" name="work_type" class="border rounded-lg px-3 py-2" required>
+                        <option value="FULL_TIME">Full-time</option>
+                        <option value="PART_TIME">Part-time</option>
+                    <select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
+                <div class="flex flex-col">
+                    <label for="extra_shirft" class="text-[#5A5A5A]">ความพร้อมในการทำงานเวรพิเศษ <span class="req">*</span></label>
+                    <select id="extra_shirft" name="extra_shirft" class="border rounded-lg px-3 py-2" required>
+                        <option>สามารถทำเวรดึกและเวรเสาร์-อาทิตย์</option>
+                    <select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="languages" class="text-[#5A5A5A]">ภาษาที่สามารถสื่อสารได้ <span class="req">*</span></label>
+                    <input required type="text" name="languages" id="languages" placeholder="เช่น ไทย, อังกฤษ"
+                        class="border rounded-lg px-3 py-2" value="{{ old('languages') }}"/>
+                    <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
 

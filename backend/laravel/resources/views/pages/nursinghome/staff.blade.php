@@ -4,7 +4,7 @@
 <div class="p-4 sm:ml-64">
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
         <h1>
-            <a class="underline" href="{{ route('nursing-home.edit', $nursinghome->id) }}">{{  __('ทีมงาน') }} ( {{ $nursinghome->profile->name }} )</a>
+            <a class="underline" href="{{ route('nursing-home.edit', $nursinghome->id) }}">{{  __('ทีมงาน') }} ( {{ $nursinghome->name }} )</a>
         </h1>
     </div>
 

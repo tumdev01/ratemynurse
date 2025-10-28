@@ -6,7 +6,7 @@ use App\Enums\UserType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class NursingCreateRequest extends FormRequest
+class MemberCreateRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -18,11 +18,6 @@ class NursingCreateRequest extends FormRequest
         return [
             'firstname' => ['required', 'string', 'max:50'],
             'lastname'  => ['required', 'string', 'max:50'],
-            'nickname'  => ['required', 'string', 'max:25'],
-            'user_type' => ['required', 'in:NURSING'],
-            'date_of_birth' => ['required', 'date'],
-            'blood'     => ['nullable', 'string'],
-            'gender'    => ['required', 'string', 'in:MALE,FEMALE'],
             'phone' => [
                 'required',
                 'string',
@@ -30,15 +25,19 @@ class NursingCreateRequest extends FormRequest
                 'size:10',
                 Rule::unique('users', 'phone')->whereNull('deleted_at'),
             ],
-            'profile_image' => [
-                'max:50000',
-                'mimes:jpeg,png'
+            'email' => [
+                'required',
+                'string',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
             ],
-            'address' => ['required', 'string', 'max:255'],
-            'province_id' => ['required', 'integer'],
-            'district_id' => ['required', 'integer'],
-            'sub_district_id' => ['required', 'integer'],
-            'zipcode' => ['required', 'string', 'regex:/^\d{5}$/'],
+            'cardid' => [
+                'required',
+                'string',
+                'regex:/^\d+$/',
+                'size:13',
+                Rule::unique('users', 'cardid')->whereNull('deleted_at'),
+            ],
+            'user_type' => ['required', 'string', 'in:MEMBER'],
         ];
     }
 
@@ -54,11 +53,13 @@ class NursingCreateRequest extends FormRequest
             'lastname.required'  => 'กรุณาระบุนามสกุล',
             'lastname.max'       => 'นามสุกลต้องมีความยาวไม่เกิน 50 ตัวอักษร',
             'lastname.string'    => 'นามสกุลต้องเป็นตัวอักษร',
-            'nickname.required'  => 'ต้องระบุชื่อเล่น',
-            'nickname.max'       => 'ชื่อเล่นต้องมีความยาวไม่เกิน 25 ตัวอักษร',
-            'nickname.string'    => 'ชื่อเล่นต้องเป็นตัวอักษร',
             'phone.unique'       => 'หมายเลขโทรศัพท์นี้มีผู้ใช้แล้ว',
-            'phone.size'         => 'หมายเลขโทรศัพท์ต้องมี 10 ตัว'
+            'phone.size'         => 'หมายเลขโทรศัพท์ต้องมี 10 ตัว',
+            'email.unique'       => 'อีเมล์มีผู้ใช้แล้ว',
+            'email.required'     => 'อีเมล์ต้องกรอก',
+            'cardid.size'        => 'หมายเลขประจำตัวประชาชน ต้องมี 13 หลัก',
+            'cardid.unique'      => 'หมายเลขประจำตัวประชาชน มีผู้ใช้แล้ว',
+            'cardid.required'    => 'หมายเลขประจำตัวประชาชน ไม่ถูกต้อง'
         ];
     }
 }

@@ -15,6 +15,7 @@
                     <th class="px-6 py-3">ชื่อ</th>
                     <th class="px-6 py-3">คะแนนเฉลี่ย</th>
                     <th class="px-6 py-3">จำนวนรีวิว</th>
+                    <th class="px-6 py-3">ผู้ใช้งาน</th>
                     <th class="px-6 py-3"><span class="sr-only">แก้ไข</span></th>
                 </tr>
             </thead>
@@ -65,9 +66,25 @@ $(function() {
         columns: [
             { data: 'id', name: 'id', searchable: false, orderable: true, visible: false }, // ซ่อนแต่ sort ได้
             { data: 'cover_image', name: 'cover_image', orderable: false, searchable: false },
-            { data: 'name', name: 'profile.name' },
+            { data: 'name', name: 'name' },
             { data: 'average_score', name: 'average_score' },
             { data: 'review_count', name: 'review_count' },
+            { data: 'owner', name: 'owner', searchable: false, orderable: false, render: function (data, type, row){
+                    let id = data.id;
+                    let firstname = data.firstname;
+                    let lastname  = data.lastname;
+                    let owner = '';
+                    let url = "{{ route('nursing-home.profile', ':id') }}";
+                    url = url.replace(':id', id);
+                    if ( firstname == lastname ) {
+                        owner = `${firstname} (ID: ${id})`;
+                        
+                    } else {
+                        owner = `${firstname} ${lastname} (ID: ${id})`;
+                    }
+                    return `<a class="underline" href="${url}">${owner}</a>`;
+                }
+            },
             {
                 data: 'id', name: 'id', searchable: false, orderable: false, render: function (data, type, row) {
                     let url = "{{ route('nursing-home.edit', ':id') }}"; // ใส่ placeholder
@@ -94,6 +111,10 @@ $(function() {
             {
                 targets: 4,
                 className: 'text-right'
+            },
+            {
+                targets: 5,
+                className: 'max-w-[150px]'
             }
         ],
         initComplete: function(settings, json) {

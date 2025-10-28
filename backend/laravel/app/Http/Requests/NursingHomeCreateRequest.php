@@ -40,13 +40,13 @@ class NursingHomeCreateRequest extends FormRequest
                 'required',
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'main_phone')->whereNull('deleted_at'),
+                //Rule::unique('nursing_home_profiles', 'main_phone')->whereNull('deleted_at'),
             ],
             'res_phone' => [
                 'nullable',
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'res_phone')->whereNull('deleted_at'),
+                //Rule::unique('nursing_home_profiles', 'res_phone')->whereNull('deleted_at'),
             ],
 
             'facebook' => ['nullable', 'url'],
@@ -177,14 +177,11 @@ class NursingHomeCreateRequest extends FormRequest
             'description.max' => 'คำอธิบายต้องไม่เกิน 255 ตัวอักษร',
 
             // Phone
-            'main-phone.required' => 'กรุณาระบุเบอร์โทรหลัก',
             'main-phone.string' => 'เบอร์โทรหลักต้องเป็นข้อความ',
             'main-phone.regex' => 'เบอร์โทรหลักต้องมี 10 หลัก และเป็นตัวเลขเท่านั้น',
-            'main-phone.unique' => 'เบอร์โทรหลักนี้ถูกใช้ไปแล้ว',
 
             'res-phone.string' => 'เบอร์โทรสำรองต้องเป็นข้อความ',
             'res-phone.regex' => 'เบอร์โทรสำรองต้องมี 10 หลัก และเป็นตัวเลขเท่านั้น',
-            'res-phone.unique' => 'เบอร์โทรสำรองนี้ถูกใช้ไปแล้ว',
 
             // URLs
             'facebook.url' => 'ลิงก์ Facebook ต้องอยู่ในรูปแบบ URL ที่ถูกต้อง',

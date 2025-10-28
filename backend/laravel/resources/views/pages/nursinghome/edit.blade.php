@@ -4,10 +4,9 @@
 <div class="p-4 sm:ml-64">
     @include('pages.nursinghome.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-
         <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing-home.update', $nursinghome->id) }}" enctype="multipart/form-data">
             @csrf
-            <input type="hidden" name="coords" value="{{ $nursinghome->profile->coords }}">
+            <input type="hidden" name="coords" value="{{ $nursinghome->coords }}">
             <div class="flex flex-col justify-start bg-[#F0F9F4] p-[16px] rounded-md">
                 <span class="htitle text-[16px] md:text-lg text-[#286F51]">แก้ไขข้อมูล {{ $nursinghome->firstname }}</span>
                 <span class="text-[#8C8A94]">กรุณากรอกข้อมูลให้ครบถ้วน</span>
@@ -36,12 +35,12 @@
                     <div class="flex flex-col">
                         <label for="name">ชื่อศูนย์ดูแลผู้สูงอายุ <span class="req">*</span></label>
                         <input required type="text" name="name" id="name" placeholder="ระบุชื่อศูนย์ฯ"
-                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->name ?? '' }}"/>
+                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->name ?? '' }}"/>
                     </div>
 
                     <div class="flex flex-col">
                         <label for="description">คำอธิบายศูนย์ <span class="req">*</span></label>
-                        <textarea required id="description" name="description" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="อธิบายเกี่ยวกับศูนย์ของคุณ เพื่อให้ผู้ใช้้บริการรู้จักคุณมากขึ้น">{{ $nursinghome->profile->description ?? '' }}</textarea>
+                        <textarea required id="description" name="description" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="อธิบายเกี่ยวกับศูนย์ของคุณ เพื่อให้ผู้ใช้้บริการรู้จักคุณมากขึ้น">{{ old('description') ?? $nursinghome->description }}</textarea>
                     </div>
 
                     <!-- Telephone Number -->
@@ -49,13 +48,13 @@
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="main_phone">เบอร์โทรศัพท์หลัก <span class="req">*</span></label>
                             <input required type="text" name="main_phone" id="main_phone" maxlength="10" placeholder="เบอร์โทรศัพท์หลัก"
-                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->main_phone }}"/>
+                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->main_phone }}"/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="res_phone">เบอร์โทรศัพท์สำรอง</label>
                             <input type="text" name="res_phone" id="res_phone" maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง"
-                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->res_phone }}"/>
+                                class="border rounded-lg px-3 py-2" value="{{ $nursinghome->res_phone }}"/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
                     </div>
@@ -63,7 +62,7 @@
                     <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="email">อีเมล <span class="req">*</span></label>
-                            <input required type="text" name="email" id="email" placeholder="example@gmail.com"
+                            <input type="text" name="email" id="email" placeholder="example@gmail.com"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ $nursinghome->email }}"/>
                             <label class="error text-xs text-red-600"></label>
@@ -72,7 +71,7 @@
                             <label for="facebook">Facebook Page (ถ้ามี)</label>
                             <input type="text" name="facebook" id="facebook" placeholder="ชื่อ Facebook Page (ถ้ามี)"
                                 class="border rounded-lg px-3 py-2"
-                                value="{{ $nursinghome->profile->facebook }}"/>
+                                value="{{ $nursinghome->facebook }}"/>
                         </div>
                     </div>
 
@@ -80,20 +79,20 @@
                         <label for="youtube_url">Youtube (ถ้ามี)</label>
                         <input type="text" name="youtube_url" id="youtube_url" placeholder="https:/www/eample.com (ถ้ามี)"
                                 class="border rounded-lg px-3 py-2"
-                                value="{{ $nursinghome->profile->youtube }}"/>
+                                value="{{ old('youtube_url' , $nursinghome->youtube_url ) ?? '' }}"/>
                     </div>
 
                     <div class="flex flex-col">
                         <label for="website">เว็บไซต์ (ถ้ามี)</label>
                         <input type="text" name="website" id="website" placeholder="https:/www/eample.com (ถ้ามี)"
                                 class="border rounded-lg px-3 py-2"
-                                value="{{ $nursinghome->profile->website }}"/>
+                                value="{{ $nursinghome->website }}"/>
                     </div>
 
                     <div class="flex flex-col">
                         <label for="certified">ได้รับการรับรอง</label>
                         <div class="toggle-switch">
-                            <input class="toggle-input" id="certified-toggle" name ="certified" type="checkbox" {{ ($nursinghome->profile->certified ? 'checked' : '') }}>
+                            <input class="toggle-input" id="certified-toggle" name ="certified" type="checkbox" {{ ($nursinghome->certified ? 'checked' : '') }}>
                             <label class="toggle-label" for="certified-toggle"></label>
                         </div>
 
@@ -109,23 +108,23 @@
 
                     <div class="flex flex-col">
                         <label for="address">ที่อยู่ <span class="req">*</span></label>
-                        <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่" onchange="hanleSelectAddress()">{{ $nursinghome->profile->address }}</textarea>
+                        <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่" onchange="hanleSelectAddress()">{{ $nursinghome->address }}</textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="weight">จังหวัด <span class="req">*</span></label>
                             <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()">
-                                @if(isset($nursinghome->profile) && isset($nursinghome->profile->province) && isset($nursinghome->profile->province->id))
-                                    <option value="{{ $nursinghome->profile->province->id }}" selected>{{ $nursinghome->profile->province->name }}</option>
+                                @if(isset($nursinghome) && isset($nursinghome->province) && isset($nursinghome->province->id))
+                                    <option value="{{ $nursinghome->province->id }}" selected>{{ $nursinghome->province->name }}</option>
                                 @endif
                             <select>
                         </div>
                         <div class="flex flex-col">
                             <label for="height">อำเภอ/เขต <span class="req">*</span></label>
                             <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()">
-                                @if(isset($nursinghome->profile) && isset($nursinghome->profile->district) && isset($nursinghome->profile->district->id))
-                                    <option value="{{  $nursinghome->profile->district->id }}" selected>{{ $nursinghome->profile->district->name }}</option>
+                                @if(isset($nursinghome) && isset($nursinghome->district) && isset($nursinghome->district->id))
+                                    <option value="{{  $nursinghome->district->id }}" selected>{{ $nursinghome->district->name }}</option>
                                 @endif
                             <select>
                         </div>
@@ -135,25 +134,25 @@
                         <div class="flex flex-col">
                             <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
                             <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()">
-                                @if(isset($nursinghome->profile) && isset($nursinghome->profile->subDistrict) && isset($nursinghome->profile->subDistrict->id))
-                                    <option value="{{  $nursinghome->profile->subDistrict->id }}" selected>{{ $nursinghome->profile->subDistrict->name }}</option>
+                                @if(isset($nursinghome) && isset($nursinghome->subDistrict) && isset($nursinghome->subDistrict->id))
+                                    <option value="{{  $nursinghome->subDistrict->id }}" selected>{{ $nursinghome->subDistrict->name }}</option>
                                 @endif
                             <select>
                         </div>
                         <div class="flex flex-col">
                             <label for="zipcode">รหัสไปรษณีย์ <span class="req">*</span></label>
                             <input required type="text" name="zipcode" id="zipcode" placeholder="รหัสไปรษณีย์"
-                                class="border rounded-lg px-3 py-2" onchange="handleSelectZipcode()" value="{{ $nursinghome->profile->zipcode }}"/>
+                                class="border rounded-lg px-3 py-2" onchange="handleSelectZipcode()" value="{{ $nursinghome->zipcode }}"/>
                         </div>
                     </div>
 
                     <div class="flex flex-col">
                         <label for="map">แผนที่</label>
                         <input type="text" name="map" id="map"
-                            class="border rounded-lg px-3 py-2 mb-2" value="{{ $nursinghome->profile->map }}"/>
+                            class="border rounded-lg px-3 py-2 mb-2" value="{{ $nursinghome->map }}"/>
                         <div id="map_show" class="bg-gray-100 border rounded-lg h-96 mb-4">
-                            @if($nursinghome->profile->map_embed)
-                                {!! $nursinghome->profile->map_embed !!}
+                            @if($nursinghome->map_embed)
+                                {!! $nursinghome->map_embed !!}
                             @endif
                         </div>
                     </div>
@@ -170,13 +169,13 @@
                             <label for="license_no">เลขที่ใบอนุญาตประกอบกิจการ <span class="req">*</span></label>
                             <input type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
                                 class="border rounded-lg px-3 py-2"
-                                value="{{ old('license_no', $nursinghome->profile->license_no ?? '') }}"/>
+                                value="{{ old('license_no', $nursinghome->license_no ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="license_start_date">วันที่ออกใบอนุญาต <span class="req">*</span></label>
                             <input type="date" name="license_start_date" id="license_start_date" placeholder="วว/ดด/ปปปป"
                                 class="border rounded-lg px-3 py-2"
-                                value="{{ old('license_start_date', $nursinghome->profile->license_start_date ?? '') }}"/>
+                                value="{{ old('license_start_date', $nursinghome->license_start_date ?? '') }}"/>
                                 
 
                         </div>
@@ -187,13 +186,13 @@
                             <label for="license_exp_date">วันที่หมดอายุ <span class="req">*</span></label>
                             <input type="text" name="license_exp_date" id="license_exp_date" placeholder="วว/ดด/ปปปป"
                                     class="border rounded-lg px-3 py-2"
-                                    value="{{ old('license_exp_date', $nursinghome->profile->license_exp_date ?? '') }}"/>
+                                    value="{{ old('license_exp_date', $nursinghome->license_exp_date ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="license_by">หน่วยงานที่ออกใบอนุญาต <span class="req">*</span></label>
                             <input type="text" name="license_by" id="license_by" placeholder="เช่น กรมการแพทย์ กระทรวงสาธารณสุข"
                                     class="border rounded-lg px-3 py-2"
-                                    value="{{ old('license_by', $nursinghome->profile->license_by ?? '') }}"/>
+                                    value="{{ old('license_by', $nursinghome->license_by ?? '') }}"/>
                         </div>
                     </div>
                     
@@ -203,13 +202,13 @@
                             <label for="certificates">มาตรฐานการรับรอง (ถ้ามี)</label>
                             <input type="text" name="certificates" id="certificates" placeholder="เช่น มาตรฐาน HA, JCI (ถ้ามี)"
                                     class="border rounded-lg px-3 py-2"
-                                    value="{{ old('certificates', $nursinghome->profile->certificates ?? '') }}"/>
+                                    value="{{ old('certificates', $nursinghome->certificates ?? '') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="hospital_no">หมายเลขประจำสถานพยาบาล (ถ้ามี)</label>
                             <input type="text" name="hospital_no" id="hospital_no" placeholder="รหัสสถานพยาบาล (ถ้ามี)"
                                     class="border rounded-lg px-3 py-2"
-                                    value="{{ old('hospital_no', $nursinghome->profile->hospital_no ?? '') }}"/>
+                                    value="{{ old('hospital_no', $nursinghome->hospital_no ?? '') }}"/>
                         </div>
                     </div>
                     
@@ -230,13 +229,13 @@
                                 <label for="manager_name">ชื่อ-นามสกุล <span class="req">*</span></label>
                                 <input type="text" name="manager_name" id="manager_name" placeholder="ชื่อ-นามสกุล ผู้อำนวยการ"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('manager_name', $nursinghome->profile->manager_name ?? '') }}"/>
+                                        value="{{ old('manager_name', $nursinghome->manager_name ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="graduated">คุณวุฒิการศึกษา <span class="req">*</span></label>
                                 <input type="text" name="graduated" id="graduated" placeholder="เช่น ปริญญาตรี พยาบาลศาสตร์"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('graduated', $nursinghome->profile->graduated ?? '') }}"/>
+                                        value="{{ old('graduated', $nursinghome->graduated ?? '') }}"/>
                             </div>
                         </div>
 
@@ -245,14 +244,14 @@
                                 <label for="graduated_paper">ใบอนุญาตประกอบวิชาชีพ</label>
                                 <input type="text" name="graduated_paper" id="graduated_paper" placeholder="เลขที่ใบอนุญาต (ถ้ามี)"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('graduated_paper', $nursinghome->profile->graduated_paper ?? '') }}"/>
+                                        value="{{ old('graduated_paper', $nursinghome->graduated_paper ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="exp_year">ประสบการณ์ (ปี)</label>
                                 <select name="exp_year" class="border rounded-lg px-3 py-2">
                                     <option>จำนวนปี</option>
                                     @for ($i = 0; $i <= 30; $i++)
-                                        <option value="{{ $i }}" {{ $nursinghome->profile->exp_year == $i ? 'selected' : '' }}>
+                                        <option value="{{ $i }}" {{ $nursinghome->exp_year == $i ? 'selected' : '' }}>
                                             {{ $i }} ปี
                                         </option>
                                     @endfor
@@ -265,13 +264,13 @@
                                 <label for="manager_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
                                 <input type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('manager_phone', $nursinghome->profile->manager_phone ?? '') }}"/>
+                                        value="{{ old('manager_phone', $nursinghome->manager_phone ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="manager_email">อีเมลส่วนตัว <span class="req">*</span></label>
                                 <input type="text" name="manager_email" id="manager_email" placeholder="example@gmail.com"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('manager_email', $nursinghome->profile->manager_email ?? '') }}"/>
+                                        value="{{ old('manager_email', $nursinghome->manager_email ?? '') }}"/>
                             </div>
                         </div>
                     </div>
@@ -286,13 +285,13 @@
                                 <label for="assist_name">ชื่อ-นามสกุล แพทย์	<span class="req">*</span></label>
                                 <input type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('assist_name', $nursinghome->profile->assist_name ?? '') }}"/>
+                                        value="{{ old('assist_name', $nursinghome->assist_name ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_no">เลขที่ใบอนุญาตแพทย์ <span class="req">*</span></label>
                                 <input type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('assist_no', $nursinghome->profile->assist_no ?? '') }}"/>
+                                        value="{{ old('assist_no', $nursinghome->assist_no ?? '') }}"/>
                             </div>
                         </div>
 
@@ -301,13 +300,13 @@
                                 <label for="assist_expert">ความเชี่ยวชาญ <span class="req">*</span></label>
                                 <input type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('assist_expert', $nursinghome->profile->assist_expert ?? '') }}"/>
+                                        value="{{ old('assist_expert', $nursinghome->assist_expert ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
                                 <input type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
-                                        value="{{ old('assist_phone', $nursinghome->profile->assist_phone ?? '') }}"/>
+                                        value="{{ old('assist_phone', $nursinghome->assist_phone ?? '') }}"/>
                             </div>
                         </div>
                     </div>
@@ -326,8 +325,8 @@
                         </div>
                             @php
                                 $home_service_type_checked = old('home_service_type') 
-                                    ?? (is_array($nursinghome->profile->home_service_type ?? null) 
-                                        ? array_column($nursinghome->profile->home_service_type, 'key') 
+                                    ?? (is_array($nursinghome->home_service_type ?? null) 
+                                        ? array_column($nursinghome->home_service_type, 'key') 
                                         : []);
                             @endphp
                         <div class="grid grid-cols-2 gap-[32px]">
@@ -375,7 +374,7 @@
                         </div>
                         <div class="w-full">
                             <label>บริการพิเศษอื่นๆ</label>
-                            <input type="text" class="w-full border rounded-lg px-3 py-2" name="etc_service" value="{{ old('etc_service', $nursinghome->profile->etc_service ?? '') }}">
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" name="etc_service" value="{{ old('etc_service', $nursinghome->etc_service ?? '') }}">
                         </div>
                     </div>
 
@@ -385,7 +384,7 @@
                         </div>
                         <div class="flex flex-row flex-wrap gap-[32px]">
                             @php
-                                $additional_service_type_check = array_column($nursinghome->profile->additional_service_type, 'key');
+                                $additional_service_type_check = array_column($nursinghome->additional_service_type, 'key');
                             @endphp
                             <div class="flex flex-row gap-[8px] items-center">
                                 <input type="checkbox" name="additional_service_type[]" value="FOOD"
@@ -436,34 +435,34 @@
                         <div class="grid grid-cols-2 gap-[32px]">
                             <div class="flex flex-col">
                                 <label>จำนวนชั้นของอาคาร</label>
-                                <input type="number" name="building_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนชั้น" value="{{ old('building_no', $nursinghome->profile->building_no ?? '') }}"/>
+                                <input type="number" name="building_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนชั้น" value="{{ old('building_no', $nursinghome->building_no ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label>จำนวนห้องพักรวม</label>
-                                <input type="number" name="total_room" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('total_room', $nursinghome->profile->total_room ?? '') }}"/>
+                                <input type="number" name="total_room" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('total_room', $nursinghome->total_room ?? '') }}"/>
                                 
                             </div>
                             <div class="flex flex-col">
                                 <label>ห้องพักเดี่ยว</label>
-                                <input type="number" name="private_room_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('private_room_no', $nursinghome->profile->private_room_no ?? '') }}" />
+                                <input type="number" name="private_room_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('private_room_no', $nursinghome->private_room_no ?? '') }}" />
                                 
                             </div>
                             <div class="flex flex-col">
                                 <label>ห้องพักคู่</label>
-                                <input type="number" name="duo_room_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('duo_room_no', $nursinghome->profile->duo_room_no ?? '') }}"/>
+                                <input type="number" name="duo_room_no" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('duo_room_no', $nursinghome->duo_room_no ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label>ห้องพักรวม (3+ เตียง)</label>
-                                <input type="number" name="shared_room_three_beds" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('shared_room_three_beds', $nursinghome->profile->shared_room_three_beds ?? '') }}"/>
+                                <input type="number" name="shared_room_three_beds" class="border rounded-lg px-3 py-2" placeholder="จำนวนห้อง" value="{{ old('shared_room_three_beds', $nursinghome->shared_room_three_beds ?? '') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label>ความจุผู้ป่วยสูงสุด</label>
-                                <input type="number" name="max_serve_no" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('max_serve_no', $nursinghome->profile->max_serve_no ?? '') }}"/>
+                                <input type="number" name="max_serve_no" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('max_serve_no', $nursinghome->max_serve_no ?? '') }}"/>
                             </div>
                         </div>
                         <div class="w-full flex flex-col">
                             <label>พื้นที่รวม (ตร.ม.)</label>
-                            <input type="number" name="area" placeholder="ตารางเมตร" class="border rounded-lg px-3 py-2" value="{{ $nursinghome->profile->area }}">
+                            <input type="number" name="area" placeholder="ตารางเมตร" class="border rounded-lg px-3 py-2" value="{{ $nursinghome->area }}">
                         </div>
                     </div>
 
@@ -473,7 +472,7 @@
                         </div>
                         <div class="flex flex-row flex-wrap gap-[32px]">
                             @php
-                                $special_facilities = array_column($nursinghome->profile->special_facilities, 'key');
+                                $special_facilities = array_column($nursinghome->special_facilities, 'key');
                             @endphp
                             <div class="flex flex-row gap-[8px] items-center">
                                 <input type="checkbox" name="special_facilities[]" value="NURSE_STATION"
@@ -539,7 +538,7 @@
                         </div>
                         <div class="flex flex-row flex-wrap gap-[32px]">
                             @php
-                                $facilities = array_column($nursinghome->profile->facilities, 'key');
+                                $facilities = array_column($nursinghome->facilities, 'key');
                             @endphp
                             <div class="flex flex-row gap-[8px] items-center">
                                 <input type="checkbox" name="facilities[]" value="ELEVATOR"
@@ -610,20 +609,20 @@
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>รถพยาบาล:</label>
-                            <input type="radio" name="ambulance" value="1" {{ $nursinghome->profile->ambulance == 1 ? 'checked' : '' }}>
+                            <input type="radio" name="ambulance" value="1" {{ $nursinghome->ambulance == 1 ? 'checked' : '' }}>
                             <label>มี</label>
-                            <input type="radio" name="ambulance" value="0" {{ $nursinghome->profile->ambulance == 0 ? 'checked' : '' }}>
+                            <input type="radio" name="ambulance" value="0" {{ $nursinghome->ambulance == 0 ? 'checked' : '' }}>
                             <label>ไม่มี</label>
                             <input type="number" name="ambulance_amount" 
                                 class="border rounded-lg px-3 py-2" 
                                 placeholder="จำนวนคัน"
-                                value="{{ $nursinghome->profile->ambulance_amount }}">
+                                value="{{ $nursinghome->ambulance_amount }}">
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>รถตู้/รถรับส่ง :</label>
-                            <input type="radio" name="van_shuttle" value="1" {{ $nursinghome->profile->van_shuttle == 1 ? 'checked' : '' }}>
+                            <input type="radio" name="van_shuttle" value="1" {{ $nursinghome->van_shuttle == 1 ? 'checked' : '' }}>
                             <label>มี</label>
-                            <input type="radio" name="van_shuttle" value="0" {{ $nursinghome->profile->van_shuttle == 0 ? 'checked' : '' }}>
+                            <input type="radio" name="van_shuttle" value="0" {{ $nursinghome->van_shuttle == 0 ? 'checked' : '' }}>
                             <label>ไม่มี</label>
                         </div>
                         <div class="w-full">
@@ -631,7 +630,7 @@
                             <input type="text" name="special_medical_equipment" 
                                 class="w-full border rounded-lg px-3 py-2" 
                                 placeholder="เช่น เครื่องช่วยหายใจ, เครื่องวัดสัญญาณชีพ"
-                                value="{{ $nursinghome->profile->special_medical_equipment }}">
+                                value="{{ $nursinghome->special_medical_equipment }}">
                         </div>
                     </div>
 
@@ -646,47 +645,47 @@
                     <div class="grid grid-cols-3 gap-[32px]">
                         <div class="flex flex-col">
                             <label for="address">จำนวนพยาบาลรวม	</label>
-                            <input type="number" name="total_staff" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_staff', $nursinghome->profile->total_staff ?? '') }}">
+                            <input type="number" name="total_staff" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_staff', $nursinghome->total_staff ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">พยาบาลประจำการ</label>
-                            <input type="number" name="total_fulltime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_fulltime_nurse', $nursinghome->profile->total_fulltime_nurse ?? '') }}">
+                            <input type="number" name="total_fulltime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_fulltime_nurse', $nursinghome->total_fulltime_nurse ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">พยาบาลพาร์ทไทม์</label>
-                            <input type="number" name="total_parttime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_parttime_nurse', $nursinghome->profile->total_parttime_nurse ?? '') }}">
+                            <input type="number" name="total_parttime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_parttime_nurse', $nursinghome->total_parttime_nurse ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">ผู้ช่วยพยาบาล</label>
-                            <input type="number" name="total_nursing_assistant" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_nursing_assistant', $nursinghome->profile->total_nursing_assistant ?? '') }}">
+                            <input type="number" name="total_nursing_assistant" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_nursing_assistant', $nursinghome->total_nursing_assistant ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">แพทย์ประจำ</label>
-                            <input type="number" name="total_regular_doctor" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_regular_doctor', $nursinghome->profile->total_regular_doctor ?? '') }}">
+                            <input type="number" name="total_regular_doctor" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_regular_doctor', $nursinghome->total_regular_doctor ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">นักกายภาพบำบัด</label>
-                            <input type="number" name="total_physical_therapist" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_physical_therapist', $nursinghome->profile->total_physical_therapist ?? '') }}">
+                            <input type="number" name="total_physical_therapist" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_physical_therapist', $nursinghome->total_physical_therapist ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">เภสัชกร</label>
-                            <input type="number" name="total_ftotal_pharmacistulltime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_pharmacist', $nursinghome->profile->total_pharmacist ?? '') }}">
+                            <input type="number" name="total_ftotal_pharmacistulltime_nurse" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_pharmacist', $nursinghome->total_pharmacist ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">นักโภชนาการ</label>
-                            <input type="number" name="total_nutritionist" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_nutritionist', $nursinghome->profile->total_nutritionist ?? '') }}">
+                            <input type="number" name="total_nutritionist" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_nutritionist', $nursinghome->file->total_nutritionist ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">นักสังคมสงเคราะห์</label>
-                            <input type="number" name="total_social_worker" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_social_worker', $nursinghome->profile->total_social_worker ?? '') }}">
+                            <input type="number" name="total_social_worker" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_social_worker', $nursinghome->total_social_worker ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">พนักงานทั่วไป</label>
-                            <input type="number" name="total_general_employees" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_general_employees', $nursinghome->profile->total_general_employees ?? '') }}">
+                            <input type="number" name="total_general_employees" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_general_employees', $nursinghome->total_general_employees ?? '') }}">
                         </div>
                         <div class="flex flex-col">
                             <label for="address">รปภ./เจ้าหน้าที่รักษาความปลอดภัย</label>
-                            <input type="number" name="total_security_officer" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_security_officer', $nursinghome->profile->total_security_officer ?? '') }}">
+                            <input type="number" name="total_security_officer" class="border rounded-lg px-3 py-2" placeholder="คน" value="{{ old('total_security_officer', $nursinghome->total_security_officer ?? '') }}">
                         </div>
                     </div>
                     
@@ -706,7 +705,7 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="address">ค่าบริการรายวัน (บาท)</label>
-                                <input type="number" name="total_security_officer" class="border rounded-lg px-3 py-2" placeholder="฿ บาท/วัน" value="{{ old('cost_per_day', $nursinghome->profile->cost_per_day ?? '') }}">
+                                <input type="number" name="total_security_officer" class="border rounded-lg px-3 py-2" placeholder="฿ บาท/วัน" value="{{ old('cost_per_day', $nursinghome->cost_per_day ?? '') }}">
                             </div>
                             <div class="flex flex-col">
                                 <label for="address">ค่าบริการรายเดือน (บาท)</label>
@@ -714,7 +713,7 @@
                                     name="cost_per_month" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท/เดือน"
-                                    value="{{ old('cost_per_month', $nursinghome->profile->cost_per_month ?? '') }}">
+                                    value="{{ old('cost_per_month', $nursinghome->cost_per_month ?? '') }}">
                             </div>
                         </div>
 
@@ -725,7 +724,7 @@
                                     name="deposit" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท"
-                                    value="{{ old('deposit', $nursinghome->profile->deposit ?? '') }}">
+                                    value="{{ old('deposit', $nursinghome->deposit ?? '') }}">
                             </div>
                             <div class="flex flex-col">
                                 <label for="address">ค่าลงทะเบียน (บาท)</label>
@@ -733,7 +732,7 @@
                                     name="registration_fee" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท"
-                                    value="{{ old('registration_fee', $nursinghome->profile->registration_fee ?? '') }}">
+                                    value="{{ old('registration_fee', $nursinghome->registration_fee ?? '') }}">
                             </div>
                         </div>
                     </div>
@@ -750,7 +749,7 @@
                                     name="special_food_expenses" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท/วัน"
-                                    value="{{ old('special_food_expenses', $nursinghome->profile->special_food_expenses ?? '') }}">
+                                    value="{{ old('special_food_expenses', $nursinghome->special_food_expenses ?? '') }}">
                             </div>
                             <div class="flex flex-col">
                                 <label for="address">ค่ากายภาพบำบัด (บาท/ครั้ง)</label>
@@ -758,7 +757,7 @@
                                     name="physical_therapy_fee" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท/ครั้ง"
-                                    value="{{ old('physical_therapy_fee', $nursinghome->profile->physical_therapy_fee ?? '') }}">
+                                    value="{{ old('physical_therapy_fee', $nursinghome->physical_therapy_fee ?? '') }}">
                             </div>
                         </div>
 
@@ -769,7 +768,7 @@
                                     name="delivery_fee" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท/ครั้ง"
-                                    value="{{ old('delivery_fee', $nursinghome->profile->delivery_fee ?? '') }}">
+                                    value="{{ old('delivery_fee', $nursinghome->delivery_fee ?? '') }}">
                             </div>
                             <div class="flex flex-col">
                                 <label for="address">ค่าบริการซักรีด (บาท/เดือน)</label>
@@ -777,7 +776,7 @@
                                     name="laundry_service" 
                                     class="border rounded-lg px-3 py-2" 
                                     placeholder="฿ บาท/เดือน"
-                                    value="{{ old('laundry_service', $nursinghome->profile->laundry_service ?? '') }}">
+                                    value="{{ old('laundry_service', $nursinghome->laundry_service ?? '') }}">
                             </div>
                         </div>
                     </div>
@@ -788,28 +787,28 @@
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>การรับประกันสังคม:</label>
-                            <input type="radio" name="social_security" value="1" {{ $nursinghome->profile->social_security == 1 ? 'checked' :'' }}>
+                            <input type="radio" name="social_security" value="1" {{ $nursinghome->social_security == 1 ? 'checked' :'' }}>
                             <label>มี</label>
-                            <input type="radio" name="social_security" value="0" {{ $nursinghome->profile->social_security == 0 ? 'checked' :'' }}>
+                            <input type="radio" name="social_security" value="0" {{ $nursinghome->social_security == 0 ? 'checked' :'' }}>
                             <label>ไม่มี</label>
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>การรับประกันสุขภาพเอกชน :</label>
-                            <input type="radio" name="private_health_insurance" value="1" {{ $nursinghome->profile->private_health_insurance == 1 ? 'checked' : '' }}>
+                            <input type="radio" name="private_health_insurance" value="1" {{ $nursinghome->private_health_insurance == 1 ? 'checked' : '' }}>
                             <label>มี</label>
-                            <input type="radio" name="private_health_insurance" value="0" {{ $nursinghome->profile->private_health_insurance == 0 ? 'checked' : '' }}>
+                            <input type="radio" name="private_health_insurance" value="0" {{ $nursinghome->private_health_insurance == 0 ? 'checked' : '' }}>
                             <label>ไม่มี</label>
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>การผ่อนชำระ :</label>
-                            <input type="radio" name="installment" value="1" {{ $nursinghome->profile->installment == 1 ? 'checked' : '' }}>
+                            <input type="radio" name="installment" value="1" {{ $nursinghome->installment == 1 ? 'checked' : '' }}>
                             <label>มี</label>
-                            <input type="radio" name="installment" value="0" {{ $nursinghome->profile->installment == 0 ? 'checked' : '' }}>
+                            <input type="radio" name="installment" value="0" {{ $nursinghome->installment == 0 ? 'checked' : '' }}>
                             <label>ไม่มี</label>
                         </div>
                         <div class="w-full">
                             <label>วิธีการชำระเงิน</label>
-                            <input type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods', $nursinghome->profile->payment_methods ?? '') }}">
+                            <input type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods', $nursinghome->payment_methods ?? '') }}">
                         </div>
                     </div>
                     
@@ -822,27 +821,27 @@
                     </span>
                     <div class="flex flex-col">
                         <label class="mb-2" for="center_highlights">จุดเด่นของศูนย์</label>
-                        <textarea id="center_highlights" name="center_highlights" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น การดูแลผู้ป่วยหัวใจ, การฉีดยา, การดูแลแผล ฯลฯ">{{ old('center_highlights', $nursinghome->profile->center_highlights ?? '') }}</textarea>
+                        <textarea id="center_highlights" name="center_highlights" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น การดูแลผู้ป่วยหัวใจ, การฉีดยา, การดูแลแผล ฯลฯ">{{ old('center_highlights', $nursinghome->center_highlights ?? '') }}</textarea>
                     </div>
                     <div class="flex flex-col">
                         <label class="mb-2" for="patients_target">กลุ่มเป้าหมายผู้ป่วย</label>
-                        <textarea id="patients_target" name="patients_target" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น ผู้สูงอายุทั่วไป ผู้ป่วยโรคเรื้อรัง ผู้ป่วยสมองเสื่อม">{{ old('patients_target', $nursinghome->profile->patients_target ?? '') }}</textarea>
+                        <textarea id="patients_target" name="patients_target" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น ผู้สูงอายุทั่วไป ผู้ป่วยโรคเรื้อรัง ผู้ป่วยสมองเสื่อม">{{ old('patients_target', $nursinghome->patients_target ?? '') }}</textarea>
                     </div>
                     <div class="flex flex-col">
                         <label class="mb-2" for="visiting_time">ช่วงเวลาเยี่ยม</label>
-                        <textarea id="visiting_time" name="visiting_time" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น วันจันทร์-อาทิตย์ 08:00-20:00">{{ old('visiting_time', $nursinghome->profile->visiting_time ?? '') }}</textarea>
+                        <textarea id="visiting_time" name="visiting_time" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น วันจันทร์-อาทิตย์ 08:00-20:00">{{ old('visiting_time', $nursinghome->visiting_time ?? '') }}</textarea>
                     </div>
                     <div class="flex flex-col">
                         <label class="mb-2" class="mb-2" for="patient_admission_policy">นโยบายการรับผู้ป่วย</label>
-                        <textarea id="patient_admission_policy" name="patient_admission_policy" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เกณฑ์การรับผู้ป่วย ข้อจำกัด หรือเงื่อนไขพิเศษ">{{ old('patient_admission_policy', $nursinghome->profile->patient_admission_policy ?? '') }}</textarea>
+                        <textarea id="patient_admission_policy" name="patient_admission_policy" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เกณฑ์การรับผู้ป่วย ข้อจำกัด หรือเงื่อนไขพิเศษ">{{ old('patient_admission_policy', $nursinghome->patient_admission_policy ?? '') }}</textarea>
                     </div>
                     <div class="flex flex-col">
                         <label class="mb-2" for="emergency_contact_information">ข้อมูลติดต่อฉุกเฉิน</label>
-                        <textarea id="emergency_contact_information" name="emergency_contact_information" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เบอร์โทรฉุกเฉิน 24 ชั่วโมง">{{ old('emergency_contact_information', $nursinghome->profile->emergency_contact_information ?? '') }}</textarea>
+                        <textarea id="emergency_contact_information" name="emergency_contact_information" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เบอร์โทรฉุกเฉิน 24 ชั่วโมง">{{ old('emergency_contact_information', $nursinghome->emergency_contact_information ?? '') }}</textarea>
                     </div>
                     <div class="flex flex-col">
                         <label class="mb-2" for="additional_notes">หมายเหตุเพิ่มเติม</label>
-                        <textarea id="additional_notes" name="additional_notes" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ข้อมูลเพิ่มเติมหรือรายละเอียดพิเศษ">{{ old('additional_notes', $nursinghome->profile->additional_notes ?? '') }}</textarea>
+                        <textarea id="additional_notes" name="additional_notes" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ข้อมูลเพิ่มเติมหรือรายละเอียดพิเศษ">{{ old('additional_notes', $nursinghome->additional_notes ?? '') }}</textarea>
                     </div>
                     
                     <div class="flex flex-col">
@@ -858,6 +857,7 @@
                             </div>
                         </div>
                         <div id="profiles_preview" class="flex flex-row gap-2"></div>
+                        @if($nursinghome->images && count($nursinghome->images) > 0 || $nursinghome->coverImage)
                         <div id="image_listing" class="p-[16px] gap-[16px] bg-[#F8F8F8] rounded-[8px] mt-4">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -867,19 +867,24 @@
                                         <th></th>
                                     </tr>
                                 </thead>
+                                @if ( $nursinghome->coverImage )
                                 <tr>
                                     <td class="px-6 py-4"><img src="{{ $nursinghome->coverImage->full_path ?? '' }}" width="90"></td>
                                     <td class="px-6 py-4 text-center">
+                                        
                                         <div class="toggle-switch">
                                             <input id="coverImg-toggle" name="coverImg" type="checkbox" class="toggle-input cover-toggle" data-id="{{ $nursinghome->coverImage->id }}"  {{ (optional($nursinghome->coverImage)->is_cover ? 'checked' : '') }}>
                                             <label class="toggle-label" for="coverImg-toggle"></label>
                                         </div>
+                                        
                                     </td>
                                     <td class="px-6 py-4 w-10">
-                                        <a href="#" class="text-red-500 text-sm text-right"><svg class="w-4 h-4 text-red-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/> </svg></a>
+                                        <a onclick="imageDelete({{ $nursinghome->coverImage->id }}, true, event)" class="text-red-500 text-sm text-right"><svg class="w-4 h-4 text-red-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/> </svg></a>
                                     </td>
                                 </tr>
+                                @endif
                                 @foreach ($nursinghome->images as $image)
+                                    @if ( $image->is_cover == 0)
                                     <tr>
                                         <td class="px-6 py-4"><img src="{{ $image->full_path }}" width="90"></td>
                                         <td class="px-6 py-4 text-center">
@@ -889,13 +894,15 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 w-10">
-                                            <a href="#" data-id="{{ $image->id }}" class="text-red-500 text-sm text-right"><svg class="w-4 h-4 text-red-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/> </svg></a>
+                                            <a onclick="imageDelete({{ $image->id }}, false, event)" data-id="{{ $image->id }}" class="text-red-500 text-sm text-right"><svg class="w-4 h-4 text-red-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/> </svg></a>
                                         </td>
                                     </tr>
+                                    @endif
                                 @endforeach
-
+                                
                             </table>
                         </div>
+                        @endif
                     </div>
                     
                     <span class="w-full min-h-[1px] divider clear-both"></span>
@@ -1289,5 +1296,48 @@
                 });
             });
         });
+
+        function imageDelete(image_id, is_cover = false, event) {
+            event.preventDefault();
+            // ส่งค่าไป backend เพื่ออัปเดต is_cover
+            fetch(`/nursing-home/image/${image_id}/delete`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    is_cover: is_cover,
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: 'อัปเดตรูปภาพหลักเรียบร้อยแล้ว',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload(); // ✅ รีโหลดหน้าเมื่อ Swal ปิด
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'เกิดข้อผิดพลาดในการอัปเดตรูปภาพ',
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ผิดพลาด!',
+                    text: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+                });
+            });
+        }
+
     </script>
 @endsection

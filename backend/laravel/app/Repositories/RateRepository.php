@@ -12,23 +12,24 @@ class RateRepository extends BaseRepository
     public function create(array $params)
     {
         try {
-            // 1) ตรวจสอบ user
-            $user = User::findOrFail(Arr::get($params, 'user_id'));
-
-            // 2) ตรวจสอบ author (0 = admin)
+            // 1) ตรวจสอบ author (0 = admin)
             $authorId = (int) Arr::get($params, 'author_id');
             if ($authorId > 0) {
                 $author = User::findOrFail($authorId);
             }
 
-            // 3) สร้าง Rate
+            // 2) ตรวจสอบ owner (ตัวที่จะถูก rate)
+            $owner = NursingHomeProfile::findOrFail(Arr::get($params, 'rateable_id'));
+            $ownerType = get_class($owner);
+
+            // 3) สร้าง Rate (polymorphic)
             $rate = Rate::create([
-                'user_id'     => $user->id,
-                'author_id'   => $authorId,
-                'text'        => $params['text'] ?? '',
-                'name'        => $params['name'] ?? '',
-                'description' => $params['description'] ?? '',
-                'user_type'   => $user->user_type,
+                'rateable_id'   => $owner->id,
+                'rateable_type' => $ownerType,
+                'author_id'     => $authorId,
+                'text'          => $params['text'] ?? '',
+                'name'          => $params['name'] ?? '',
+                'description'   => $params['description'] ?? '',
             ]);
 
             // 4) สร้าง RateDetail

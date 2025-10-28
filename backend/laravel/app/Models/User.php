@@ -30,14 +30,14 @@ class User extends Authenticatable
         return $this->hasOne(Nursing::class, 'user_id', 'id');
     }
     
-    public function nursingHome()
+    public function nursingHomes()
     {
-        return $this->hasOne(NursingHomeProfile::class);
+        return $this->hasMany(NursingHomeProfile::class, 'user_id', 'id');
     }
 
     public function member()
     {
-        return $this->hasOne(MemberProfile::class, 'user_id', id);
+        return $this->hasOne(MemberProfile::class, 'user_id', 'id');
     }
 
     // เช็ค type
@@ -76,4 +76,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Rate::class, 'user_id', 'id');
     }
+
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable')->where('is_cover', false);
+    }
+
+    public function coverImage()
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+    }
+
 }

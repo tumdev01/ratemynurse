@@ -41,6 +41,11 @@
                         </svg>
                         <span class="text-md text-white font-semibold">ข้อมูลทั่วไปของศูนย์</span>
                     </span>
+
+                    <div class="flex flex-col">
+                        <label for="name">เลือกเจ้าของศูนย์ <span class="req">*</span></label>
+                        <select name="user_id" id="user_id"></select>
+                    </div>
                     
                     <div class="flex flex-col">
                         <label for="name">ชื่อศูนย์ดูแลผู้สูงอายุ <span class="req">*</span></label>
@@ -72,7 +77,7 @@
                     <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="email">อีเมล <span class="req">*</span></label>
-                            <input required type="text" name="email" id="email" placeholder="example@gmail.com"
+                            <input type="text" name="email" id="email" placeholder="example@gmail.com"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('email') }}"/>
                             <label class="error text-xs text-red-600"></label>
@@ -158,14 +163,14 @@
 
                     <div class="flex flex-col">
                         <label for="map">แผนที่</label>
-                        <input required type="text" name="map" id="map"
+                        <input  type="text" name="map" id="map"
                             class="border rounded-lg px-3 py-2" value="{{ old('map') }}"/>
                     </div>
 
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="map">ฝังแผนที่ (iframe)</label>
-                            <input required type="text" name="map_embed" id="map_embed"
+                            <input  type="text" name="map_embed" id="map_embed"
                                 class="border rounded-lg px-3 py-2" value="{{ old('map_embed') }}"/>
                         </div>
                     </div>
@@ -183,14 +188,14 @@
                     </span>
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
-                            <label for="email">เลขที่ใบอนุญาตประกอบกิจการ <span class="req">*</span></label>
-                            <input required type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
+                            <label for="license_no">เลขที่ใบอนุญาตประกอบกิจการ </label>
+                            <input  type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('license_no') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="license_start_date">วันที่ออกใบอนุญาต <span class="req">*</span></label>
-                            <input required type="date" name="license_start_date" id="license_start_date" placeholder="วว/ดด/ปปปป"
+                            <input  type="date" name="license_start_date" id="license_start_date" placeholder="วว/ดด/ปปปป"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('license_start_date') }}"/>
                                 
@@ -201,13 +206,13 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="license_exp_date">วันที่หมดอายุ <span class="req">*</span></label>
-                            <input required type="text" name="license_exp_date" id="license_exp_date" placeholder="วว/ดด/ปปปป"
+                            <input  type="text" name="license_exp_date" id="license_exp_date" placeholder="วว/ดด/ปปปป"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('license_exp_date') }}"/>
                         </div>
                         <div class="flex flex-col">
                             <label for="address">หน่วยงานที่ออกใบอนุญาต <span class="req">*</span></label>
-                            <input required type="text" name="license_by" id="license_by" placeholder="เช่น กรมการแพทย์ กระทรวงสาธารณสุข"
+                            <input  type="text" name="license_by" id="license_by" placeholder="เช่น กรมการแพทย์ กระทรวงสาธารณสุข"
                                     class="border rounded-lg px-3 py-2"
                                     value="{{ old('license_by') }}"/>
                         </div>
@@ -244,13 +249,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="address">ชื่อ-นามสกุล <span class="req">*</span></label>
-                                <input required type="text" name="manager_name" id="manager_name" placeholder="ชื่อ-นามสกุล ผู้อำนวยการ"
+                                <input type="text" name="manager_name" id="manager_name" placeholder="ชื่อ-นามสกุล ผู้อำนวยการ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_name') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="address">คุณวุฒิการศึกษา <span class="req">*</span></label>
-                                <input required type="text" name="graduated" id="graduated" placeholder="เช่น ปริญญาตรี พยาบาลศาสตร์"
+                                <input type="text" name="graduated" id="graduated" placeholder="เช่น ปริญญาตรี พยาบาลศาสตร์"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('graduated') }}"/>
                             </div>
@@ -258,13 +263,13 @@
 
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
-                                <label for="address">ใบอนุญาตประกอบวิชาชีพ</label>
+                                <label for="graduated_paper">ใบอนุญาตประกอบวิชาชีพ</label>
                                 <input type="text" name="graduated_paper" id="graduated_paper" placeholder="เลขที่ใบอนุญาต (ถ้ามี)"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('graduated_paper') }}"/>
                             </div>
                             <div class="flex flex-col">
-                                <label for="address">ประสบการณ์ (ปี)</label>
+                                <label for="exp_year">ประสบการณ์ (ปี)</label>
                                 <select name="exp_year" class="border rounded-lg px-3 py-2">
                                     <option>จำนวนปี</option>
                                     @for ($i = 0; $i <= 30; $i++)
@@ -279,13 +284,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="manager_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
-                                <input required type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
+                                <input type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_phone') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="manager_email">อีเมลส่วนตัว <span class="req">*</span></label>
-                                <input required type="text" name="manager_email" id="manager_email" placeholder="example@gmail.com"
+                                <input type="text" name="manager_email" id="manager_email" placeholder="example@gmail.com"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_email') }}"/>
                             </div>
@@ -300,13 +305,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="assist_name">ชื่อ-นามสกุล แพทย์	<span class="req">*</span></label>
-                                <input required type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
+                                <input type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_name') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_no">เลขที่ใบอนุญาตแพทย์ <span class="req">*</span></label>
-                                <input required type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
+                                <input type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_no') }}"/>
                             </div>
@@ -315,13 +320,13 @@
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
                                 <label for="assist_expert">ความเชี่ยวชาญ <span class="req">*</span></label>
-                                <input required type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
+                                <input type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_expert') }}"/>
                             </div>
                             <div class="flex flex-col">
                                 <label for="assist_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
-                                <input required type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
+                                <input type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_phone') }}"/>
                             </div>
@@ -822,7 +827,7 @@
                         </div>
                         <div class="w-full">
                             <label>วิธีการชำระเงิน</label>
-                            <input required type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods') }}">
+                            <input type="text" name="payment_methods" class="w-full border rounded-lg px-3 py-2" value="{{ old('payment_methods') }}">
                         </div>
                     </div>
                     
@@ -1071,12 +1076,9 @@
             // ตรวจสอบ pattern: ต้องขึ้นต้นด้วย 0 และมี 10 หลัก
             const thaiPhonePattern = /^0[0-9]{9}$/;
 
-            // if (thaiPhonePattern.test(this.value)) {
-            //     loginBtn.removeAttribute('disabled'); // เปิดปุ่ม
-            // } else {
-            //     loginBtn.setAttribute('disabled', true); // ปิดปุ่ม
-            // }
         });
+
+        ajaxCallUserOption();
 
         ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
 
@@ -1177,6 +1179,35 @@
                     },
                     delay: 250,
                     cache: true
+                }
+            });
+        }
+
+        function ajaxCallUserOption() {
+            $('#user_id').select2({
+                placeholder: "กรุณาเลือกเจ้าของศูนย์",
+                ajax: {
+                    transport: function (params, success, failure) {
+                        axios.get('/nursing-home/users', {
+                            params: { term: params.data.term }
+                        })
+                        .then(function (response) {
+                            // ส่ง response ให้ select2 ผ่าน success
+                            success(response.data);
+                        })
+                        .catch(function (error) {
+                            failure(error);
+                        });
+                    },
+                    delay: 250,
+                    cache: true,
+                    processResults: function (data) {
+                        // data คือ response.data จาก Laravel
+                        return {
+                            results: data.results,      // <-- array ของ {id, text}
+                            pagination: { more: false } // <-- ปิด infinite scroll
+                        };
+                    }
                 }
             });
         }

@@ -152,7 +152,7 @@
                     </span>
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
-                            <label for="email">ชื่อผู้ติดต่อ <span class="req">*</span></label>
+                            <label for="email">ชื่อผู้ติดต่อ </label>
                             <input required type="text" name="license_no" id="license_no" placeholder="เลขที่ใบอนุญาต"
                                 class="border rounded-lg px-3 py-2"
                                 value="{{ old('license_no') }}"/>

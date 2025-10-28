@@ -31,17 +31,17 @@ class NursingHomeUpdateRequest extends FormRequest
             'main_phone' => [
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'main_phone')
-                ->ignore($this->nursingHomeProfileId(), 'id')
-                ->whereNull('deleted_at'),
+                // Rule::unique('nursing_home_profiles', 'main_phone')
+                // ->ignore($this->nursingHomeProfileId(), 'id')
+                // ->whereNull('deleted_at'),
             ],
             'res_phone' => [
                 'nullable',
                 'string',
                 'regex:/^\d{10}$/',
-                Rule::unique('nursing_home_profiles', 'res_phone')
-                ->ignore($this->nursingHomeProfileId(), 'id')
-                ->whereNull('deleted_at'),
+                // Rule::unique('nursing_home_profiles', 'res_phone')
+                // ->ignore($this->nursingHomeProfileId(), 'id')
+                // ->whereNull('deleted_at'),
             ],
 
             'facebook' => ['nullable', 'url'],

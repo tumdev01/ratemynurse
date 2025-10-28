@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Repositories\MemberRepository;
+use App\Http\Requests\MemberCreateRequest;
 
 class MemberController extends Controller 
 {
@@ -22,5 +23,10 @@ class MemberController extends Controller
             'status' => 'success',
             'data'   => $result,
         ]);
+    }
+
+    public function create(MemberCreateRequest $request)
+    {
+        dd($request->all());
     }
 }

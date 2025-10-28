@@ -125,13 +125,13 @@ class NursingRepository
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
-                'rates:user_id,scores,text,name,description',
                 'images:id,user_id,path,is_cover',
                 'coverImage:id,user_id,path,is_cover',
-                'cv'
+                'rates.rate_details',
+                'costs'
             ])
-            ->withAvg('rates as average_score', 'scores')
-            ->withCount('rates as review_count')
+            ->select('id','firstname','lastname','phone','email')
+            ->withCount(['rates as review_count'])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
             ->where('id', $id)
@@ -152,7 +152,9 @@ class NursingRepository
                 'rates.rate_details:rate_id,scores,scores_for',
                 'images:id,user_id,path,is_cover',
                 'coverImage:id,user_id,path,is_cover',
-                'cv'
+                'cv',
+                'detail',
+                'detail.images:id,detail_id,path'
             ])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)

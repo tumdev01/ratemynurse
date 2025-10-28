@@ -8,6 +8,7 @@ use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\NursingHomeRoomController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -38,10 +39,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', [NursingHomeController::class, 'create'])->name('nursing-home.create');
         Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
         Route::post('/image/{id}/cover', [NursingHomeController::class, 'updateCover'])->name('nursinghome.image.cover');
+        Route::post('/image/{id}/delete', [NursingHomeController::class, 'deleteImage'])->name('nursinghome.image.delete');
 
         Route::get('/{id}/rate', [NursingHomeController::class, 'review'])->where('id', '[0-9]+')->name('nursing-home.edit-rate');
         Route::post('/{id}/rate', [NursingHomeController::class, 'reviewCreate'])->where('id', '[0-9]+')->name('nursing-home.edit-rate.save');
 
+        Route::get('/{id}/room', [NursingHomeRoomController::class, 'index'])->where('id', '[0-9]+')->name('nursing-home.room.index');
+        Route::get('/rooms', [NursingHomeRoomController::class, 'getRoomDataTable'])->name('nursing-home.room.data');
+        Route::get('{nursing_home_id}/room/create', [NursingHomeRoomController::class, 'create'])->name('nursing-home.room.create');
+        Route::post('{nursing_home_id}/room/create', [NursingHomeRoomController::class, 'store'])->name('nursing-home.room.store');
+
+        Route::prefix('/profile')->group(function() {
+            Route::get('/{user_id}', [NursingHomeController::class, 'profileView'])->where('user_id', '[0-9]+')->name('nursing-home.profile');
+            Route::post('/{user_id}/update', [NursingHomeController::class, 'profileUpdate'])->where('user_id', '[0-9]+')->name('nursing-home.profile.update');
+        });
     });
     Route::get('/nursings', [NursingController::class, 'getNursingPagination'])->name('nursing.data');
     Route::prefix('nursing')->group(function() {
@@ -49,6 +60,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', [NursingController::class, 'create'])->name('nursing.create');
         Route::post('/create', [NursingController::class, 'store'])->name('nursing.store');
         Route::get('/{id}/edit', [NursingController::class, 'edit'])->where('id', '[0-9]+')->name('nursing.edit');
+        Route::get('/{id}/history', [NursingController::class, 'historyView'])->where('id', '[0-9]+')->name('nursing.history');
+        Route::get('/{id}/detail', [NursingController::class, 'detailView'])->where('id', '[0-9]+')->name('nursing.detail');
+        Route::post('/{id}/detail', [NursingController::class, 'updateDetail'])->where('id', '[0-9]+')->name('nursing.detail.update');
+        Route::get('/{id}/cost', [NursingController::class, 'costView'])->where('id', '[0-9]+')->name('nursing.cost');
+        Route::post('/{id}/cost', [NursingController::class, 'updateCost'])->where('id', '[0-9]+')->name('nursing.cost.update');
     });
 
     Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {
@@ -70,6 +86,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/update', [JobController::class, 'update'])->where('id', '[0-9]+')->name('job.update');
         Route::post('/{id}/status-update', [JobController::class, 'updateStatus'])->where('id', '[0-9]+')->name('job.status-update');
     });
+
+    Route::get('/nursing-home/users', [NursingHomeController::class, 'getNursingHomeUser']);
+
     
 });
 
