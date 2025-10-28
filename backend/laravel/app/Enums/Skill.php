@@ -4,7 +4,7 @@ namespace App\Enums;
 final class Skill extends Enum
 {
     const BASIC_PHYSIOTHERAPY = 'กายภาพบำบัดเบื้องต้น';
-    const การทานอาหาร = 'การทานอาหาร';
+    const EATEN = 'การทานอาหาร';
     const MEDICATION_VITALSIGNS = 'จัดยา และวัดสัญญาณชีพ';
     const BOWELCARE = 'การขับถ่าย/ชําระร่างกาย';
     const FEEDING = 'ป้อนอาหาร';
@@ -12,6 +12,14 @@ final class Skill extends Enum
     const TUBE_FEEDING = 'ให้อาหารทางสายยาง (ติดเตียง)';
     const URINARY_CATHETER = 'ใส่สายสวนปัสสาวะ';
     const SUCTION_SECRETION = 'ดูดเสมหะ (ติดเตียง)';
+    const BEDRIDDEN_CARE = 'การดูแลผู้ป่วยติดเตียง';
+    const MEDICATION_AND_INJECTION = 'การให้ยาและการฉีดยา';
+    const DAILY_ACTIVITY_ASSISTANCE = 'การช่วยเหลือกิจกรรมประจำวัน (ADL)';
+    const WOUND_CARE = 'การดูแลแผลและแต่งแผล';
+    const MEDICAL_EQUIPMENT_USE = 'การใช้เครื่องทางการแพทย์';
+    const CHRONIC_CARE = 'การดูแลผู้ป่วยโรคเรื้อรัง';
+    const DEMENTIA_CARE = 'การดูแลผู้ป่วยโรคอัลไซเมอร์/สมองเสื่อม';
+    const OTHER_SKILLS = 'ทักษะอื่นๆ';
     
     public static function list(): array
     {
