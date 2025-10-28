@@ -20,6 +20,7 @@ class NursingHomeProfile extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'email',
         'description',
         'main_phone',
         'res_phone',
@@ -95,7 +96,9 @@ class NursingHomeProfile extends Model
         'youtube_url',
         'map',
         'map_embed',
-        'coords'
+        'map_show',
+        'coords',
+        'status'
     ];
 
     /**
@@ -161,7 +164,7 @@ class NursingHomeProfile extends Model
         'ambulance' => 'boolean',
         'ambulance_amount' => 'integer',
         'van_shuttle' => 'boolean',
-        'special_medical_equipment' => 'boolean',
+        'special_medical_equipment' => 'string',
         'total_staff' => 'integer',
         'total_fulltime_nurse' => 'integer',
         'total_parttime_nurse' => 'integer',
@@ -204,11 +207,13 @@ class NursingHomeProfile extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo|\App\Models\User
      */
-    public function user()
+    // Relation กับเจ้าของบ้าน
+    public function owner()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    // Relation province/district/subDistrict
     public function province()
     {
         return $this->belongsTo(Province::class, 'province_id', 'id');
@@ -224,5 +229,34 @@ class NursingHomeProfile extends Model
         return $this->belongsTo(SubDistrict::class, 'sub_district_id', 'id');
     }
 
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable')->where('is_cover', false);
+    }
 
+    public function coverImage()
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+    }
+
+    public function staffs()
+    {
+        return $this->hasMany(NursingHomeStaff::class, 'user_id', 'id');
+    }
+
+    // Rates
+    public function rates()
+    {
+        return $this->morphMany(Rate::class, 'rateable');
+    }
+
+    public function rooms()
+    {
+        return $this->hasMany(NursingHomeRoom::class, 'user_id', 'id');
+    }
+
+    public function licenses()
+    {
+        return $this->hasmany(NursingHomeLicenseImage::class, 'profile_id', 'id');
+    }
 }
