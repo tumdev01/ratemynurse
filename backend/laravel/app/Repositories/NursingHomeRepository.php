@@ -497,6 +497,7 @@ class NursingHomeRepository
                 'coverImage:id,imageable_id,imageable_type,path,is_cover',
                 'images:id,imageable_id,imageable_type,path,is_cover',
                 'rates.rate_details',
+                'licenses'
             ])
             ->withCount(['rates as review_count'])
             //->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description'])
