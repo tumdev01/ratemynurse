@@ -110,12 +110,14 @@ class NursingHomeRepository
         $nursingHome = NursingHomeProfile::query()
             ->with([
                 'owner:id,firstname,lastname,user_type,status',
+                'province:id,name',
+                'district:id,name',
+                'subDistrict:id,name',
                 'rates',
                 'rates.rate_details:rate_id,scores,scores_for',
                 'images:id,imageable_id,imageable_type,path,is_cover',
                 'coverImage:id,imageable_id,imageable_type,path,is_cover',
-                'staffs',
-                'licenses'
+                'staffs'
             ])
             ->whereNull('deleted_at')
             ->where('id', $id)
@@ -618,6 +620,9 @@ class NursingHomeRepository
                 $input['facilities'] = $facilities;
                 $input['center_highlights'] = $center_highlights;
                 $profile->update($input);
+
+                // Update Licenses
+                
                 return $profile;
             } else {
                 throw new \Exception('Profile not found for this user.');
