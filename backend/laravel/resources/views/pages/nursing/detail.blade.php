@@ -26,7 +26,7 @@
 
             <div class="flex flex-col gap-[8px]">
                 <label class="text-[#5A5A5A] text-medium" for="about">รายละเอียดเกี่ยวกับบริการของคุณ<span class="req">*</span></label>
-                <textarea id="about" name="about" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="คำอธิบายรายละเอียดเกี่ยวกับบริการของคุณเพื่อให้ผู้ใช้บริการสนใจ">{{ old('about', $nursing->detail->about) }}</textarea>
+                <textarea id="about" name="about" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="คำอธิบายรายละเอียดเกี่ยวกับบริการของคุณเพื่อให้ผู้ใช้บริการสนใจ"></textarea>
                 <span class="text-sm text-[#8C8A94]">คำอธิบายจะแสดงในหน้าข้อมูลบริการของคุณ กรุณาอธิบายรายละเอียดบริการของคุณ</span>
             </div>
 
@@ -43,7 +43,7 @@
                         </div>
                     </div>
                 </div>
-                @if ( old('images', $nursing->detail->images))
+                @if (old('images', optional($nursing->detail)->images))
                 <div id="image_listing" class="p-[16px] gap-[16px] bg-[#F8F8F8] rounded-[8px] mt-4 flex flex-row gap-[24px] flex-wrap">
                     @foreach($nursing->detail->images as $image)
                         <div class="rounded-md w-[92px] h-[92px] relative">
@@ -78,7 +78,7 @@
                 </div>
                 <div class="flex flex-col flex-wrap gap-[16px]">
                     @php
-                        $hirerule_check = old('hire_rules', $nursing->detail->hire_rules) ?? [];
+                        $hirerule_check = old('hire_rules', $nursing?->detail?->hire_rules ?? []);
                     @endphp
                     <div class="flex flex-row gap-[8px] items-center text-[#1F1F1F]">
                         <input class="rounded-md border border-gray-200 w-5 h-5" type="checkbox" name="hire_rules[]" value="FULL_STAY"
@@ -121,7 +121,7 @@
                 <span class="text-sm text-[#1F1F1F]">เพิ่มทักษะความเชี่ยวชาญพิเศษ ช่วยเพิ่มความน่าสนใจให้กับประกาศของคุณ</span>
                 <div class="flex flex-col flex-wrap gap-[16px]">
                     @php
-                        $skills_check = old('skills', $nursing->detail->skills) ?? [];
+                        $skills_check = old('skills', $nursing?->detail?->skills ?? []);
                     @endphp
                     <div class="flex flex-row gap-[8px] items-center text-[#1F1F1F]">
                         <input class="rounded-md border border-gray-200 w-5 h-5" type="checkbox" name="skills[]" value="BASIC_PHYSIOTHERAPY"
@@ -212,7 +212,7 @@
                         <div class="w-full flex flex-col gap-[8px]">
                             <label for="other_skills">ทักษะอื่นๆ <span class="req">*</span></label>
                             <input required type="text" name="other_skills" id="other_skills" maxlength="255" placeholder="ทักษะอื่นๆ คั่นด้วย , เช่น การอ่าน, การเล่าเรื่อง"
-                                class="border rounded-lg px-3 py-2" value="{{ old('other_skills', $nursing->detail->other_skills) }}"/>
+                                class="border rounded-lg px-3 py-2" value=""/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
                     </div>
