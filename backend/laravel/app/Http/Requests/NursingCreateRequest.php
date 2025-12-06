@@ -22,7 +22,12 @@ class NursingCreateRequest extends FormRequest
             'user_type' => ['required', 'in:NURSING'],
             'date_of_birth' => ['required', 'date'],
             'blood'     => ['nullable', 'string'],
-            'gender'    => ['required', 'string', 'in:MALE,FEMALE'],
+            'gender'    => ['required', 'string', 'in:MALE,FEMALE,OTHER'],
+            'email' => [
+                'required',
+                'string',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
             'phone' => [
                 'required',
                 'string',
@@ -30,15 +35,16 @@ class NursingCreateRequest extends FormRequest
                 'size:10',
                 Rule::unique('users', 'phone')->whereNull('deleted_at'),
             ],
-            'profile_image' => [
-                'max:50000',
-                'mimes:jpeg,png'
-            ],
-            'address' => ['required', 'string', 'max:255'],
-            'province_id' => ['required', 'integer'],
-            'district_id' => ['required', 'integer'],
-            'sub_district_id' => ['required', 'integer'],
-            'zipcode' => ['required', 'string', 'regex:/^\d{5}$/'],
+            // disabled rule
+            // 'profile_image' => [
+            //     'max:50000',
+            //     'mimes:jpeg,png'
+            // ],
+            // 'address' => ['required', 'string', 'max:255'],
+            // 'province_id' => ['required', 'integer'],
+            // 'district_id' => ['required', 'integer'],
+            // 'sub_district_id' => ['required', 'integer'],
+            // 'zipcode' => ['required', 'string', 'regex:/^\d{5}$/'],
         ];
     }
 
@@ -58,7 +64,9 @@ class NursingCreateRequest extends FormRequest
             'nickname.max'       => 'ชื่อเล่นต้องมีความยาวไม่เกิน 25 ตัวอักษร',
             'nickname.string'    => 'ชื่อเล่นต้องเป็นตัวอักษร',
             'phone.unique'       => 'หมายเลขโทรศัพท์นี้มีผู้ใช้แล้ว',
-            'phone.size'         => 'หมายเลขโทรศัพท์ต้องมี 10 ตัว'
+            'phone.size'         => 'หมายเลขโทรศัพท์ต้องมี 10 ตัว',
+            'email.unique'       => 'อีเมล์นี้มีผู้ใช้งานแล้ว',
+            'date_of_birth.date' => 'วัน/เดือน/ปีเกิด ไม่ถูกต้อง',
         ];
     }
 }
