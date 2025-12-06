@@ -55,9 +55,11 @@ Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
 
 // Route role only for Nursing role
 Route::middleware(['auth:sanctum', 'nursing.role'])->group(function () {
+    Route::get('/nursing/{id}', [NursingController::class, 'getNursingById']);
     Route::prefix('job-nursing')->group(function(){
         Route::post('/apply', [JobInterviewController::class, 'applyNursingJob']);
     });
+    Route::post('/nursing/profile/update', [NursingController::class, 'updateProfile']);
 });
 
 
@@ -94,6 +96,8 @@ Route::middleware(['verify.internal.token'])->group(function () {
     Route::post('/member/create', [MemberController::class, 'create']);
     Route::post('/nursinghome/create', [NursingHomeController::class, 'userCreate']);
     Route::post('/nursinghome/profile/create', [NursingHomeController::class, 'userCreateProfile']);
+
+    Route::post('/nursing/create', [NursingController::class, 'store']);
 });
 
 
