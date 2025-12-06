@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Sanctum\HasApiTokens;
+use App\Traits\HasSubscriptions;
 
 class Nursing extends User
 {
     protected $table = 'users';
 
     use HasApiTokens; // << important
+    use HasSubscriptions;
 
     protected $fillable = [
         'firstname',

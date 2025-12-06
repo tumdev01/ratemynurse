@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class NursingProfile extends Model
 {
     use HasFactory,SoftDeletes;
+    use \App\Traits\HasSubscriptions;
 
     protected $table = 'nursing_profiles';
 
