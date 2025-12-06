@@ -24,18 +24,24 @@ class NursingProfile extends Model
         'religion',
         'about',
         'description',
+        'gender',
+        'date_of_birth',
+        'nationality',
+        'cost',
+        'sub_district_id',
+        'district_id',
+        'province_id',
+        'zipcode',
+        'certified',
         'exp_year',
         'work_style',
         'skill',
         'service_packages',
-        'gender',
-        'date_of_birth',
-        'nationality',
-        'province_id',
-        'district_id',
-        'sub_district_id',
-        'zipcode',
-        'certified'
+        'nickname',
+        'blood',
+        'address',
+        'medical_condition',
+        'history_of_drug_allergy'
     ];
 
     /**
