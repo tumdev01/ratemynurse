@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MemberProfile extends Model
 {
-    use HasFactory,SoftDeletes;
+    use SoftDeletes;
+    use \App\Traits\HasSubscriptions;
 
     protected $table = 'member_profiles';
 
@@ -94,6 +94,4 @@ class MemberProfile extends Model
     {
         return $this->belongsTo(Job::class, 'user_id', 'id');
     }
-
-
 }
