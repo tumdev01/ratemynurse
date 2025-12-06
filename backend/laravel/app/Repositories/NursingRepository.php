@@ -217,4 +217,12 @@ class NursingRepository
             ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
             ->make(true);
     }
+
+    public function updateProfile(array $input, Int $user_id)
+    {
+        $profileId = Arr::get($input, 'id');
+        $user = NursingHome::findOrFail($user_id);
+
+        dd($input);
+    }
 }
