@@ -3,11 +3,25 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Laravel\Sanctum\HasApiTokens;
 
 class Nursing extends User
 {
-    protected $table = 'users'; // <<=== เพิ่มบรรทัดนี้
+    protected $table = 'users';
 
+    use HasApiTokens; // << important
+
+    protected $fillable = [
+        'firstname',
+        'lastname',
+        'email',
+        'password',
+        'phone',
+        'status',
+        'plan',
+        'plan_start',
+        'user_type'
+    ];
     protected static function booted()
     {
         static::addGlobalScope('user_type', function (Builder $builder) {
@@ -20,11 +34,6 @@ class Nursing extends User
         return $this->hasOne(NursingProfile::class, 'user_id', 'id');
     }
 
-    public function cv()
-    {
-        return $this->hasOne(NursingCvs::class, 'user_id', 'id');
-    }
-
     public function images()
     {
         return $this->hasMany(Image::class, 'user_id', 'id')->where('is_cover', false);
@@ -34,7 +43,7 @@ class Nursing extends User
     {
         return $this->hasOne(Image::class, 'user_id', 'id')->where('is_cover', true);
     }
-
+    
     public function rates()
     {
         return $this->hasMany(Rate::class, 'user_id', 'id');
@@ -45,8 +54,4 @@ class Nursing extends User
         return $this->hasMany(NursingCost::class, 'user_id', 'id');
     }
 
-    public function detail()
-    {
-        return $this->hasOne(NursingDetail::class, 'user_id', 'id');
-    }
 }
