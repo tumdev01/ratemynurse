@@ -18,12 +18,12 @@ return new class extends Migration
                 ->onDelete('cascade')->onUpdate('cascade');
 
             $table->string('name');
-            $table->string('about');
+            $table->string('about')->nullable();
             $table->string('email');
             $table->string('phone');
-            $table->string('gender');
-            $table->date('date_of_birth');
-            $table->string('address');
+            $table->string('gender')->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->string('address')->nullable();
             $table->string('cardid');
             $table->foreignId('sub_district_id')->nullable()
                 ->references('id')->on('sub_districts')
@@ -34,14 +34,14 @@ return new class extends Migration
             $table->foreignId('province_id')->nullable()
                 ->references('id')->on('provinces')
                 ->cascadeOnUpdate()->nullOnDelete();
-            $table->string('zipcode');
+            $table->string('zipcode')->nullable();
 
             // Contact person
-            $table->string('contact_person_name');
-            $table->string('contact_person_phone');
-            $table->string('contact_person_relation');
+            $table->string('contact_person_name')->nullable();
+            $table->string('contact_person_phone')->nullable();
+            $table->string('contact_person_relation')->nullable();
 
-            $table->json('services_required');
+            $table->json('services_required')->nullable();
 
             $table->boolean('privacy')->default(0);
             $table->boolean('policy')->default(0);
