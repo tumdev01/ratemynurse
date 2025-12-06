@@ -10,6 +10,8 @@ use App\Http\Controllers\API\OtpController;
 use App\Http\Controllers\API\RateController;
 use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\JobInterviewController;
+use App\Models\Nursing;
+use App\Http\Resources\NursingResource;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -46,8 +48,8 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     //Roiute::get('/job-filter', [JobController::class, 'jobFilters']);
 });
 
-
 Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
+    Route::get('/member/{id}', [MemberController::class, 'getUserInfo']);
     Route::post('/info', [MemberController::class, 'getUserInfo']);
     Route::post('/job/create', [JobController::class, 'store']);
     Route::post('/job/user/job-list', [JobController::class, 'getJobList']);
@@ -56,7 +58,7 @@ Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
 // Route role only for Nursing role
 Route::middleware(['auth:sanctum', 'nursing.role'])->group(function () {
     Route::get('/nursing/{id}', [NursingController::class, 'getNursingById']);
-    Route::prefix('job-nursing')->group(function(){
+    Route::prefix('job-nursing')->group(function () {
         Route::post('/apply', [JobInterviewController::class, 'applyNursingJob']);
     });
     Route::post('/nursing/profile/update', [NursingController::class, 'updateProfile']);
@@ -83,7 +85,35 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+
+    switch ($user->user_type) {
+        case 'NURSING':
+            $model = Nursing::with(['profile', 'images', 'coverImage'])->find($user->id);
+            $data = (new NursingResource($model))->toArray($request);
+            break;
+
+        case 'NURSING_HOME':
+            $model = NursingHome::with(['homeProfile', 'rooms'])->find($user->id);
+            $data = (new NursingHomeResource($model))->toArray($request);
+            break;
+
+        case 'MEMBER':
+            $model = Member::with(['subscription'])->find($user->id);
+            $data = (new MemberResource($model))->toArray($request);
+            break;
+
+        default:
+            return response()->json([
+                'success' => false,
+                'message' => 'User type not supported'
+            ], 400);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $data,
+    ]);
 });
 
 Route::middleware(['verify.internal.token'])->group(function () {
