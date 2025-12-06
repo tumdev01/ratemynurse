@@ -1,7 +1,7 @@
 <?php
 namespace App\Enums;
 
-final class Skill extends Enum
+final class Skill
 {
     const BASIC_PHYSIOTHERAPY = 'กายภาพบำบัดเบื้องต้น';
     const EATEN = 'การทานอาหาร';
@@ -20,6 +20,7 @@ final class Skill extends Enum
     const CHRONIC_CARE = 'การดูแลผู้ป่วยโรคเรื้อรัง';
     const DEMENTIA_CARE = 'การดูแลผู้ป่วยโรคอัลไซเมอร์/สมองเสื่อม';
     const OTHER_SKILLS = 'ทักษะอื่นๆ';
+    const MASSAGE_AND_PHYSICAL_THERAPY = 'การนวดและกายภาพบำบัด';
     
     public static function list(): array
     {
