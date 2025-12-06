@@ -12,6 +12,10 @@ use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\JobInterviewController;
 use App\Models\Nursing;
 use App\Http\Resources\NursingResource;
+use App\Models\NursingHome;
+use App\Http\Resources\NursingHomeResource;
+use App\Models\Member;
+use App\Http\Resources\MemberResource;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -99,7 +103,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
             break;
 
         case 'MEMBER':
-            $model = Member::with(['subscription'])->find($user->id);
+            $model = Member::with(['profile.subscriptions'])->find($user->id);
             $data = (new MemberResource($model))->toArray($request);
             break;
 
