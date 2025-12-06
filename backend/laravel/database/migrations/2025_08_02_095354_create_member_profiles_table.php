@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('gender');
             $table->date('date_of_birth');
             $table->string('address');
-
+            $table->string('cardid');
             $table->foreignId('sub_district_id')->nullable()
                 ->references('id')->on('sub_districts')
                 ->cascadeOnUpdate()->nullOnDelete();

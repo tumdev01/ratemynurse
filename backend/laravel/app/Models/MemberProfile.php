@@ -37,6 +37,7 @@ class MemberProfile extends Model
         'privacy',
         'policy',
         'newsletter',
+        'cardid',
     ];
 
     /**
