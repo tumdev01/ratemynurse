@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class NursingProfile extends Model
 {
-    use HasFactory,SoftDeletes;
-    use \App\Traits\HasSubscriptions;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'nursing_profiles';
 
@@ -80,6 +79,4 @@ class NursingProfile extends Model
     {
         return $this->belongsTo(SubDistrict::class, 'sub_district_id', 'id');
     }
-
-
 }

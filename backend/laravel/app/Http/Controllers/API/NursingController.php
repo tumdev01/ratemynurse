@@ -141,21 +141,19 @@ class NursingController extends Controller {
         }
 
         try {
-            $result = $this->nursing_repository->updateProfile($request->all(), $user->id);
+            $result = $this->nursing_api_repository->updateProfile($request->all(), $user->id);
 
             return response()->json([
                 'success' => true,
                 'message' => $request->has('id') ? 'Profile updated successfully' : 'Profile created successfully',
                 'data' => $result
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
-
     }
 
 }

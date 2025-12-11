@@ -48,7 +48,7 @@ class JobController extends Controller {
     {
         try {
             $jobs = $this->job_repository->getJobPagination($request->all());
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'success',

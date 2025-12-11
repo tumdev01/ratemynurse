@@ -15,6 +15,16 @@ class NursingDetail extends Model {
     ];
 
     /**
+     * Get the user that owns the NursingDetail
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * Get all of the comments for the NursingDetail
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

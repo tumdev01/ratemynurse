@@ -128,7 +128,9 @@ class NursingRepository
                 'images:id,user_id,path,is_cover',
                 'coverImage:id,user_id,path,is_cover',
                 'rates.rate_details',
-                'costs'
+                'costs',
+                'cvs',
+                'detail',
             ])
             ->select('id','firstname','lastname','phone','email')
             ->withCount(['rates as review_count'])
@@ -152,9 +154,6 @@ class NursingRepository
                 'rates.rate_details:rate_id,scores,scores_for',
                 'images:id,user_id,path,is_cover',
                 'coverImage:id,user_id,path,is_cover',
-                'cv',
-                'detail',
-                'detail.images:id,detail_id,path'
             ])
             ->whereNull('deleted_at')
             ->where('status', '!=', 0)
@@ -216,13 +215,5 @@ class NursingRepository
             ->rawColumns(['cover_image', 'action'])
             ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
             ->make(true);
-    }
-
-    public function updateProfile(array $input, Int $user_id)
-    {
-        $profileId = Arr::get($input, 'id');
-        $user = NursingHome::findOrFail($user_id);
-
-        dd($input);
     }
 }

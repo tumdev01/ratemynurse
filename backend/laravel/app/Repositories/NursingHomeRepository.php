@@ -620,9 +620,6 @@ class NursingHomeRepository
                 $input['facilities'] = $facilities;
                 $input['center_highlights'] = $center_highlights;
                 $profile->update($input);
-
-                // Update Licenses
-                
                 return $profile;
             } else {
                 throw new \Exception('Profile not found for this user.');

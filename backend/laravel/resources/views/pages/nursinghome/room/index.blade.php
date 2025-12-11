@@ -3,7 +3,7 @@
 @section('content')
 <div class="p-4 sm:ml-64">
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <h1>รายการ ห้องพัก <a class="underline text-blue-200" href="{{ route('nursing-home.edit', $nursingHome->id) }}">{{$nursingHome->name}}</a></h1>
+        <h1>รายการ ห้องพัก <a class="underline text-blue-200" href="{{ route('nursing-home.edit', $nursingHome->id) }}">{{$nursingHome->profile->name}}</a></h1>
         <a href="{{route('nursing-home.room.create', $nursingHome->id)}}" class="text-blue-600 hover:underline">เพิ่มใหม่</a>
     </div>
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg opacity-0" id="roomTableWrapper">

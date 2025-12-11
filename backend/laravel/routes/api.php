@@ -11,10 +11,9 @@ use App\Http\Controllers\API\RateController;
 use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\JobInterviewController;
 use App\Models\Nursing;
-use App\Http\Resources\NursingResource;
 use App\Models\NursingHome;
-use App\Http\Resources\NursingHomeResource;
 use App\Models\Member;
+use App\Http\Resources\NursingResource;
 use App\Http\Resources\MemberResource;
 /*
 |--------------------------------------------------------------------------
@@ -93,7 +92,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 
     switch ($user->user_type) {
         case 'NURSING':
-            $model = Nursing::with(['profile', 'images', 'coverImage'])->find($user->id);
+            $model = Nursing::with(['profile', 'images', 'coverImage', 'cvs', 'cvs.images'])->find($user->id);
             $data = (new NursingResource($model))->toArray($request);
             break;
 

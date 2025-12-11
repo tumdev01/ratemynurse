@@ -47,10 +47,12 @@ class NursingHomeController extends Controller {
             DB::transaction(function () use ($request) {
                 $user = null;
 
+                // กรณีที่มี user_id มา
                 if ($request->filled('user_id')) {
                     $user = NursingHome::find($request->user_id);
                 }
 
+                // ถ้าไม่มี user_id -> สร้างใหม่
                 if (!$user) {
                     $user = NursingHome::create([
                         'firstname' => $request->name,
@@ -64,6 +66,7 @@ class NursingHomeController extends Controller {
                 }
 
                 if ($user && $user->id) {
+                    // ====== build ข้อมูล type ต่าง ๆ ======
                     $home_service_type = null;
                     if ($request->home_service_type) {
                         $pre_home_service_type = [];
@@ -294,7 +297,6 @@ class NursingHomeController extends Controller {
     public function update(NursingHomeUpdateRequest $request, int $id)
     {
         $result = $this->nursing_home_repository->updateNursingHomeData($request, $id);
-
         if ($result['status'] === 'success') {
             return redirect()
                 ->back() // กลับไปหน้าเดิม
@@ -315,7 +317,7 @@ class NursingHomeController extends Controller {
     {
         $image = Image::findOrFail($id);
         Image::where('type', 'NURSING_HOME')
-            ->where('user_id', $image->user_id)
+            ->where('imageable_id', $image->user_id)
             ->update(['is_cover' => 0]);
 
         $image->is_cover = $request->is_cover;

@@ -10,9 +10,17 @@ class NursingCvImage extends Model {
     protected $fillable = [
         'user_id',
         'cv_id',
+        'name',
         'path',
         'filetype'
     ];
+
+    protected $appends = ['full_path'];
+
+    public function getFullPathAttribute()
+    {
+        return url($this->path);
+    }
 
     public function cv()
     {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Enums;
 
 final class Skill
@@ -21,7 +22,7 @@ final class Skill
     const DEMENTIA_CARE = 'การดูแลผู้ป่วยโรคอัลไซเมอร์/สมองเสื่อม';
     const OTHER_SKILLS = 'ทักษะอื่นๆ';
     const MASSAGE_AND_PHYSICAL_THERAPY = 'การนวดและกายภาพบำบัด';
-    
+
     public static function list(): array
     {
         return (new \ReflectionClass(static::class))->getConstants();
