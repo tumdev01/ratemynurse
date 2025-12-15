@@ -130,9 +130,13 @@ class NursingRepository
                 'rates.rate_details',
                 'costs',
                 'cvs',
+<<<<<<< HEAD
                 'cvs.images',
                 'detail',
                 'detail.images'
+=======
+                'detail',
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
             ])
             ->select('id','firstname','lastname','phone','email')
             ->withCount(['rates as review_count'])
