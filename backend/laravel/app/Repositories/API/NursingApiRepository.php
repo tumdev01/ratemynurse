@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Hash;
 use App\Enums\UserType;
 use App\Models\NursingCvs;
 use App\Models\NursingCvImage;
+<<<<<<< HEAD
 use App\Models\NursingDetailImage;
+=======
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
 use Illuminate\Support\Carbon;
 use App\Enums\Skill;
 use Illuminate\Http\UploadedFile;
@@ -60,7 +63,10 @@ class NursingApiRepository
 
     public function updateProfile(array $input, Int $user_id)
     {
+<<<<<<< HEAD
 
+=======
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
         DB::beginTransaction();
 
         try {
@@ -159,6 +165,23 @@ class NursingApiRepository
             $cvId = $nursingCv->id;
 
             /* -----------------------------
+<<<<<<< HEAD
+=======
+            | 4) CV Images — Delete removed
+            ----------------------------- */
+            $keepIds = Arr::get($input, 'existing_image_ids', []);
+
+            $nursingCv->images()
+                    ->whereNotIn('id', $keepIds)
+                    ->each(function ($img) {
+                        if (File::exists(public_path($img->path))) {
+                            File::delete(public_path($img->path));
+                        }
+                        $img->delete();
+                    });
+
+            /* -----------------------------
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
             | 5) CV Images — Upload new
             ----------------------------- */
             if (!empty($input['cvs_images'])) {
@@ -215,7 +238,11 @@ class NursingApiRepository
                 $skills = json_encode($formatted);
             }
 
+<<<<<<< HEAD
             $nursingDetail = NursingDetail::updateOrCreate(
+=======
+            NursingDetail::updateOrCreate(
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
                 ['user_id' => $user_id],
                 [
                     'about'        => Arr::get($input, 'about'),
@@ -225,6 +252,7 @@ class NursingApiRepository
                 ]
             );
 
+<<<<<<< HEAD
             if(!empty($input['detail_images'])) {
                 foreach ($input['detail_images'] as $file) {
 
@@ -256,6 +284,8 @@ class NursingApiRepository
                 }
             }
 
+=======
+>>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
             DB::commit();
             return true;
 
