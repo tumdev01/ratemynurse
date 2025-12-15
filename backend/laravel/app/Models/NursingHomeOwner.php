@@ -9,7 +9,7 @@ class NursingHomeOwner extends User
     protected static function booted()
     {
         static::addGlobalScope('user_type', function (Builder $builder) {
-            $builder->where('user_type', 'NURSING_HOME');
+            $builder->where('user_type', 'NURSING_HOME_OWNER');
         });
     }
 

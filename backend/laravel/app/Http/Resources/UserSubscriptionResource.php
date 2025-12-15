@@ -18,6 +18,11 @@ class UserSubscriptionResource extends JsonResource
             'id' => $this->id,
             'plan' => $this->plan,
             'start_date' => $this->start_date,
+            'expired_at' => \Carbon\Carbon::parse($this->start_date)
+                ->addMonth()
+                ->addDay()
+                ->startOfDay()     // 00:00 น.
+                ->format('d/m/Y 00:00'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at,

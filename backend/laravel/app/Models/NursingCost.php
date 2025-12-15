@@ -9,10 +9,10 @@ class NursingCost extends Model {
     protected $fillable = [
         'user_id',
         'type',
-        'hire_rule',
         'name',
         'description',
-        'cost',
+        'cost_per_day',
+        'cost_per_month'
     ];
 
     public function user()

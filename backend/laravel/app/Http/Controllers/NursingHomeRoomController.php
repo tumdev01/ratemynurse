@@ -6,7 +6,6 @@ use App\Repositories\NursingHomeRoomRepository;
 use App\Models\NursingHome;
 use App\Models\NursingHomeRoom;
 use App\Models\NursingHomeRoomImage;
-use App\Models\NursingHomeProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,13 +16,13 @@ class NursingHomeRoomController extends Controller {
 
     public function index(Int $id, NursingHomeRoomRepository $repo) 
     {
-        $nursingHome = NursingHomeProfile::where('id', $id)->first();
+        $nursingHome = NursingHome::where('id', $id)->first();
         return view('pages.nursinghome.room.index', compact('nursingHome'));
     }
 
     public function create(Int $user_id)
     {
-        $nursingHome = NursingHomeProfile::where('id', $user_id)->first();
+        $nursingHome = NursingHome::where('id', $user_id)->first();
         return view('pages.nursinghome.room.create', compact('nursingHome'));
     }
 

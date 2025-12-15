@@ -1,10 +1,9 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
-use App\Traits\HasSubscriptions;
+
 class NursingHome extends User
 {
-    use HasSubscriptions;
     protected $table = 'users'; // <<=== เพิ่มบรรทัดนี้
 
     protected static function booted()
@@ -23,11 +22,6 @@ class NursingHome extends User
     public function profile()
     {
         return $this->hasOne(NursingHomeProfile::class, 'user_id', 'id');
-    }
-
-    public function profiles()
-    {
-        return $this->hasMany(NursingHomeProfile::class, 'user_id', 'id');
     }
 
     public function images()

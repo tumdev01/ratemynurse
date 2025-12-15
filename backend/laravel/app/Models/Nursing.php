@@ -4,14 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Sanctum\HasApiTokens;
-use App\Traits\HasSubscriptions;
 
 class Nursing extends User
 {
     protected $table = 'users';
 
     use HasApiTokens; // << important
-    use HasSubscriptions;
 
     protected $fillable = [
         'firstname',
@@ -56,4 +54,13 @@ class Nursing extends User
         return $this->hasMany(NursingCost::class, 'user_id', 'id');
     }
 
+    public function cvs()
+    {
+        return $this->hasOne(NursingCvs::class, 'user_id', 'id');
+    }
+
+    public function detail()
+    {
+        return $this->hasOne(NursingDetail::class, 'user_id', 'id');
+    }
 }

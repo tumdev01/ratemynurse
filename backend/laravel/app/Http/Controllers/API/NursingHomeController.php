@@ -90,6 +90,7 @@ class NursingHomeController extends Controller {
             throw $e;
         }
     }
+    
     /*
     public function userCreateProfile(NursingHomeProfileCreateRequest $request)
     {
@@ -346,7 +347,7 @@ class NursingHomeController extends Controller {
                         $facilities = json_encode($pre_facilities);
                     }
 
-                    NursingHomeProfile::create([
+                    $profile = NursingHomeProfile::create([
                         'user_id' => $user->id,
                         'name'    => $request->name,
                         'description' => $request->description,
@@ -463,7 +464,7 @@ class NursingHomeController extends Controller {
                                 File::copy($sourcePath, $destFullPath);
 
                                 Image::create([
-                                    'user_id' => $user->id,
+                                    'user_id' => $profile->id,
                                     'type' => 'NURSING_HOME',
                                     'name' => $filename,
                                     'path' => $destPath,

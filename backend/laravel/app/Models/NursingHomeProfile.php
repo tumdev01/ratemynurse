@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class NursingHomeProfile extends Model
 {
     use HasFactory,SoftDeletes;
-    use \App\Traits\HasSubscriptions;
 
     protected $table = 'nursing_home_profiles';
 
@@ -97,7 +96,6 @@ class NursingHomeProfile extends Model
         'youtube_url',
         'map',
         'map_embed',
-        'map_show',
         'coords',
         'status'
     ];

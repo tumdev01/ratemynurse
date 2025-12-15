@@ -85,6 +85,7 @@ class JobRepository extends BaseRepository {
             ->when($min_cost, fn($q) => $q->where('cost', '>=', $min_cost))
             ->when($max_cost, fn($q) => $q->where('cost', '<=', $max_cost))
             ->when($created_at, fn($q) => $q->whereDate('created_at', '>=', $created_at));
+        
         return $job->orderBy($order_by, $order)
                 ->paginate($limits, ['*'], 'page', $page ?? 1);
     }

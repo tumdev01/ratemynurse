@@ -10,7 +10,7 @@ class NursingDetailImage extends Model {
         'detail_id',
         'filename',
         'path',
-        'fullpath'
+        'filetype'
     ];
 
     protected $appends = ['full_path'];

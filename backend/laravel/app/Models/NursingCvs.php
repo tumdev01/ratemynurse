@@ -24,7 +24,7 @@ class NursingCvs extends Model {
         'exp',
         'work_type',
         'extra_shirft',
-        'languages', 
+        'languages',
     ];
 
     /**

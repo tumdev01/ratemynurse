@@ -35,7 +35,6 @@ class NursingCreateRequest extends FormRequest
                 'size:10',
                 Rule::unique('users', 'phone')->whereNull('deleted_at'),
             ],
-            // disabled rule
             // 'profile_image' => [
             //     'max:50000',
             //     'mimes:jpeg,png'

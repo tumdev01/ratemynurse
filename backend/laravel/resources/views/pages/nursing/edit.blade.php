@@ -72,13 +72,13 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label for="firstname">ชื่อจริง <span class="req">*</span></label>
-                    <input required type="text" name="firstname" id="firstname" maxlength="10" placeholder="ชื่อจริง"
+                    <input required type="text" name="firstname" id="firstname" placeholder="ชื่อจริง"
                         class="border rounded-lg px-3 py-2" value="{{ old('firstname', $nursing->firstname ?? '') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label for="lastname">นามสกุล <span class="req">*</span></label>
-                    <input type="text" name="lastname" id="lastname" maxlength="10" placeholder="นามสกุล"
+                    <input type="text" name="lastname" id="lastname" placeholder="นามสกุล"
                         class="border rounded-lg px-3 py-2" value="{{ old('lastname', $nursing->lastname ?? '') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
