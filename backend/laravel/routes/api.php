@@ -15,6 +15,7 @@ use App\Models\NursingHome;
 use App\Models\Member;
 use App\Http\Resources\NursingResource;
 use App\Http\Resources\MemberResource;
+use App\Http\Controllers\API\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -47,8 +48,6 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     Route::post('/rate', [RateController::class, 'create']);
 
     Route::get('/members', [MemberController::class, 'getMembers']);
-
-    //Roiute::get('/job-filter', [JobController::class, 'jobFilters']);
 });
 
 Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
@@ -70,7 +69,6 @@ Route::middleware(['auth:sanctum', 'nursing.role'])->group(function () {
     Route::post('/detail_image/{id}/delete', [NursingDetailImageController::class, 'delete']);
 });
 
-
 Route::middleware(['auth:sanctum', 'nursing_home.role'])->group (function () {
     Route::get('/nursing-home/profiles', [NursingHomeController::class, 'getProfiles']);
     Route::post('/nursing-home/profile/update', [NursingHomeController::class, 'updateProfile']);
@@ -88,6 +86,9 @@ Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [UserController::class, 'getuser']);
+
+    Route::post('/notifications', [NotificationController::class, 'getNotifications']);
+    Route::post('/notification/read', [NotificationController::class, 'setNotificationAsRead']);
 });
 
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {

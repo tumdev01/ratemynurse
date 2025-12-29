@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
 use App\Models\MemberProfile;
 use Illuminate\Support\Facades\DB;
+use App\Models\Notification;
 use Exception;
 class MemberRepository
 {
@@ -59,6 +60,14 @@ class MemberRepository
             $profile->subscriptions()->create([
                 'plan' => 'BASIC', // first time register set to "BASIC"
                 'start_date' => now()
+            ]);
+
+            $user->notifications()->create([
+                'title' => 'Welcome to RateMyNurse',
+                'message' => 'Thank you for registering with RateMyNurse. We are excited to have you on board!',
+                'type' => 'Models/Member',
+                'is_read' => 0,
+                'user_id' => $user->id
             ]);
             
             DB::commit();

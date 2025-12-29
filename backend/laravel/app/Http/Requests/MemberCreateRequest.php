@@ -35,7 +35,7 @@ class MemberCreateRequest extends FormRequest
                 'string',
                 'regex:/^\d+$/',
                 'size:13',
-                Rule::unique('users', 'cardid')->whereNull('deleted_at'),
+                Rule::unique('member_profiles', 'cardid')->whereNull('deleted_at'),
             ],
             'user_type' => ['required', 'string', 'in:MEMBER'],
         ];

@@ -38,7 +38,7 @@ class User extends Authenticatable
 
     public function member()
     {
-        return $this->hasOne(MemberProfile::class, 'user_id', id);
+        return $this->hasOne(MemberProfile::class, 'user_id', 'id');
     }
 
     // เช็ค type
@@ -86,5 +86,20 @@ class User extends Authenticatable
     public function coverImage()
     {
         return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id');
+    }
+
+    public function readNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id')->where('is_read', true);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id')->where('is_read', false);
     }
 }
