@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Repositories\API\NursingCvImageRepository;
+use App\Repositories\NursingCvImageRepository;
 use Exception;
 
 class NursingCvImageController extends Controller
@@ -19,7 +19,7 @@ class NursingCvImageController extends Controller
     public function delete($id)
     {
         try {
-            $image = \App\Models\CvImage::findOrFail($id);
+            $image = \App\Models\NursingCvImage::findOrFail($id);
             
             // ลบไฟล์จริง
             $filePath = public_path($image->path);

@@ -4,8 +4,13 @@
 <div class="p-4 sm:ml-64">
     @include('pages.nursing.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.store') }}" enctype="multipart/form-data">
+        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.update', $nursing->id) }}" enctype="multipart/form-data">
             @csrf
+            @if(session('success'))
+                <div class="flex flex-col justify-start bg-green-500 p-[16px] rounded-md text-white mb-4">
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
             @if(session('error'))
                 <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
                     <span>
@@ -288,6 +293,9 @@
         transform: translateX(16px);
         }
         #map_show iframe {width: 100%!important; height: 100% !important;}
+        .swal2-confirm {
+            background-color: #286F51;
+        }
     </style>
 @endsection
 @section('javascript')
@@ -474,4 +482,16 @@
             subDistrictTxt = $('#sub_district option:selected').text() ?? '';
         }
     </script>
+
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: "{{ session('success') }}",
+                });
+            });
+        </script>
+    @endif
 @endsection

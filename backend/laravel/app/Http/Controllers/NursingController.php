@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Repositories\NursingRepository;
 use App\Http\Requests\NursingCreateRequest;
+use App\Http\Requests\NursingUpdateRequest;
+use App\Http\Requests\NursingHistoryStoreRequest;
+use App\Http\Requests\NursingDetailStoreRequest;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\NursingCost;
 
@@ -47,6 +51,16 @@ class NursingController extends Controller
         }
     }
 
+    public function update(
+        NursingUpdateRequest $request,
+        NursingRepository $repo,
+        int $id
+    ) {
+        $repo->updateNurse($request, $id);
+
+        return redirect()->back()->with('success', 'บันทึกเรียบร้อยแล้ว');
+    }
+
     /**
      * Display the specified resource.
      */
@@ -64,13 +78,6 @@ class NursingController extends Controller
         return view('pages.nursing.edit', compact('nursing'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -92,10 +99,39 @@ class NursingController extends Controller
         return view('pages.nursing.history', compact('nursing'));
     }
 
+    public function historyStore(
+        NursingHistoryStoreRequest $request,
+        NursingRepository $repo,
+        int $id
+    ) {
+        $repo->createOrUpdateHistory(
+            $request->validated(),
+            $request->hasFile('cvs_images') ? $request->file('cvs_images') : null, // เปลี่ยนเป็น cvs_images
+            $id
+        );
+
+        return redirect()->back()->with('success', 'บันทึกเรียบร้อยแล้ว');
+    }
+
+
     public function detailView(Int $id, NursingRepository $repo)
     {
         $nursing = $repo->getInfo($id);
         return view('pages.nursing.detail', compact('nursing'));
+    }
+
+    public function detailStore(
+        NursingDetailStoreRequest $request,
+        NursingRepository $repo,
+        int $id
+    ) {
+        $repo->createOrUpdateDetail(
+            $request->validated(),
+            $request->hasFile('detail_images') ? $request->file('detail_images') : null,
+            $id
+        );
+
+        return redirect()->back()->with('success', 'บันทึกเรียบร้อยแล้ว');
     }
 
     public function costView(Int $id, NursingRepository $repo)
@@ -105,36 +141,54 @@ class NursingController extends Controller
         return view('pages.nursing.cost', compact('nursing', 'costs'));
     }
 
-    public function updateCost(Int $id, Request $request) 
+    public function updateCost(int $id, Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'type'          => 'required|in:DAY,MONTH',
-            'name'          => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'cost_per_day'  => 'nullable|numeric|min:0',
-            'cost_per_month'=> 'nullable|numeric|min:0',
-        ]);
+        /* ================= VALIDATION ================= */
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput(); // ส่งค่าเก่ากลับไปด้วย
+        $rules = [];
+        $messages = [];
+
+        $types = ['DAILY', 'MONTH'];
+        $hireRules = ['FULL_ROUND', 'FULL_STAY', 'PART_ROUND', 'PART_STAY'];
+
+        foreach ($types as $type) {
+            foreach ($hireRules as $rule) {
+                $rules["{$type}.{$rule}"] = 'required|numeric|min:0';
+                $messages["{$type}.{$rule}.required"] = 'กรุณากรอกราคาให้ครบ';
+                $messages["{$type}.{$rule}.numeric"]  = 'ราคาต้องเป็นตัวเลข';
+                $messages["{$type}.{$rule}.min"]      = 'ราคาต้องไม่น้อยกว่า 0';
+            }
         }
 
-        $cost = NursingCost::updateOrCreate(
-            [
-                'user_id' => $id,
-                'type'    => $request->type, // มีแค่ DAILY หรือ MONTHLY
-            ],
-            [
-                'name'           => $request->name,
-                'description'    => $request->description,
-                'cost_per_day'   => $request->cost_per_day ?? 0,
-                'cost_per_month' => $request->cost_per_month ?? 0,
-            ]
-        );
+        Validator::make($request->all(), $rules, $messages)->validate();
 
-        return redirect()->back()->with('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
+        /* ================= SAVE ================= */
+
+        DB::transaction(function () use ($request, $id, $types, $hireRules) {
+
+            foreach ($types as $type) {
+
+                $name = $type === 'DAILY' ? 'รายวัน' : 'รายเดือน';
+
+                foreach ($hireRules as $rule) {
+
+                    NursingCost::updateOrCreate(
+                        [
+                            'user_id'   => $id,
+                            'type'      => $type,
+                            'hire_rule' => $rule,
+                        ],
+                        [
+                            'name'        => $name,
+                            'cost'        => (float) $request->{$type}[$rule],
+                            'description' => null,
+                        ]
+                    );
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'บันทึกค่าบริการเรียบร้อยแล้ว');
     }
 
     public function rateView()

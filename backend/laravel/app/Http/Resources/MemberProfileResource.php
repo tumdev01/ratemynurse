@@ -16,6 +16,9 @@ class MemberProfileResource extends JsonResource
     {
         $data = parent::toArray($request);
         $data['subscriptions'] = UserSubscriptionResource::collection($this->whenLoaded('subscriptions'));
+        $data['current_active_subscription'] = $this->whenLoaded('currentActiveSubscription')
+            ? new UserSubscriptionResource($this->currentActiveSubscription)
+            : null;
         return $data;
     }
 }

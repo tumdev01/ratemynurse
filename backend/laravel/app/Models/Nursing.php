@@ -54,6 +54,12 @@ class Nursing extends User
         return $this->hasMany(NursingCost::class, 'user_id', 'id');
     }
 
+    public function lowestCost()
+    {
+        return $this->hasOne(NursingCost::class, 'user_id', 'id')
+            ->ofMany('cost', 'min');
+    }
+
     public function cvs()
     {
         return $this->hasOne(NursingCvs::class, 'user_id', 'id');

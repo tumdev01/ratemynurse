@@ -3,20 +3,32 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
-class NursingCost extends Model {
+class NursingCost extends Model
+{
     protected $table = 'nursing_costs';
+    protected $appends = ['lowest_cost', 'highest_cost'];
+    public $timestamps = true;
 
     protected $fillable = [
         'user_id',
         'type',
+        'hire_rule',
         'name',
         'description',
-        'cost_per_day',
-        'cost_per_month'
+        'cost'
     ];
 
-    public function user()
+    public function getLowestCostAttribute()
     {
-        return $this->belongsTo(User::class);
+        return static::where('user_id', $this->user_id)
+            ->where('type', $this->type)
+            ->min('cost');
+    }
+
+    public function getHighestCostAttribute()
+    {
+        return static::where('user_id', $this->user_id)
+            ->where('type', $this->type)
+            ->max('cost');
     }
 }

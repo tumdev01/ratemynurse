@@ -56,6 +56,7 @@ Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
     Route::post('/info', [MemberController::class, 'getUserInfo']);
     Route::post('/job/create', [JobController::class, 'store']);
     Route::post('/job/user/job-list', [JobController::class, 'getJobList']);
+    Route::post('/nursing/compare', [NursingController::class, 'compareNursing']);
 });
 
 // Route role only for Nursing role
@@ -104,7 +105,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
             break;
 
         case 'MEMBER':
-            $model = Member::with(['profile.subscriptions'])->find($user->id);
+            $model = Member::with(['profile.subscriptions', 'profile.currentActiveSubscription', 'coverImage'])->find($user->id);
             $data = (new MemberResource($model))->toArray($request);
             break;
 
@@ -133,6 +134,7 @@ Route::middleware(['verify.internal.token'])->group(function () {
     Route::post('/nursinghome/profile/create', [NursingHomeController::class, 'userCreateProfile']);
 
     Route::post('/nursing/create', [NursingController::class, 'store']);
+    Route::get('internal/nursing/{id}', [NursingController::class, 'getNursingById']);
 });
 
 

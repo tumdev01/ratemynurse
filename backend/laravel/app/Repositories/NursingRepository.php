@@ -10,6 +10,9 @@ use App\Enums\UserType;
 use App\Models\Image;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use App\Http\Requests\NursingUpdateRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class NursingRepository
 {
@@ -45,7 +48,7 @@ class NursingRepository
 
                     Image::create([
                         'user_id'  => $user->id,
-                        'type'     => 'NURSING_HOME',
+                        'type'     => 'NURSING',
                         'name'     => $file->getClientOriginalName(),
                         'path'     => 'images/' . $hashedName,
                         'filetype' => $file->getClientMimeType(),
@@ -56,6 +59,77 @@ class NursingRepository
         }
 
         return $user;
+    }
+
+    public function updateNurse(Request $request, int $id)
+    {
+        $user = Nursing::findOrFail($id);
+
+        DB::transaction(function () use ($request, $user) {
+
+            /* ---------- users table ---------- */
+            $user->update($request->only([
+                'firstname',
+                'lastname',
+                'email',
+                'phone',
+            ]));
+
+            /* ---------- profile ---------- */
+            $profile = NursingProfile::where('user_id', $user->id)->first();
+            if ($profile) {
+                $profile->update([
+                    'name' => "{$request->firstname} {$request->lastname}",
+                    'nickname' => $request->nickname,
+                    'gender' => $request->gender,
+                    'date_of_birth' => $request->date_of_birth,
+                    'address' => $request->address,
+                    'province_id' => $request->province_id,
+                    'district_id' => $request->district_id,
+                    'sub_district_id' => $request->sub_district_id,
+                    'zipcode' => $request->zipcode,
+                    'blood' => $request->blood,
+                ]);
+            }
+
+            /* ---------- profile image ---------- */
+            if ($request->hasFile('profile_image')) {
+
+                $file = $request->file('profile_image');
+
+                if ($file->isValid()) {
+                    /** ปิด cover เก่า + ลบไฟล์เก่า */
+                    $oldCover = Image::where('user_id', $user->id)
+                        ->where('type', 'NURSING')
+                        ->where('is_cover', true)
+                        ->first();
+
+                    if ($oldCover) {
+                        if (file_exists(public_path($oldCover->path))) {
+                            unlink(public_path($oldCover->path));
+                        }
+
+                        $oldCover->update(['is_cover' => false]);
+                    }
+
+                    /** upload ใหม่ */
+                    $hashedName = md5(uniqid($user->id, true)) . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('images'), $hashedName);
+
+                    /** save db */
+                    Image::create([
+                        'user_id'  => $user->id,
+                        'type'     => 'NURSING',
+                        'name'     => $file->getClientOriginalName(),
+                        'path'     => 'images/' . $hashedName,
+                        'filetype' => $file->getClientMimeType(),
+                        'is_cover' => true,
+                    ]);
+                }
+            }
+        });
+
+        return $user->fresh();
     }
 
     public function getNursing(array $filters = [])
@@ -129,14 +203,11 @@ class NursingRepository
                 'coverImage:id,user_id,path,is_cover',
                 'rates.rate_details',
                 'costs',
+                'lowestCost',
                 'cvs',
-<<<<<<< HEAD
                 'cvs.images',
                 'detail',
-                'detail.images'
-=======
-                'detail',
->>>>>>> cde7837dd732ae4603b89b62f49e270c8c6789ce
+                'detail.images:id,detail_id,path'
             ])
             ->select('id','firstname','lastname','phone','email')
             ->withCount(['rates as review_count'])
@@ -221,5 +292,121 @@ class NursingRepository
             ->rawColumns(['cover_image', 'action'])
             ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
             ->make(true);
+    }
+
+    public function createOrUpdateHistory(
+        array $data,
+        $images,
+        int $id
+    ) {
+        $nursing = Nursing::findOrFail($id);
+        
+        \Log::info('Repository - Images received:', [
+            'images' => $images,
+            'is_array' => is_array($images),
+            'count' => is_array($images) ? count($images) : 0
+        ]);
+
+        DB::transaction(function () use ($nursing, $data, $images) {
+            $cvs = $nursing->cvs()->updateOrCreate(
+                ['user_id' => $nursing->id],
+                $data
+            );
+
+            if ($images && is_array($images) && count($images) > 0) {
+                $storagePath = public_path('cv');
+                
+                if (!file_exists($storagePath)) {
+                    mkdir($storagePath, 0755, true);
+                }
+
+                foreach ($images as $file) {
+                    if (!$file || !$file->isValid()) {
+                        \Log::warning('Invalid file skipped');
+                        continue;
+                    }
+
+                    try {
+                        $name = md5(uniqid(rand(), true)) . '.' . $file->getClientOriginalExtension();
+                        $file->move($storagePath, $name);
+
+                        $cvs->images()->create([
+                            'user_id' => $nursing->id,
+                            'cv_id' => $cvs->id,
+                            'name' => $file->getClientOriginalName(),
+                            'path' => 'cv/' . $name,
+                            'filetype' => $file->getClientMimeType(),
+                        ]);
+                        
+                        \Log::info('Image saved successfully:', ['name' => $name]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error saving image:', ['error' => $e->getMessage()]);
+                    }
+                }
+            } else {
+                \Log::warning('No valid images to process');
+            }
+        });
+
+        return true;
+    }
+
+    public function createOrUpdateDetail(
+        array $data,
+        $images,
+        int $id
+    ) {
+
+        $nursing = Nursing::findOrFail($id);
+        
+        \Log::info('Repository - Images received:', [
+            'images' => $images,
+            'is_array' => is_array($images),
+            'count' => is_array($images) ? count($images) : 0
+        ]);
+
+        DB::transaction(function () use ($nursing, $data, $images) {
+            $detail = $nursing->detail()->updateOrCreate(
+                ['user_id' => $nursing->id],
+                $data
+            );
+
+            if ($images && is_array($images) && count($images) > 0) {
+                $storagePath = public_path('images/detail/');
+                
+                if (!file_exists($storagePath)) {
+                    mkdir($storagePath, 0755, true);
+                }
+
+                foreach ($images as $file) {
+                    if (!$file || !$file->isValid()) {
+                        \Log::warning('Invalid file skipped');
+                        continue;
+                    }
+
+                    try {
+                        $name = md5(uniqid(rand(), true)) . '.' . $file->getClientOriginalExtension();
+                        $file->move($storagePath, $name);
+
+                        $detail->images()->create([
+                            'user_id' => $nursing->id,
+                            'detail_id' => $detail->id,
+                            'filename' => $file->getClientOriginalName(),
+                            'path' => 'images/detail/' . $name,
+                            'filetype' => $file->getClientMimeType(),
+                        ]);
+                        
+                        \Log::info('Image saved successfully:', ['name' => $name]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error saving image:', ['error' => $e->getMessage()]);
+                    }
+                }
+            } else {
+                \Log::warning('No valid images to process');
+            }
+        });
+
+        return true;
+
     }
 }

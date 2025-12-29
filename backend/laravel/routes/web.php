@@ -9,6 +9,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NursingHomeRoomController;
+use App\Http\Controllers\NursingCvImageController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -61,10 +62,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', [NursingController::class, 'create'])->name('nursing.create');
         Route::post('/create', [NursingController::class, 'store'])->name('nursing.store');
         Route::get('/{id}/edit', [NursingController::class, 'edit'])->where('id', '[0-9]+')->name('nursing.edit');
+        Route::post('/{id}/edit', [NursingController::class, 'update'])->where('id', '[0-9]+')->name('nursing.update');
         Route::get('/{id}/history', [NursingController::class, 'historyView'])->where('id', '[0-9]+')->name('nursing.history');
+        Route::post('/{id}/history', [NursingController::class, 'historyStore'])->where('id', '[0-9]+')->name('nursing.history.store');
         Route::get('/{id}/detail', [NursingController::class, 'detailView'])->where('id', '[0-9]+')->name('nursing.detail');
+        Route::post('/{id}/detail', [NursingController::class, 'detailStore'])->where('id', '[0-9]+')->name('nursing.detail.store');
         Route::get('/{id}/cost', [NursingController::class, 'costView'])->where('id', '[0-9]+')->name('nursing.cost');
         Route::post('/{id}/cost', [NursingController::class, 'updateCost'])->where('id', '[0-9]+')->name('nursing.cost.update');
+        Route::delete('/cv/{id}/delete', [NursingCvImageController::class, 'delete']);
     });
 
     Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {

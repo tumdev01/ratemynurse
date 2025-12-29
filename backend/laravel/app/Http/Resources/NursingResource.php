@@ -42,6 +42,12 @@ class NursingResource extends JsonResource
             }),
             'rates' => $this->whenLoaded('rates'),
             'costs' => $this->whenLoaded('costs'),
+            'lowest_price' => $this->whenLoaded('lowestCost', function () {
+                return $this->lowestCost ? [
+                    'cost' => (float) $this->lowestCost->cost,
+                    'type' => $this->lowestCost->type,
+                ] : null;
+            }),
             'detail' => $this->whenLoaded('detail'),
             'cover_image' => $this->whenLoaded('coverImage', function () {
                 return $this->coverImage?->full_path ?? null;

@@ -4,7 +4,7 @@
 <div class="p-4 sm:ml-64">
     @include('pages.nursing.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="costNurse" class="text-[16px] flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.cost.update', $nursing->id) }}">
+        <!-- <form id="costNurse" class="text-[16px] flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.cost.update', $nursing->id) }}">
             @csrf
             @if(session('error'))
                 <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
@@ -42,35 +42,29 @@
             </div>
 
             <div class="flex flex-col">
-                <label class="text-[#5A5A5A]" for="name">ชื่อแพ็คเกจ <span class="req">*</span></label>
-                <input required type="text" name="name" id="name" placeholder="ระบุชื่อแพ็กเกจ"
-                    class="border rounded-lg px-3 py-2" value="{{ old('name') }}"/>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="text-[#5A5A5A]" for="name">ชื่อแพ็คเกจ <span class="req">*</span></label>
+                <label class="text-[#5A5A5A]" for="type">ชื่อแพ็คเกจ <span class="req">*</span></label>
                 <select name="type" id="type" class="border rounded-lg px-3 py-2">
-                    <option value="DAY">รายวัน</option>
+                    <option>เลือกประเภท</option>
+                    <option value="DAILY">รายวัน</option>
                     <option value="MONTH">รายเดือน</option>
                 </select>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="text-[#5A5A5A]" for="description">รายละเอียด <span class="req">*</span></label>
-                <textarea required id="description" name="description" class="min-h-[90px] border rounded-lg px-3 py-2 text-sm" maxlength="300" placeholder="รายละเอียดของแพ็กเกจค่าบริการ (จำกัดไม่เกิน 300 ตัวอักษร)"></textarea>
             </div>
             
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
-                    <label class="text-[#5A5A5A]" for="cost_per_day">รายวัน</label>
-                    <input required type="number" name="cost_per_day" id="cost_per_day" placeholder="ค่าบริการรายวัน"
-                        class="border rounded-lg px-3 py-2" value="{{ old('cost_per_day') }}"/>
-                    <label class="error text-xs text-red-600"></label>
+                    <label class="text-[#5A5A5A]" for="hire_rule">ลักษณะการจ้างงาน</label>
+                    <select name="hire_rule" id="hire_rule" class="border rounded-lg px-3 py-2">
+                        <option>เลือกลักษณะการทำงาน</option>
+                        <option value="FULL_ROUND">อยู่ประจำ ไป-กลับ</option>
+                        <option value="FULL_STAY">อยู่ประจำ ค้างคืน</option>
+                        <option value="PART_ROUND">ชั่วคราว ค้างคืน</option>
+                        <option value="PART_STAY">ชั่วคราว ไปกลับ</option>
+                    </select>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
-                    <label class="text-[#5A5A5A]" for="cost_per_month">รายเดือน</label>
-                    <input type="text" name="cost_per_month" id="cost_per_month" placeholder="ค่าบริการรายเดือน"
-                        class="border rounded-lg px-3 py-2" value="{{ old('cost_per_month') }}"/>
+                    <label class="text-[#5A5A5A]" for="cost">ค่าบริการ</label>
+                    <input required type="number" name="cost" id="cost" placeholder="ค่าบริการ"
+                        class="border rounded-lg px-3 py-2" value="{{ old('cost') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -80,9 +74,145 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] justify-end">
                 <button type="submit" class="w-[200px] h-[48px] rounded-lg bg-[#286F51] text-white">บันทึกข้อมูล</button>
             </div>
+        </form> -->
+        @php
+            $nursingCosts = $nursing->costs
+            ->groupBy('type')
+            ->map(function ($items) {
+                return $items->keyBy('hire_rule');
+            })
+            ->toArray();
+        @endphp
+
+        <form id="costNurse" class="text-[16px] flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.cost.update', $nursing->id) }}">
+            @csrf
+            @if(session('error'))
+                <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
+                    <span>
+                        {{ session('error') }}
+                    </span>
+                 </div>
+            @endif
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 p-3 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+            <input type="hidden" name="user_type" value="NURSING">
+               <div class="flex flex-col gap-[4px] px-[12px] py-[8px] bg-[#F7FCF9] rounded-[8px]">
+                    <label class="text-[#286F51] font-semibold">ค่าบริการ</label>
+                    <p class="text-[#5A5A5A] text-sm">กรุณาระบุอัตราค่าบริการของคุณตามลักษณะการทำงาน โดยสามารถกำหนดได้ทั้ง รายวัน และรายเดือนและรูปแบบลักษณะการจ้างที่คุณ
+                        รับเพื่อให้ผู้ใช้บริการทราบช่วงราคาค่าจ้างที่ชัดเจนก่อนตัดสินใจ</p>
+                </div>
+
+                <div class="flex flex-col gap-[16px] p-[16px] bg-[#F7FCF9] rounded-[8px]">
+                    <div class="flex flex-row gap-[12px]">
+                        <label class="has-border text-[#286F51] font-semibold">รายวัน</label>
+                    </div>
+                    <div class="bg-[#ECECED] h-[1px] w-full"></div>
+                    <span>ลักษณะการจ้างงาน</span>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">อยู่ประจำ ค้างคืน</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="DAILY[FULL_STAY]" id="daily_full_stay_cost" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.FULL_STAY', $nursingCosts['DAILY']['FULL_STAY']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">อยู่ประจำ ไปกลับ</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="DAILY[FULL_ROUND]" id="daily_full_round_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.FULL_ROUND', $nursingCosts['DAILY']['FULL_ROUND']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">ชั่วคราว ค้างคืน</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="DAILY[PART_STAY]" id="daily_part_stay_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.PART_STAY', $nursingCosts['DAILY']['PART_STAY']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">ชั่วคราว ไปกลับ</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="DAILY[PART_ROUND]" id="daily_part_round_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.PART_ROUND', $nursingCosts['DAILY']['PART_ROUND']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-[16px] p-[16px] bg-[#F7FCF9] rounded-[8px]">
+                    <div class="flex flex-row gap-[12px]">
+                        <label class="has-border text-[#286F51] font-semibold">รายเดือน</label>
+                    </div>
+                    <div class="bg-[#ECECED] h-[1px] w-full"></div>
+                    <span>ลักษณะการจ้างงาน</span>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">อยู่ประจำ ค้างคืน</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="MONTH[FULL_STAY]" id="monthly_full_stay_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.FULL_STAY', $nursingCosts['DAILY']['FULL_STAY']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">อยู่ประจำ ไปกลับ</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="MONTH[FULL_ROUND]" id="monthly_full_round_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.FULL_ROUND', $nursingCosts['DAILY']['FULL_ROUND']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">ชั่วคราว ค้างคืน</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="MONTH[PART_STAY]" id="monthly_part_stay_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.PART_STAY', $nursingCosts['DAILY']['PART_STAY']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-row justify-between">
+                        <div class="flex flex-row gap-[8px]">
+                            <label for="">ชั่วคราว ไปกลับ</label>
+                        </div>
+                        <div class="w-full max-w-[400px]">
+                            <input type="number" name="MONTH[PART_ROUND]" id="monthly_part_round_cost" maxlength="10" placeholder="฿ ค่าบริการ"
+                                class="border rounded-lg px-3 py-2 w-full" value="{{ old('DAILY.PART_ROUND', $nursingCosts['DAILY']['PART_ROUND']['cost'] ?? '') }}"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-[#ECECED] w-full h-[1px]"></div>
+
+                <div class="flex flex-row justify-between">
+                    <div class="flex flex-row gap-[24px]">
+                        <button type="submit" class="w-[200px] h-[48px] rounded-lg bg-[#286F51] text-white">บันทึกข้อมูล</button>
+                    </div>
+                </div> 
         </form>
     </div>
-    <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
+    <!-- <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
         <div class="text-[16px] flex flex-col gap-[32px] w-full max-w-[1440px] mx-auto">
             <div class="flex flex-row justify-between bg-[#F7FCF9] px-[12px] py-[8px] rounded-md">
                 <div class="flex flex-row gap-[8px] items-center">
@@ -98,9 +228,8 @@
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 dataTable no-footer">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th class="px-6 py-3">แพ็กเกจ</th>
                         <th class="px-6 py-3">ประเภท</th>
-                        <th class="px-6 py-3 max-w-[50%]">รายละเอียด</th>
+                        <th class="px-6 py-3 max-w-[50%]">ลักษณะการจ้างงาน</th>
                         <th class="px-6 py-3">ราคา</th>
                         <th class="px-6 py-3"></th>
                     </tr>
@@ -108,15 +237,30 @@
                 <tbody class="bg-white dark:bg-gray-800">
                     @if($costs)
                         @foreach($costs as $cost)
-                            
+                            @php
+                                $hire_rule = '';
+                                switch($cost->hire_rule) {
+                                    case 'FULL_ROUND':
+                                        $hire_rule = 'อยุ่ประจำ ไปกลับ';
+                                        break;
+                                    case 'FULL_STAY':
+                                        $hire_rule = 'อยู่ประจำ ค้างคืน';
+                                        break;
+                                    case 'PART_ROUND':
+                                        $hire_rule = 'ชั่วคราว ไปกลับ';
+                                        break;
+                                    case 'PART_STAY':
+                                        $hire_rule = 'ชั่วคราว ค้างคืน';
+                                        break;
+                                }
+                            @endphp
                             <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-700 dark:even:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                                <td class="px-6 py-3">{{ $cost->name }}</td>
                                 <td class="px-6 py-3">
-                                    {{ $cost->type == 'DAY' ? 'รายวัน' : 'รายเดือน' }}
+                                    {{ $cost->type == 'DAILY' ? 'รายวัน' : 'รายเดือน' }}
                                 </td>
-                                <td class="px-6 py-3 w-[50%]">{{ $cost->description }}</td>
+                                <td class="px-6 py-3 w-[50%]">{{ $hire_rule }}</td>
                                 <td class="px-6 py-3">
-                                    ฿{{ $cost->type == 'DAY' ? number_format($cost->cost_per_day, 2, '.', ',') : number_format($cost->cost_per_month, 2, '.', ',') }}
+                                    ฿{{ number_format($cost->cost, 2, '.', ',') }}
                                 </td>
                                 <td class="px-6 py-3"></td>
                             </tr>
@@ -125,13 +269,12 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </div> -->
 </div>
 @endsection
 @section('style')
     <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> 
-    <link href="{{ asset('flatpickr/flatpickr.min.css') }}" rel="stylesheet"/>
     <style>
         .req {color:red}
         .sub_topic:before {
@@ -228,189 +371,4 @@
         }
         #map_show iframe {width: 100%!important; height: 100% !important;}
     </style>
-@endsection
-@section('javascript')
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="{{ asset('flatpickr/flatpickr.min.js') }}"></script>
-    <script src="{{ asset('flatpickr/monthSelect/index.js') }}"></script>
-    <script src="{{ asset('flatpickr/th.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-
-        document.querySelector('.profile-upload').addEventListener('click', () => {
-            document.getElementById('hiddenProfileUpload').click();
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const hiddenInput = document.getElementById('hiddenProfileUpload');
-            const profilePreview = document.getElementById('profile-preview');
-            const uploadSpan = document.querySelector('#profile_upload .profile-upload:not(#profile-preview)');
-            const errorEl = document.querySelector('#profile_upload .upload_error');
-
-            if (!hiddenInput || !profilePreview || !uploadSpan || !errorEl) return;
-
-            // ✅ ให้คลิกได้แค่ปุ่ม "อัพโหลดรูปภาพ"
-            uploadSpan.addEventListener('click', () => hiddenInput.click());
-
-            hiddenInput.addEventListener('change', function () {
-                errorEl.innerHTML = '';
-                removePreview();
-
-                const file = this.files[0];
-                if (!file) return;
-
-                const maxSize = 5 * 1024 * 1024; // 5MB
-                if (file.size > maxSize) {
-                    errorEl.innerHTML = "❌ ไฟล์ต้องมีขนาดไม่เกิน 5MB";
-                    this.value = "";
-                    return;
-                }
-
-                const allowedTypes = ['image/jpeg', 'image/png'];
-                if (!allowedTypes.includes(file.type)) {
-                    errorEl.innerHTML = "❌ อนุญาตเฉพาะไฟล์ JPG และ PNG เท่านั้น";
-                    this.value = "";
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.createElement('img');
-                    img.setAttribute('data-profile-preview', '1');
-                    img.src = e.target.result;
-                    img.alt = 'Profile preview';
-                    img.className = 'absolute top-0 left-0 w-full h-full object-cover rounded-full';
-
-                    profilePreview.insertBefore(img, profilePreview.firstChild);
-                };
-                reader.readAsDataURL(file);
-            });
-
-            function removePreview() {
-                const existing = profilePreview.querySelector('img[data-profile-preview]');
-                if (existing) existing.remove();
-            }
-        });
-
-        flatpickr('#date_of_birth', {
-            yearModifier: 543,
-            altInput: true,
-            altFormat: 'd F B',
-            locale: 'th',
-            dateFormat: 'Y-m-d',
-            defaultDate: null,
-            onChange (_, d) {
-                month = d
-            },
-            onReady (_, d) {
-                month = null
-            },
-        });
-
-        const phone = document.getElementById('phone');
-        phone.addEventListener('input', function () {
-            let typingTimer;
-            const doneTypingInterval = 500; // 0.5 วินาที
-            clearTimeout(typingTimer); // reset timer ทุกครั้งที่พิมพ์
-            typingTimer = setTimeout(() => {
-                validatePhone(this);
-            }, doneTypingInterval);
-        });
-
-        ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
-
-        function setOldValue(id, oldValue, oldText) {
-            if(oldValue && oldText) {
-                const option = new Option(oldText, oldValue, true, true);
-                $(id).append(option).trigger('change');
-            }
-        }
-
-        // เรียกหลัง initialize Select2
-        setOldValue('#province', "{{ old('province_id') }}", "{{ old('province_name') }}");
-        setOldValue('#district', "{{ old('district_id') }}", "{{ old('district_name') }}");
-        setOldValue('#sub_district', "{{ old('sub_district_id') }}", "{{ old('sub_district_name') }}");
-    
-        let provinceTxt = $('#provinceTxt').val() ?? '';
-        $('#province:selected').html(provinceTxt);
-
-        let districtTxt = $('#districtTxt').val() ?? '';
-        $('#district:selected').html(districtTxt);
-
-        let subDistrictTxt = $('#subDistrictTxt').val() ?? '';
-        $('#sub_district:selected').html(subDistrictTxt);
-        
-
-        function validatePhone(input) {
-            const thaiPhonePattern = /^0[0-9]{9}$/;
-            const errorElement = input.parentElement.querySelector('.error');
-
-            if (errorElement) {
-                if (!thaiPhonePattern.test(input.value)) {
-                    errorElement.textContent = "เบอร์โทรต้องขึ้นต้นด้วย 0 และมีทั้งหมด 10 หลัก";
-                } else {
-                    errorElement.textContent = "";
-                }
-            }
-        }
-
-        function ajaxCallDropdownOption(id, url, placeholder) {
-            $(id).select2({
-                placeholder: placeholder,
-                ajax: {
-                    transport: function (params, success, failure) {
-                        axios.get(url, {
-                            params: params.data // ส่ง query ไปกับ request เช่น search, pagination
-                        })
-                        .then(function (response) {
-                            const results = response.data.data.map(function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.id
-                                };
-                            });
-
-                            // ถ้าอยากเซ็ตค่า textbox ตอนเลือก dropdown ให้ทำใน event ของ select2
-                            $(id).on('select2:select', function (e) {
-                                const data = e.params.data;
-                                if(id === '#province') {
-                                    $('#provinceTxt').val(data.text);
-                                } else if (id === '#district') {
-                                    $('#districtTxt').val(data.text);
-                                } else if(id === '#sub_district') {
-                                    $('#subDistrictTxt').val(data.text);
-                                }
-                            });
-
-                            success({ results: results });
-                        })
-                        .catch(function (error) {
-                            failure(error);
-                        });
-                    },
-                    delay: 250,
-                    cache: true
-                }
-            });
-        }
-
-        function handleSelectProvince() {
-            let province = $('#province option:selected');
-            provinceTxt = province.text() ?? '';
-            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
-        }
-        function handleSelectDistrict() {
-            let district = $('#district');
-            districtTxt = $('#district option:selected').text() ?? '';
-            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
-        }
-
-        function handleSelectSubDistrict() {
-            let subDistrict = $('#sub_district');
-            subDistrictTxt = $('#sub_district option:selected').text() ?? '';
-        }
-    </script>
 @endsection

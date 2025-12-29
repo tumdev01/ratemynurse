@@ -156,4 +156,45 @@ class NursingController extends Controller {
         }
     }
 
+    public function compareNursing(Request $request)
+    {
+        $data = $request->validate([
+            'nurse_ids'   => ['required', 'array', 'min:1', 'max:3'],
+            'nurse_ids.*' => ['integer', 'exists:users,id'],
+        ]);
+        
+        $ids = $data['nurse_ids'];
+        
+        $nurses = Nursing::whereIn('id', $ids)
+            ->with(['profile', 'rates'])
+            ->get()
+            ->keyBy('id');
+        
+        // เรียงและเลือกเฉพาะ fields ที่ต้องการ
+        $sortedNurses = collect($ids)->map(function ($id) use ($nurses) {
+            $nurse = $nurses->get($id);
+            
+            if (!$nurse) return null;
+            
+            return [
+                'id' => $nurse->id,
+                'firstname' => $nurse->firstname,
+                'lastname' => $nurse->lastname,
+                // เพิ่ม fields อื่นๆ ที่ต้องการจาก users table
+                
+                'profile' => $nurse->profile ? [
+                    'name' => $nurse->profile->name,
+                    'cost' => $nurse->profile->cost,
+                    'nickname' => $nurse->profile->nickname,
+                ] : null,
+                
+                'rates' => $nurse->rates,
+                'cover_image' => $nurse->coverImage,
+            ];
+        })->filter()->values();
+
+        return response()->json($sortedNurses);
+    }
+
+
 }

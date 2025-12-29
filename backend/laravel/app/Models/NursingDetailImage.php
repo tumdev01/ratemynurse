@@ -7,6 +7,7 @@ class NursingDetailImage extends Model {
     protected $table = 'nursing_detail_images';
 
     protected $fillable = [
+        'user_id',
         'detail_id',
         'filename',
         'path',
