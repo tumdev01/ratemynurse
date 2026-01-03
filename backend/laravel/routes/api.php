@@ -10,12 +10,12 @@ use App\Http\Controllers\API\OtpController;
 use App\Http\Controllers\API\RateController;
 use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\JobInterviewController;
+use App\Http\Controllers\API\MemberContactController;
 use App\Models\Nursing;
 use App\Models\NursingHome;
 use App\Models\Member;
 use App\Http\Resources\NursingResource;
 use App\Http\Resources\MemberResource;
-use App\Http\Controllers\API\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,14 +48,28 @@ Route::middleware(['auth:sanctum', 'api.role'])->group(function () {
     Route::post('/rate', [RateController::class, 'create']);
 
     Route::get('/members', [MemberController::class, 'getMembers']);
+
+    Route::post('/notification', [NotificationController::class, 'createNotification']);
+    Route::get('/notification', [NotificationController::class, 'getNotifications']);
+    Route::post('/notification/read', [NotificationController::class, 'setNotificationAsRead']);
 });
 
 Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
-    Route::get('/member/{id}', [MemberController::class, 'getUserInfo']);
+    Route::get('/member/{id}', [MemberController::class, 'getUserInfo'])->where('id', '[0-9]+');
     Route::post('/info', [MemberController::class, 'getUserInfo']);
     Route::post('/job/create', [JobController::class, 'store']);
     Route::post('/job/user/job-list', [JobController::class, 'getJobList']);
     Route::post('/nursing/compare', [NursingController::class, 'compareNursing']);
+    
+    Route::prefix('member')->group(function () {
+        Route::get('/contacts', [MemberContactController::class, 'getContacts']);
+        Route::get('/contact/{id}', [MemberContactController::class, 'getContactById']);
+        Route::delete('/contact/{id}', [MemberContactController::class, 'deleteContact']);
+        Route::post('/contact/create', [MemberContactController::class, 'create']);
+        Route::put('/contact/{id}', [MemberContactController::class, 'updateContact']);
+    });
+    
+    
 });
 
 // Route role only for Nursing role
@@ -106,7 +120,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
             break;
 
         case 'MEMBER':
-            $model = Member::with(['profile.subscriptions', 'profile.currentActiveSubscription', 'coverImage'])->find($user->id);
+            $model = Member::with(['profile.subscriptions', 'profile.currentActiveSubscription', 'coverImage', 'notifications', 'readNotifications', 'unreadNotifications'])->find($user->id);
             $data = (new MemberResource($model))->toArray($request);
             break;
 
