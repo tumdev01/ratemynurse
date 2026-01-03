@@ -136,7 +136,7 @@ class NursingRepository
     {
         $query = Nursing::query()
             ->with([
-                'profile:user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
+                'profile:id,user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
                 'profile.province:id,name',
                 'profile.district:id,name',
                 'profile.subDistrict:id,name',
