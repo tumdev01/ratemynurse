@@ -13,11 +13,24 @@ return new class extends Migration
     {
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('profile_id'); // nursing_profiles, nursing_home_profiles
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('type'); // [NURSING, NURSING_HOME]
+
+            // คนกด (MEMBER)
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            // profile ที่ถูก favorite
+            $table->morphs('profile'); 
+            // profile_id, profile_type
+
             $table->timestamps();
+
+            // ป้องกันกดซ้ำ
+            $table->unique([
+                'user_id',
+                'profile_id',
+                'profile_type'
+            ]);
         });
     }
 
