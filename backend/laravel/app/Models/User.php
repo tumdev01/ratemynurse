@@ -38,7 +38,7 @@ class User extends Authenticatable
 
     public function member()
     {
-        return $this->hasOne(MemberProfile::class, 'user_id', 'id');
+        return $this->hasOne(MemberProfile::class, 'user_id', id);
     }
 
     // เช็ค type
@@ -101,5 +101,10 @@ class User extends Authenticatable
     public function unreadNotifications()
     {
         return $this->hasMany(Notification::class, 'user_id', 'id')->where('is_read', false);
+    }
+
+    public function memberContacts()
+    {
+        return $this->hasMany(MemberContact::class, 'member_id');
     }
 }
