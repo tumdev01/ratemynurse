@@ -79,4 +79,23 @@ class NursingProfile extends Model
     {
         return $this->belongsTo(SubDistrict::class, 'sub_district_id', 'id');
     }
+
+    public function favorites()
+    {
+        return $this->morphMany(Favorite::class, 'profile');
+    }
+
+    public function isFavoritedBy($user)
+    {
+        if (!$user) return false;
+
+        return $this->favorites()
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function memberContacts()
+    {
+        return $this->morphMany(MemberContact::class, 'provider');
+    }
 }
