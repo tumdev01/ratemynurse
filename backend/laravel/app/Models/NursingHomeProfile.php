@@ -258,4 +258,25 @@ class NursingHomeProfile extends Model
     {
         return $this->hasmany(NursingHomeLicenseImage::class, 'profile_id', 'id');
     }
+
+    public function isFavoritedBy($user)
+    {
+        if (!$user) return false;
+
+        return $this->favorites()
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function favoritedUsers()
+    {
+        return $this->favorites()
+            ->with('user')   // MEMBER
+            ->latest();
+    }
+
+    public function memberContacts()
+    {
+        return $this->morphMany(MemberContact::class, 'provider');
+    }
 }
