@@ -1,9 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\NotificationCreateRequest;
 use App\Repositories\NotificationRepository;
 use Illuminate\Http\Request;
 
@@ -16,24 +14,18 @@ class NotificationController extends Controller
         $this->notificationRepository = $notificationRepository;
     }
 
-    public function createNotification(NotificationCreateRequest $request, $user_id)
+    public function createNotification(Array $inputs, $user_id)
     {
-        return $this->notificationRepository->createNotification($request->all(), $user_id);
+        return $this->notificationRepository->createNotification($inputs, $user_id);
     }
 
-    public function getNotifications()
+    public function getNotifications($user_id)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->notificationRepository->getNotifications(),
-        ]);
+        return $this->notificationRepository->getNotifications($user_id);
     }
 
-    public function setNotificationAsRead(Request $request)
+    public function setNotificationAsRead($notification_id, $user_id)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->notificationRepository->setNotificationAsRead($request->id),
-        ]);
+        return $this->notificationRepository->setNotificationAsRead($notification_id, $user_id);
     }
 }
