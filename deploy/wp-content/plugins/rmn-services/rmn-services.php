@@ -103,6 +103,24 @@ function rmn_enqueue_scripts() {
         'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css'
     );
 
+    // Hardcode สไตล์หลักของ Tom Select เข้าไปตรงๆ (ไม่พึ่ง CDN css อย่างเดียว)
+    // กัน CDN โดนบล็อก/โหลดช้า/ad-blocker แทรกแซง ทำให้ dropdown โผล่มาแบบไม่มีสไตล์เลย (โปร่งใส)
+    wp_add_inline_style('tom-select', '
+        .ts-wrapper { position: relative; box-sizing: border-box; border: none !important; padding: 0 !important; }
+        .ts-control { box-sizing: border-box; cursor: pointer; display: flex; align-items: center;
+            min-height: 43px; padding: 8px 12px; background-color: #fff; border: 1px solid #D9D8DC;
+            border-radius: 8px; font-size: 14px; color: #444; }
+        .ts-control input { font-size: 14px; }
+        .ts-wrapper.single .ts-control { padding-right: 24px; }
+        .ts-dropdown { background-color: #fff !important; border: 1px solid #D9D8DC !important;
+            border-radius: 8px; box-sizing: border-box; z-index: 999999 !important; }
+        .ts-dropdown .ts-dropdown-content { max-height: 200px; overflow-y: auto; }
+        .ts-dropdown .option { padding: 6px 12px; font-size: 14px; color: #444; cursor: pointer; }
+        .ts-dropdown .option.active { background-color: #5897fb; color: #fff; }
+        .ts-dropdown .option[data-selected] { background-color: #ddd; }
+        .ts-dropdown .no-results { padding: 6px 12px; font-size: 14px; color: #999; }
+    ');
+
     // Flatpickr (registered, enqueue per-shortcode that needs it)
     wp_register_style(
         'flatpickr',
@@ -132,11 +150,18 @@ function rmn_enqueue_scripts() {
         true
     );
 
+    // เวอร์ชันผูกกับ filemtime ของไฟล์จริง (ไม่ hardcode) — เดิม hardcode '1.0.x' ทำให้
+    // query string ?ver=... เหมือนเดิมทุกครั้งที่แก้โค้ด browser/cache เลยไม่โหลดไฟล์ใหม่ให้
+    $rmn_config_path            = plugin_dir_path(__FILE__) . 'js/rmn-config.js';
+    $rmn_utils_path             = plugin_dir_path(__FILE__) . 'js/rmn-utils.js';
+    $rmn_location_selector_path = plugin_dir_path(__FILE__) . 'js/rmn-location-selector.js';
+    $rmn_scripts_path           = plugin_dir_path(__FILE__) . 'rmn-scripts.js';
+
     wp_enqueue_script(
         'rmn-config',
         plugins_url('js/rmn-config.js', __FILE__),
         [],
-        '1.0.0',
+        file_exists($rmn_config_path) ? filemtime($rmn_config_path) : '1.0.0',
         true
     );
 
@@ -144,7 +169,7 @@ function rmn_enqueue_scripts() {
         'rmn-utils',
         plugins_url('js/rmn-utils.js', __FILE__),
         ['rmn-config', 'jquery', 'axios'],
-        '1.0.0',
+        file_exists($rmn_utils_path) ? filemtime($rmn_utils_path) : '1.0.0',
         true
     );
 
@@ -152,7 +177,7 @@ function rmn_enqueue_scripts() {
         'rmn-location-selector',
         plugins_url('js/rmn-location-selector.js', __FILE__),
         ['rmn-config', 'rmn-utils', 'jquery', 'tom-select', 'axios'],
-        '1.0.1',
+        file_exists($rmn_location_selector_path) ? filemtime($rmn_location_selector_path) : '1.0.1',
         true
     );
 
@@ -160,7 +185,7 @@ function rmn_enqueue_scripts() {
         'rmn-scripts',
         plugins_url('rmn-scripts.js', __FILE__),
        ['rmn-config', 'rmn-utils', 'rmn-location-selector', 'jquery', 'axios'],
-        '1.0.1',
+        file_exists($rmn_scripts_path) ? filemtime($rmn_scripts_path) : '1.0.1',
         true
     );
 
@@ -169,7 +194,8 @@ function rmn_enqueue_scripts() {
     // จึงห้ามฝังข้อมูลผู้ใช้จริงลงใน HTML ที่นี่ — ต้องให้ browser ไปดึงเองผ่าน get_current_user
     // (admin-ajax.php ไม่ถูก cache) เสมอ ดู rmn_get_current_user() ด้านล่าง
     wp_localize_script('rmn-scripts', 'RMN_AUTH', [
-        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'hasToken' => !empty($_COOKIE['access_token']),
+        'ajaxUrl'  => admin_url('admin-ajax.php'),
     ]);
 
     wp_localize_script('rmn-location-selector', 'RMN_PROVINCES', rmn_get_provinces());
@@ -211,9 +237,9 @@ function rmn_get_provinces() {
  */
 add_filter('style_loader_tag', function ($html, $handle) {
     // tom-select (เดิม select2) ถูกถอดออกจากลิสต์นี้เจตนา: การ defer ด้วย media="print" onload="..."
-    // ต้องพึ่ง inline onload handler ทำงานสำเร็จ — ถ้าโดน CSP บล็อก หรือ browser ไม่ยิง onload ตามจังหวะ
-    // ที่คาด media จะค้างที่ "print" ถาวร ทำให้ dropdown เลือกจังหวัด/อำเภอ/ตำบล (ซึ่งเป็น UI ที่ผู้ใช้
-    // ต้องโต้ตอบด้วยจริง ไม่ใช่ non-critical CSS) โผล่มาแบบไม่มีสไตล์เลย
+    // ต้องพึ่ง inline onload handler ทำงานสำเร็จ — ถ้าโดน CSP บล็อก หรือ browser
+    // ไม่ยิง onload ตามจังหวะที่คาด media จะค้างที่ "print" ถาวร ทำให้ dropdown เลือกจังหวัด/อำเภอ/ตำบล
+    // (ซึ่งเป็น UI ที่ผู้ใช้ต้องโต้ตอบด้วยจริง ไม่ใช่ non-critical CSS) โผล่มาแบบไม่มีสไตล์เลย
     $deferred = ['flatpickr'];
     if (!in_array($handle, $deferred, true)) {
         return $html;
@@ -661,37 +687,19 @@ function rmn_member_register() {
         ]);
     }
 
-    $token = $body['data']['access_token'] ?? null;
-
-    if($token == null || !$token) {
+    // สมัครสำเร็จแล้ว แต่ยังไม่ได้ access_token — backend ส่ง OTP ไปที่เบอร์แล้ว ต้องยืนยันผ่าน
+    // /api/otp/verify (action verify_otp) ก่อนถึงจะได้ token จริงและ login เข้าระบบสมบูรณ์
+    if (empty($body['data']['otp_required'])) {
         wp_send_json([
             'success' => false,
             'message' => 'เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้!',
-            'errors'  => $response->get_error_messages(),
         ]);
     }
 
-    setcookie('access_token', $token, [
-        'expires'  => time() + (7 * 24 * 60 * 60),
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ]);
-
-    setcookie('is_auth', '1', [
-        'expires'  => time() + (7 * 24 * 60 * 60),
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => false, // JS อ่านได้
-        'samesite' => 'Strict'
-    ]);
-
-    // ถ้าผ่าน
     wp_send_json([
         'success' => true,
-        'data'    => $body,
-        'message' => $body['message'] ?? 'สมัครสมาชิกสำเร็จ'
+        'message' => $body['message'] ?? 'สมัครสมาชิกสำเร็จ',
+        'data'    => ['otp_required' => true, 'phone' => $payload['phone']],
     ]);
 }
 
@@ -763,8 +771,8 @@ function rmn_provider_register() {
         ]);
     }
 
-    // ❌ ไม่มี token (ถือว่าสมัครสมาชิกไม่สำเร็จ)
-    if (empty($body['data']['access_token'])) {
+    // ❌ ไม่ใช่กรณีต้องยืนยัน OTP (ถือว่าสมัครสมาชิกไม่สำเร็จ)
+    if (empty($body['data']['otp_required'])) {
         wp_send_json([
             'success' => false,
             'message' => $body['message'] ?? 'เกิดข้อผิดพลาด ไม่สามารถสมัครสมาชิกได้',
@@ -773,20 +781,11 @@ function rmn_provider_register() {
     }
 
     // ✅ สำเร็จ — สร้าง user + profile ในทรานแซคชันเดียวเรียบร้อยแล้วฝั่ง backend
-    $token = $body['data']['access_token'];
-
-    setcookie('access_token', $token, [
-        'expires'  => time() + (7 * 24 * 60 * 60),
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ]);
-
+    // ยังไม่ set cookie/login เพราะ backend ส่ง OTP ไปที่เบอร์แล้ว ต้องยืนยันผ่าน verify_otp ก่อน
     wp_send_json([
         'success' => true,
         'message' => $body['message'] ?? 'สมัครสมาชิกสำเร็จ',
-        'data'    => $body['data'],
+        'data'    => array_merge($body['data'], ['phone' => $payload['phone']]),
     ]);
 }
 
@@ -900,7 +899,7 @@ function rmn_nursing_register() {
 
     // แนบรูปถ่าย (บังคับ) ด้วย CURLFile — เดิม endpoint นี้ส่งเป็น JSON ผ่าน wp_remote_post() ทำให้ไฟล์
     // ที่ผู้ใช้อัปโหลดหายไปเงียบๆ ไม่เคยถึง backend เลย เปลี่ยนมาใช้ curl+CURLFile แบบเดียวกับ
-    // nursing_profile_draft_save() ด้านล่างแทน
+    // nursing_profile_draft_save() ด้านบนแทน
     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['profile_photo'];
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -967,26 +966,18 @@ function rmn_nursing_register() {
         ]);
     }
 
-    $token = $body['data']['access_token'] ?? null;
-
-    if (empty($token)) {
+    // สมัครสำเร็จแล้ว แต่ยังไม่ได้ access_token — backend ส่ง OTP ไปที่เบอร์แล้ว ต้องยืนยันผ่าน
+    // /api/otp/verify (action verify_otp) ก่อนถึงจะได้ token จริงและ login เข้าระบบสมบูรณ์
+    if (empty($body['data']['otp_required'])) {
         wp_send_json([
             'success' => false,
             'message' => 'เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้!',
         ]);
     }
 
-    setcookie('access_token', $token, [
-        'expires'  => time() + (7 * 24 * 60 * 60),
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ]);
-
     wp_send_json_success([
-        'success' => true,
-        'token'   => $token,
+        'otp_required' => true,
+        'phone'        => $postData['phone'],
     ]);
 }
 
@@ -1793,10 +1784,12 @@ function rmn_toggle_favorite() {
         wp_send_json_error(['message' => 'Invalid data'], 422);
     }
 
-    // Invalidate favorite-state transient cache (ของ NursingHome.php / Nursing.php)
+    // Invalidate favorite-state transient cache (ของ NursingHome.php / Nursing.php / rmn_get_my_favorite_ids)
     $token_hash = substr(hash('sha256', $token), 0, 16);
     delete_transient('rmn_favs_nh_' . $token_hash);
     delete_transient('rmn_favs_nursing_' . $token_hash);
+    delete_transient('rmn_fav_ids_nursing_' . $token_hash);
+    delete_transient('rmn_fav_ids_nursing_home_' . $token_hash);
 
     $endpoint = 'https://services.ratemynurse.org/api/favorite/toggle';
 
@@ -1827,6 +1820,94 @@ function rmn_toggle_favorite() {
     curl_close($ch);
 
     $result = json_decode($response, true);
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        wp_send_json_error([
+            'message' => $result['message'] ?? 'API error',
+        ], $httpCode);
+    }
+
+    wp_send_json_success($result);
+}
+
+add_action('wp_ajax_get_my_favorite_ids', 'rmn_get_my_favorite_ids');
+add_action('wp_ajax_nopriv_get_my_favorite_ids', 'rmn_get_my_favorite_ids');
+function rmn_get_my_favorite_ids() {
+    if (empty($_COOKIE['access_token'])) {
+        wp_send_json_error(['message' => 'Unauthorized'], 401);
+    }
+
+    $token        = sanitize_text_field($_COOKIE['access_token']);
+    $profile_type = strtoupper(sanitize_text_field($_POST['profile_type'] ?? ''));
+
+    if (!in_array($profile_type, ['NURSING', 'NURSING_HOME'], true)) {
+        wp_send_json_error(['message' => 'Invalid data'], 422);
+    }
+
+    $cache_key = 'rmn_fav_ids_' . strtolower($profile_type) . '_' . substr(hash('sha256', $token), 0, 16);
+    $cached    = get_transient($cache_key);
+    if ($cached !== false) {
+        wp_send_json_success($cached);
+    }
+
+    $endpoint = add_query_arg(['profile_type' => $profile_type], 'https://services.ratemynurse.org/api/favorite/ids');
+
+    $response = wp_remote_get($endpoint, [
+        'headers' => [
+            'Authorization' => 'Bearer ' . $token,
+            'Accept'        => 'application/json',
+        ],
+        'timeout' => 10,
+    ]);
+
+    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+        wp_send_json_error(['message' => 'API error'], 500);
+    }
+
+    $result = json_decode(wp_remote_retrieve_body($response), true);
+    $ids    = $result['data'] ?? [];
+
+    set_transient($cache_key, $ids, 30);
+
+    wp_send_json_success($ids);
+}
+
+add_action('wp_ajax_remove_provider_favorite', 'rmn_remove_provider_favorite');
+add_action('wp_ajax_nopriv_remove_provider_favorite', 'rmn_remove_provider_favorite');
+function rmn_remove_provider_favorite() {
+    if (!isset($_COOKIE['access_token'])) {
+        wp_send_json_error([
+            'message' => 'Unauthorized: no access token',
+        ], 401);
+    }
+
+    $token        = sanitize_text_field($_COOKIE['access_token']);
+    $favorite_id  = intval($_POST['favorite_id'] ?? 0);
+    $profile_type = strtoupper(sanitize_text_field($_POST['profile_type'] ?? ''));
+
+    if (!$favorite_id || !in_array($profile_type, ['NURSING', 'NURSING_HOME'], true)) {
+        wp_send_json_error(['message' => 'Invalid data'], 422);
+    }
+
+    $path = $profile_type === 'NURSING' ? 'nursing' : 'nursing-home';
+    $endpoint = "https://services.ratemynurse.org/api/{$path}/provider/favorites/{$favorite_id}";
+
+    $response = wp_remote_request($endpoint, [
+        'method'  => 'DELETE',
+        'headers' => [
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+        ],
+        'timeout' => 15,
+    ]);
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => $response->get_error_message()], 500);
+    }
+
+    $httpCode = wp_remote_retrieve_response_code($response);
+    $result   = json_decode(wp_remote_retrieve_body($response), true);
 
     if ($httpCode < 200 || $httpCode >= 300) {
         wp_send_json_error([

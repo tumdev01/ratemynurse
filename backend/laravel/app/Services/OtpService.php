@@ -10,9 +10,9 @@ class OtpService
     public function generate($id, $identifier, $length = 5, $ttl = 90)
     {
         $otp = str_pad(
-            random_int(0, (int) pow(10, $length) - 1), 
-            $length, 
-            '0', 
+            random_int(0, (int) pow(10, $length) - 1),
+            $length,
+            '0',
             STR_PAD_LEFT
         );
 
@@ -26,6 +26,18 @@ class OtpService
         ]);
 
         return $otp;
+    }
+
+    /**
+     * สร้าง OTP แล้วส่ง SMS ทันที — ใช้ตอนสมัครสมาชิกสำเร็จ (ต้องยืนยัน OTP ก่อนถึงจะได้ access_token จริง)
+     * เหมือน pattern เดียวกับ OtpController::requestOtp() ตอน login
+     */
+    public function sendOtp($id, $identifier, $length = 5, $ttl = 90)
+    {
+        $otp = $this->generate($id, $identifier, $length, $ttl);
+
+        $smsService = new SmsService();
+        return $smsService->send($identifier, "รหัส OTP ของคุณคือ $otp หมดอายุภายใน {$ttl} วินาที");
     }
 
     public function verify($identifier, $otp)

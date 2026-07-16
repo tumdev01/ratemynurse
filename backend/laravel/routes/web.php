@@ -10,7 +10,6 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NursingHomeRoomController;
 use App\Http\Controllers\NursingCvImageController;
-use App\Http\Controllers\SubscriptionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -94,12 +93,6 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/nursing-home/users', [NursingHomeController::class, 'getNursingHomeUser']);
-
-    Route::prefix('subscription')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {
-        Route::get('/', [SubscriptionController::class, 'dashboard'])->name('subscription.dashboard');
-        Route::get('/{id}', [SubscriptionController::class, 'show'])->name('subscription.show');
-        Route::post('/{id}/accept', [SubscriptionController::class, 'acceptPayment'])->name('subscription.accept');
-    });
     
 });
 

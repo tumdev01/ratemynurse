@@ -22,11 +22,9 @@ class NursingUpdateRequest extends FormRequest
             'lastname'  => ['required', 'string', 'max:50'],
             'nickname'  => ['required', 'string', 'max:25'],
             'user_type' => ['required', 'in:NURSING'],
-            'date_of_birth' => ['nullable', 'date'],
+            'date_of_birth' => ['required', 'date'],
             'blood'     => ['nullable', 'string'],
             'gender'    => ['required', 'string', 'in:MALE,FEMALE,OTHER'],
-            'care_type' => ['nullable', 'string', 'in:RN,PN,NA,CG,MAID'],
-            'certified' => ['nullable', 'boolean'],
 
             'email' => [
                 'required',

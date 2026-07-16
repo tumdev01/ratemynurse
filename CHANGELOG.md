@@ -4,6 +4,60 @@
 
 ## 2026-07-17
 
+### เพิ่มเช็คเบอร์ซ้ำก่อนไปขั้นตอนถัดไป + บังคับยืนยัน OTP ก่อน login จริงหลังสมัครสมาชิก (ครอบคลุมทั้ง 3 ฟอร์ม)
+
+**คำขอ:** (1) ระหว่างกรอกฟอร์มสมัครสมาชิกและกรอกเบอร์โทรศัพท์แล้ว ถ้ากด "ถัดไป" ต้องเช็คก่อนว่าเบอร์นี้มี
+ในระบบแล้วหรือยัง กันไม่ให้กรอกฟอร์มที่เหลือทั้งหมดจนจบแล้วต้องย้อนกลับมาแก้ใหม่ (2) เมื่อสมัครสมาชิกผ่านแล้ว
+ต้องให้ยืนยัน OTP ก่อนถึงจะถือว่า login เข้าระบบสมบูรณ์ (เดิม registration สำเร็จแล้ว login ทันทีโดยไม่เคย
+เช็ค OTP เลย) — ผู้ใช้ยืนยันให้ครอบคลุมทั้ง 3 ฟอร์ม: NursingHome (provider), Nursing (พยาบาลรายบุคคล),
+Member
+
+**Backend (Laravel):**
+- เพิ่ม `OtpController::checkPhone()` + route `POST /api/check-phone` (public เหมือน otp/request) — รับ
+  `{phone}` คืน `{exists: true/false}`
+- เพิ่ม `OtpService::sendOtp()` (generate OTP + ส่ง SMS ในทีเดียว) รีแฟคเตอร์ให้ใช้ซ้ำได้ทั้งตอน login เดิม
+  และตอนสมัครสมาชิกสำเร็จ (ใหม่)
+- **เปลี่ยนพฤติกรรมสำคัญ**: `NursingHomeController::register()`, `NursingController::store()` (ผ่าน
+  `NursingApiRepository::createNurse()`), `MemberController::create()` ทั้ง 3 จุด เลิกคืน `access_token`
+  ทันทีหลังสมัครสำเร็จ (atomic เหมือนเดิม ไม่กระทบ) เปลี่ยนเป็นเรียก `OtpService::sendOtp()` ส่ง OTP ไปเบอร์
+  ที่สมัครแทน คืน `{otp_required: true}` — ต้องเรียก `/api/otp/verify` (endpoint เดียวกับ login OTP
+  เดิม เพราะหา user จาก phone เหมือนกัน ใช้ซ้ำได้เลยไม่ต้องสร้างใหม่) เพื่อเอา token จริง
+
+**Frontend (WordPress):**
+- `rmn-services.php`: `rmn_provider_register()`, `rmn_member_register()`, `rmn_nursing_register()` เลิก
+  คาดหวัง `access_token` จาก response (เดิมถ้าไม่มี token จะรายงาน error ทั้งที่จริงสมัครสำเร็จ) เปลี่ยนไปเช็ค
+  `otp_required` แทน ไม่ set cookie login ทันทีอีกต่อไป ส่ง `phone` กลับไปให้ JS แทน
+- `Authentication.php`: เพิ่ม helper กลาง `rmnCheckPhoneExists()` / `rmnShowRegistrationOtpModal()` ใช้ร่วม
+  กันทั้ง 3 ฟอร์ม
+  - `providerRegisFrm` (step 1 ของ NursingHome) และปุ่ม "ถัดไป" ของ `nursingRegisFrm` — เช็ค
+    `rmnCheckPhoneExists()` ก่อนสลับ tab ถ้าซ้ำแสดง toast แจ้งเตือน ไม่ไปขั้นตอนถัดไป
+  - `memberRegisFrm` (ฟอร์มเดียวจบ ไม่มีหลาย step) — เช็คตอน blur ช่องเบอร์โทรทันที แสดง error inline แทนรอ
+    submit สุดท้าย
+  - ทั้ง 3 ฟอร์ม: หลังสมัครสำเร็จ (`otp_required`) เปิด modal ยืนยัน OTP (ใช้ modal เดียวกับตอน login
+    `#otpConfirm`) ก่อนแสดง popup "สมัครสำเร็จ" — แก้ `confirmBtn` handler เดิมให้เช็ค
+    `window._rmnOtpVerifiedCallback` แทนการ `location.reload()` แบบเดิมเสมอ (login flow ปกติยังทำงาน
+    เหมือนเดิมทุกอย่าง เพราะไม่มี callback ก็ fallback ไป reload ตามเดิม)
+
+**ทดสอบแล้ว:** curl ตรงเข้า Laravel local ครบวงจร (check-phone, register ไม่คืน token, OTP ถูกสร้างจริงใน
+DB, verify OTP สำเร็จได้ access_token) และผ่าน WordPress `admin-ajax.php` จริงสำหรับ `provider_register` +
+`verify_otp` ครบวงจรสำเร็จ (ลบข้อมูลทดสอบออกหมดแล้ว) **ยังไม่ได้ทดสอบผ่านฟอร์มจริงในเบราว์เซอร์แบบเต็ม
+ขั้นตอน** — ควรทดสอบทั้ง 3 ฟอร์มก่อน deploy จริง
+
+**เพิ่มเติม (ตามคำขอ):** ตอนกด "ถัดไป" ของ providerRegisFrm/nursingRegisFrm ระหว่างรอผล
+`rmnCheckPhoneExists()` เพิ่มการแสดง loading overlay เต็มจอ (ใช้ `lockAuthUI()`/`unlockAuthUI()` ตัว
+เดียวกับที่ใช้ตอนรอ OTP request/verify อยู่แล้ว — reuse ของเดิมเพื่อความสม่ำเสมอ) ให้ผู้ใช้เห็นว่ากำลังตรวจสอบ
+อยู่ ไม่ใช่ค้าง ก่อนจะอนุญาตให้ไปขั้นตอนถัดไปได้
+
+### พบ production error `RMN_Utils is not defined` — สงสัยว่าไฟล์ใหม่บางไฟล์ยังไม่เคยอัปโหลดขึ้นจริง
+
+ตรวจสอบ `Authentication.php`/`job-post.php` (ทั้ง working copy และ deploy copy) แล้วพบว่าทุกจุดที่เรียก
+`RMN_Utils.*` มีการ guard ด้วย `DOMContentLoaded`/`window.load` ถูกต้องอยู่แล้ว (ไม่ใช่บั๊ก race condition
+ในโค้ด) จึงสงสัยว่าสาเหตุจริงคือไฟล์ `js/rmn-utils.js` (ไฟล์ใหม่จากรอบก่อนหน้า ไม่เคยมีอยู่บนเซิร์ฟเวอร์เลย)
+ยังไม่ถูกอัปโหลดขึ้นจริงในรอบ deploy ก่อนหน้า — ตรวจสอบ `deploy/wp-content/plugins/rmn-services/js/rmn-utils.js`
+มีอยู่ครบและตรงกับ working copy (diff ต่างกันแค่ line ending) ยืนยันว่าไฟล์นี้พร้อมสำหรับรอบ deploy ถัดไป —
+ดู `deploy/FILES_TO_UPLOAD.txt` หัวข้อ "สรุปล่าสุด" สำหรับรายการไฟล์ที่ต้องอัปโหลดครบ (ทำเครื่องหมาย
+[ไฟล์ใหม่] ไว้ชัดเจน)
+
 ### แก้ user.status ไม่ตรงกันตอนสมัคร NursingHome + error toast โผล่หลัง modal + ขยาย OTP เป็น 90 วินาที
 
 **พบระหว่างผู้ใช้ทดสอบสมัครสมาชิก NursingHome จริง**

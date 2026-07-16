@@ -29,8 +29,8 @@ class NotificationRepository
         ];
     }
 
-    public function setNotificationAsRead($notification_id, $user_id)
+    public function setNotificationAsRead($notification_id)
     {
-        return Notification::where('id', $notification_id)->where('user_id', $user_id)->update(['is_read' => true]);
+        return Notification::where('id', $notification_id)->update(['is_read' => true]);
     }
 }   

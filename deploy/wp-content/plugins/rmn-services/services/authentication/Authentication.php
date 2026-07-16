@@ -231,7 +231,11 @@ class Authentication {
                             background-image: url('https://ratemynurse.org/wp-content/uploads/2025/10/calendar.webp');
                         }
                     }
-                } 
+                }
+
+                .ts-dropdown {
+                    z-index: 999999 !important;
+                }
             </style>
             <div class="authen_wrapper">
                 <div id="authenLoadingOverlay" class="authen-loading-overlay">
@@ -377,7 +381,7 @@ class Authentication {
 
                 <div id="memberRegistrationTab" class="flex flex-column gap-5 step" data-step="5" style="display:none">
                     <div class="action flex flex-row flex-between w-full">
-                        <span class="back" data-to="authen">
+                        <span class="back" data-to="userType">
                             <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 19-7-7 7-7"/> </svg>
                             <span style="padding-top:3px;line-height:1;">ย้อนกลับ</span>
                         </span>
@@ -458,7 +462,7 @@ class Authentication {
 
                 <div id="providerRegistrationTab" class="flex flex-column gap-5 step" data-step="7" style="display:none">
                     <div class="action flex flex-row flex-between w-full">
-                        <span class="back" data-to="authen">
+                        <span class="back" data-to="serviceType">
                             <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 19-7-7 7-7"/> </svg>
                             <span style="padding-top:3px;line-height:1;">ย้อนกลับ</span>
                         </span>
@@ -702,7 +706,7 @@ class Authentication {
                                         <label class="error text-xs text-red-600"></label>
                                     </div>
 
-                                    <div class="flex flex-col">
+                                    <div class="flex flex-col" style="display:none">
                                         <label class="font-semibold" for="blood">กรุ๊ปเลือด (ถ้ามี)</label>
                                         <select name="blood" id="nursingBlood" class="rounded-lg px-3 py-2 border border-[#e5e7eb]">
                                             <option value="">กรุ๊ปเลือด</option>
@@ -815,6 +819,38 @@ class Authentication {
                 function unlockAuthUI() {
                     authRequestInProgress = false;
                     if (authLoadingOverlay) authLoadingOverlay.classList.remove('active');
+                }
+
+                // เช็คว่าเบอร์นี้มีในระบบแล้วหรือยัง — เรียกก่อนสลับไปขั้นตอนถัดไปของฟอร์มสมัครสมาชิก
+                // กันไม่ให้กรอกฟอร์มที่เหลือทั้งหมดจนจบแล้วมาเจอ error ซ้ำเบอร์ตอน submit สุดท้าย
+                // fail-open: ถ้าเช็คไม่ได้ (เช่น network error) ปล่อยผ่านไปก่อน backend จะเช็คซ้ำตอน submit จริงอีกที
+                async function rmnCheckPhoneExists(phoneNumber) {
+                    try {
+                        const response = await axios.post('https://services.ratemynurse.org/api/check-phone', {
+                            phone: phoneNumber,
+                        });
+                        return !!response.data?.exists;
+                    } catch (err) {
+                        return false;
+                    }
+                }
+
+                // แสดง modal ยืนยัน OTP หลังสมัครสมาชิกสำเร็จ (ใช้ modal เดียวกับตอน login)
+                // onVerified จะถูกเรียกแทน location.reload() ปกติ หลังยืนยัน OTP สำเร็จ
+                function rmnShowRegistrationOtpModal(phoneNumber, onVerified) {
+                    document.querySelectorAll('.step').forEach(step => {
+                        step.style.display = 'none';
+                    });
+
+                    document.getElementById('tel_number').value = phoneNumber;
+                    const telTxt = document.querySelector('.tel_txt');
+                    if (telTxt) telTxt.textContent = phoneNumber;
+
+                    const otpConfirmEl = document.getElementById('otpConfirm');
+                    otpConfirmEl.style.display = 'flex';
+
+                    window._rmnOtpVerifiedCallback = onVerified;
+                    startCountdown();
                 }
 
                 function checkAllFilled() {
@@ -1036,7 +1072,15 @@ class Authentication {
                             otp: otp
                         });
                         if (response.data.success) {
-                            location.reload();
+                            // ถ้า modal นี้ถูกเปิดมาจากขั้นตอน "สมัครสมาชิก" (ไม่ใช่ login ปกติ) จะมี
+                            // callback รอทำงานต่อ (เช่น แสดง popup สมัครสำเร็จ) แทนที่จะ reload หน้าเฉยๆ
+                            if (window._rmnOtpVerifiedCallback) {
+                                const cb = window._rmnOtpVerifiedCallback;
+                                window._rmnOtpVerifiedCallback = null;
+                                cb();
+                            } else {
+                                location.reload();
+                            }
                         }
                     } catch (err) {
                         Swal.fire({
@@ -1152,8 +1196,18 @@ class Authentication {
                     }
 
                     // ตรวจสอบตัวเลขเท่านั้น
+                    let memberPhoneExists = false;
                     memberphone.addEventListener('input', function() {
                         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+                        memberPhoneExists = false; // แก้เบอร์ใหม่แล้ว ต้องเช็คซ้ำอีกครั้งตอน blur
+                        validateForm();
+                    });
+
+                    // เช็คว่าเบอร์นี้มีในระบบแล้วหรือยัง ทันทีที่กรอกเสร็จ (blur) — ไม่ต้องรอกรอกฟอร์ม
+                    // ที่เหลือทั้งหมดจนจบแล้วมาเจอ error ซ้ำเบอร์ตอน submit สุดท้าย
+                    memberphone.addEventListener('blur', async function() {
+                        if (!/^0[0-9]{9}$/.test(memberphone.value)) return;
+                        memberPhoneExists = await rmnCheckPhoneExists(memberphone.value);
                         validateForm();
                     });
 
@@ -1168,13 +1222,24 @@ class Authentication {
 
                     function validateForm() {
                         let allFilled = true;
-                        let phoneValid = /^0[0-9]{9}$/.test(memberphone.value);
+                        let phoneValid = /^0[0-9]{9}$/.test(memberphone.value) && !memberPhoneExists;
                         let cardValid = isValidThaiID(cardid.value);
                         let checkboxesChecked = agreeTerms.checked && agreeNews.checked;
 
                         // Reset error highlight
                         memberinputs.forEach(input => input.classList.remove('border-red-500'));
                         form.querySelectorAll('.error').forEach(el => el.classList.add('hidden'));
+
+                        // ตรวจเบอร์โทร
+                        if (memberPhoneExists) {
+                            memberphone.classList.add('border-red-500');
+                            memberphone.nextElementSibling.textContent = 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว';
+                            memberphone.nextElementSibling.classList.remove('hidden');
+                        } else if (!phoneValid && memberphone.value.trim() !== '') {
+                            memberphone.classList.add('border-red-500');
+                            memberphone.nextElementSibling.textContent = '';
+                            memberphone.nextElementSibling.classList.remove('hidden');
+                        }
 
                         // ตรวจช่องว่าง
                         memberinputs.forEach(input => {
@@ -1183,12 +1248,6 @@ class Authentication {
                                 allFilled = false;
                             }
                         });
-
-                        // ตรวจเบอร์โทร
-                        if (!phoneValid && phone.value.trim() !== '') {
-                            memberphone.classList.add('border-red-500');
-                            memberphone.nextElementSibling.classList.remove('hidden');
-                        }
 
                         // ตรวจบัตรประชาชน
                         if (!cardValid && cardid.value.trim() !== '') {
@@ -1252,11 +1311,16 @@ class Authentication {
                             const result = response.data;
 
                             if (result.success) {
-                                form.reset();
-                                btn.classList.add('disabled', 'opacity-50', 'cursor-not-allowed');
-                                document.getElementById('section-678-21').style.display = 'none';
-                                let popup = createPopUp('สมัครสมาชิกสำเร็จ', 'เราพร้อมช่วยคุณหาผู้ดูแลมืออาชีพที่ไว้ใจได้ เพื่อคนที่คุณรัก เริ่มค้นหาผู้ดูแลที่ใช่ได้เลยตอนนี้');
-                                document.querySelector('body').insertAdjacentHTML('beforeend', popup);
+                                // สมัครสำเร็จแล้ว แต่ยังไม่ login จริง — ต้องยืนยัน OTP ที่ส่งไปเบอร์ก่อน
+                                const registeredPhone = result.data?.phone || memberphone.value;
+
+                                rmnShowRegistrationOtpModal(registeredPhone, () => {
+                                    form.reset();
+                                    btn.classList.add('disabled', 'opacity-50', 'cursor-not-allowed');
+                                    document.getElementById('section-678-21').style.display = 'none';
+                                    let popup = createPopUp('สมัครสมาชิกสำเร็จ', 'เราพร้อมช่วยคุณหาผู้ดูแลมืออาชีพที่ไว้ใจได้ เพื่อคนที่คุณรัก เริ่มค้นหาผู้ดูแลที่ใช่ได้เลยตอนนี้');
+                                    document.querySelector('body').insertAdjacentHTML('beforeend', popup);
+                                });
                                 return;
                             }
 
@@ -1793,13 +1857,39 @@ class Authentication {
                     // Step 1: แค่ validate ฝั่ง client แล้วสลับไปหน้าถัดไป — ไม่ยิง API
                     // (ข้อมูลทั้งหมดจะถูกส่งไปบันทึกครั้งเดียวตอนกด "สมัครสมาชิก" ในขั้นตอนสุดท้าย
                     // เพื่อกันไม่ให้เกิด account ค้างถ้าขั้นตอนถัดไปกรอกไม่สำเร็จ)
-                    providerRegisFrm.addEventListener('submit', e => {
+                    providerRegisFrm.addEventListener('submit', async e => {
                         e.preventDefault();
 
                         checkProviderAgreement();
 
                         if (!providerRegisFrm.checkValidity()) {
                             providerRegisFrm.reportValidity();
+                            return;
+                        }
+
+                        const nextBtn = providerRegisFrm.querySelector('#nextTab');
+                        if (nextBtn) nextBtn.setAttribute('disabled', true);
+
+                        const phoneValue = document.getElementById('main_phone').value;
+                        lockAuthUI();
+                        let phoneExists;
+                        try {
+                            phoneExists = await rmnCheckPhoneExists(phoneValue);
+                        } finally {
+                            unlockAuthUI();
+                        }
+
+                        if (nextBtn) nextBtn.removeAttribute('disabled');
+
+                        if (phoneExists) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว',
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
                             return;
                         }
 
@@ -1868,33 +1958,38 @@ class Authentication {
                             const result = response.data;
 
                             if (result.success) {
+                                // สมัครสำเร็จแล้ว แต่ยังไม่ login จริง — ต้องยืนยัน OTP ที่ส่งไปเบอร์ก่อน
                                 const registerFrame = document.getElementById('section-678-21');
-                                registerFrame.style.display = 'none';
+                                const registeredPhone = result.data?.phone || document.getElementById('main_phone').value;
 
-                                const popUpSuccessFrameHTML = `
-                                <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
-                                    <div style="display: flex;flex-direction: column;gap: 36px;width: 461px;height: 491px;border-radius: 12px;padding: 40px 24px 24px 24px;background-color: white;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);">
-                                        <div class="flex flex-col justify-center">
-                                            <img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png" width="281" height="200" class="mx-auto">
-                                        </div>
-                                        <div class="flex flex-col gap-[8px] justify-center items-center">
-                                            <h4 class="font-semibold">สมัครสมาชิกสำเร็จ</h4>
-                                            <span class="text-base">คุณสามารถลงประกาศงานได้ทันที</span>
-                                            <span class="text-base">เพิ่มข้อมูลเพื่อให้เจอบริการของคุณง่ายยิ่งขึ้น</span>
-                                        </div>
-                                        <div class="flex flex-row justify-center gap-[24px] text-base font-medium">
-                                            <button class="close_frame w-[172px] h-[48px] leading-[48px] text-[#5A5A5A] rounded-[10px] text-center border border-[#D9D8DC]">ไว้ทีหลัง</button>
-                                            <a href="https://ratemynurse.org/my-profile/" class="w-[172px] h-[48px] leading-[48px] text-white rounded-[10px] bg-[#286F51] text-center">ลงประกาศเลย</a>
+                                rmnShowRegistrationOtpModal(registeredPhone, () => {
+                                    registerFrame.style.display = 'none';
+
+                                    const popUpSuccessFrameHTML = `
+                                    <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
+                                        <div style="display: flex;flex-direction: column;gap: 36px;width: 461px;height: 491px;border-radius: 12px;padding: 40px 24px 24px 24px;background-color: white;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+                                            <div class="flex flex-col justify-center">
+                                                <img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png" width="281" height="200" class="mx-auto">
+                                            </div>
+                                            <div class="flex flex-col gap-[8px] justify-center items-center">
+                                                <h4 class="font-semibold">สมัครสมาชิกสำเร็จ</h4>
+                                                <span class="text-base">คุณสามารถลงประกาศงานได้ทันที</span>
+                                                <span class="text-base">เพิ่มข้อมูลเพื่อให้เจอบริการของคุณง่ายยิ่งขึ้น</span>
+                                            </div>
+                                            <div class="flex flex-row justify-center gap-[24px] text-base font-medium">
+                                                <button class="close_frame w-[172px] h-[48px] leading-[48px] text-[#5A5A5A] rounded-[10px] text-center border border-[#D9D8DC]">ไว้ทีหลัง</button>
+                                                <a href="https://ratemynurse.org/my-profile/" class="w-[172px] h-[48px] leading-[48px] text-white rounded-[10px] bg-[#286F51] text-center">ลงประกาศเลย</a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                `;
+                                    `;
 
-                                document.body.insertAdjacentHTML('beforeend', popUpSuccessFrameHTML);
+                                    document.body.insertAdjacentHTML('beforeend', popUpSuccessFrameHTML);
 
-                                // ปุ่มปิด popup
-                                document.querySelector('.close_frame').addEventListener('click', () => {
-                                    document.getElementById('regisSuccessFrame').remove();
+                                    // ปุ่มปิด popup
+                                    document.querySelector('.close_frame').addEventListener('click', () => {
+                                        document.getElementById('regisSuccessFrame').remove();
+                                    });
                                 });
 
                                 return;
@@ -1982,21 +2077,6 @@ class Authentication {
                             errorElement.innerText = '';
                         }
                     });
-
-                });
-
-                document.addEventListener('DOMContentLoaded', () => {
-                    // ===== LOCATION SELECTOR =====
-                    // ตรวจสอบว่ามี element province หรือไม่
-                    if (document.getElementById('province')) {
-                        // สร้าง instance ของ LocationSelector
-                        window.locationSelector = new RMN_LocationSelector({
-                            provinceSelector: '#province',
-                            districtSelector: '#district',
-                            subDistrictSelector: '#sub_district'
-                        });
-
-                    }
                 });
 
                 // Nursing Registration
@@ -2055,12 +2135,22 @@ class Authentication {
                     });
                     
                     back.addEventListener('click', function() {
-                        let toTab = this.dataset.to;
-                        if(toTab === 'subTab-1') {
-                            nursingRegisFrm.querySelector('.subTab-2').style.display = 'none';
-                            nursingRegisFrm.querySelector('.subTab-1').style.display = 'flex';
+                        const subTab1 = nursingRegisFrm.querySelector('.subTab-1');
+                        const subTab2 = nursingRegisFrm.querySelector('.subTab-2');
+                        if (subTab2.style.display !== 'none') {
+                            // อยู่ subTab-2 -> ถอยไป subTab-1 ของฟอร์มพยาบาลเอง
+                            subTab2.style.display = 'none';
+                            subTab1.style.display = 'flex';
+                        } else {
+                            // อยู่ subTab-1 (จุดแรกสุดของฟอร์ม) -> ออกจากฟอร์มพยาบาล กลับไปเลือกประเภทบริการ
+                            document.querySelectorAll('.step').forEach(step => {
+                                step.style.display = 'none';
+                            });
+                            const serviceTypeTab = document.getElementById('serviceType');
+                            if (serviceTypeTab) {
+                                serviceTypeTab.style.display = 'flex';
+                            }
                         }
-                        
                     });
 
                     nursingCreate.setAttribute('disabled', true);
@@ -2069,6 +2159,29 @@ class Authentication {
                     nextTabBtn.addEventListener('click', async e => {
                         e.preventDefault();
                         e.stopPropagation();
+
+                        nextTabBtn.setAttribute('disabled', true);
+                        lockAuthUI();
+                        let phoneExists;
+                        try {
+                            phoneExists = await rmnCheckPhoneExists(nursingPhone.value);
+                        } finally {
+                            unlockAuthUI();
+                        }
+                        nextTabBtn.removeAttribute('disabled');
+
+                        if (phoneExists) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว',
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                            });
+                            return;
+                        }
+
                         nursingRegisFrm.querySelector('.subTab-1').style.display = 'none';
                         nursingRegisFrm.querySelector('.subTab-2').style.display = 'flex';
                     });
@@ -2168,11 +2281,11 @@ class Authentication {
                         const nursingLastName  = document.getElementById('nursingLastName');
                         const nursingNickname = document.getElementById('nursingNickname');
                         const nursingGender   = document.getElementById('nursingGender');
-                        const nursingCareType = document.getElementById('nursingCareType');
                         const nursingPhone    = document.getElementById('nursingPhone');
                         const nursingEmail    = document.getElementById('nursingEmail');
                         const nursingBirthDate= document.getElementById('nursingBirthDate');
                         const nursingBlood    = document.getElementById('nursingBlood');
+                        const nursingCareType = document.getElementById('nursingCareType');
                         const nursingProfilePhoto = document.getElementById('nursingProfilePhoto');
                         const medical_condition = document.getElementById('medical_condition');
                         const history_of_drug_allergy = document.getElementById('history_of_drug_allergy');
@@ -2250,37 +2363,40 @@ class Authentication {
                             }
 
                             if( result.success == true ) {
-
+                                // สมัครสำเร็จแล้ว แต่ยังไม่ login จริง — ต้องยืนยัน OTP ที่ส่งไปเบอร์ก่อน
                                 const registerFrame = document.getElementById('section-678-21');
-                                registerFrame.style.display = 'none';
+                                const registeredPhone = result.data?.phone || nursingPhone.value;
 
-                                const popUpSuccessFrameHTML = `
-                                <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
-                                    <div style="display: flex;flex-direction: column;gap: 36px;width: 461px;height: 491px;border-radius: 12px;padding: 40px 24px 24px 24px;background-color: white;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);">
-                                        <div class="flex flex-col justify-center">
-                                            <img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png" width="281" height="200" class="mx-auto">
-                                        </div>
-                                        <div class="flex flex-col gap-[8px] justify-center items-center">
-                                            <h4 class="font-semibold">สมัครสมาชิกสำเร็จ</h4>
-                                            <span class="text-base">คุณสามารถลงประกาศงานได้ทันที</span>
-                                            <span class="text-base">เพิ่มข้อมูลเพื่อให้เจอบริการของคุณง่ายยิ่งขึ้น</span>
-                                        </div>
-                                        <div class="flex flex-row justify-center gap-[24px] text-base font-medium">
-                                            <button class="close_frame w-[172px] h-[48px] leading-[48px] text-[#5A5A5A] rounded-[10px] text-center border border-[#D9D8DC]">ไว้ทีหลัง</button>
-                                            <a href="https://ratemynurse.org/my-profile/" class="w-[172px] h-[48px] leading-[48px] text-white rounded-[10px] bg-[#286F51] text-center">ลงประกาศเลย</a>
+                                rmnShowRegistrationOtpModal(registeredPhone, () => {
+                                    registerFrame.style.display = 'none';
+
+                                    const popUpSuccessFrameHTML = `
+                                    <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
+                                        <div style="display: flex;flex-direction: column;gap: 36px;width: 461px;height: 491px;border-radius: 12px;padding: 40px 24px 24px 24px;background-color: white;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+                                            <div class="flex flex-col justify-center">
+                                                <img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png" width="281" height="200" class="mx-auto">
+                                            </div>
+                                            <div class="flex flex-col gap-[8px] justify-center items-center">
+                                                <h4 class="font-semibold">สมัครสมาชิกสำเร็จ</h4>
+                                                <span class="text-base">คุณสามารถลงประกาศงานได้ทันที</span>
+                                                <span class="text-base">เพิ่มข้อมูลเพื่อให้เจอบริการของคุณง่ายยิ่งขึ้น</span>
+                                            </div>
+                                            <div class="flex flex-row justify-center gap-[24px] text-base font-medium">
+                                                <button class="close_frame w-[172px] h-[48px] leading-[48px] text-[#5A5A5A] rounded-[10px] text-center border border-[#D9D8DC]">ไว้ทีหลัง</button>
+                                                <a href="https://ratemynurse.org/my-profile/" class="w-[172px] h-[48px] leading-[48px] text-white rounded-[10px] bg-[#286F51] text-center">ลงประกาศเลย</a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                `;
+                                    `;
 
-                                document.body.insertAdjacentHTML('beforeend', popUpSuccessFrameHTML);
+                                    document.body.insertAdjacentHTML('beforeend', popUpSuccessFrameHTML);
 
-                                // ปุ่มปิด popup
-                                document.querySelector('.close_frame').addEventListener('click', () => {
-                                    document.getElementById('regisSuccessFrame').remove();
-                                    location.reload();
+                                    // ปุ่มปิด popup
+                                    document.querySelector('.close_frame').addEventListener('click', () => {
+                                        document.getElementById('regisSuccessFrame').remove();
+                                        location.reload();
+                                    });
                                 });
-
                             }
 
                         } catch (error) {
@@ -2378,7 +2494,7 @@ class Authentication {
                                 </div>
                                 <div class="flex flex-col gap-[8px] font-medium">
                                     <span id="mb_profile_displayname" class="text-[16px] text-[#1F1F1F]"></span>
-                                    <a href="#" class="text-[14px]">แก้ไขข้อมูลส่วนตัว</a>
+                                    <a href="https://ratemynurse.org/my-account" class="text-[14px]">แก้ไขข้อมูลส่วนตัว</a>
                                 </div>
                             </div>
                             <a href="https://ratemynurse.org/my-account">
@@ -2401,7 +2517,7 @@ class Authentication {
                         </div>
 
                             <div class="rounded-[12px] w-full h-[96px] grid grid-cols-2 gap-[16px] text-[16px] text-[#5A5A5A] font-medium">
-                            <div class="min-h-[96px] flex flex-col justify-center items-center gap-[12px] rounded-[12px] bg-white" style="box-shadow: 0px 3.57px 16px 0px #A3A3A30F;">
+                            <div id="mb_appointment_item" class="min-h-[96px] flex flex-col justify-center items-center gap-[12px] rounded-[12px] bg-white" style="box-shadow: 0px 3.57px 16px 0px #A3A3A30F;">
                                 <img src="https://ratemynurse.org/wp-content/uploads/2026/02/Letter-Opened.webp" width="32" height="32" class="h-[32px] w-[32px]">
                                 <span>การนัดหมาย</span>
                             </div>
@@ -2415,7 +2531,7 @@ class Authentication {
                             <span class="text-[#8C8A94]">ตั้งค่าบัญชี</span>
                             <div class="bg-white rounded-[8px] px-[12px] text-[#5A5A5A]">
                                 <div class="border-b-[1px] border-[#F2F4F7]">
-                                    <a href="http://" class="flex flex-row gap-[8px] w-full py-[18px]">
+                                    <a href="https://ratemynurse.org/my-account" class="flex flex-row gap-[8px] w-full py-[18px]">
                                         <svg class="w-[24px] h-[24px]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                             <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                                         </svg>
@@ -2429,7 +2545,7 @@ class Authentication {
                                     </a>
                                 </div>
                                 <div>
-                                    <a href="http://" class="flex flex-row gap-[8px] w-full py-[18px]">
+                                    <a href="https://ratemynurse.org/subscription" class="flex flex-row gap-[8px] w-full py-[18px]">
                                         <img src="https://ratemynurse.org/wp-content/uploads/2025/10/card.webp" class="w-[20px] h-[16px]" width="20" height="16" loading="lazy">
                                         <span>การสมัครสมาชิก</span>
                                     </a>
@@ -2475,7 +2591,9 @@ class Authentication {
                 <script>
                     // ดึงสถานะ login สดๆ ผ่าน ajax เสมอ (admin-ajax.php ไม่ถูก cache ต่างจากหน้านี้เอง)
                     // ห้ามตัดสิน "login แล้วหรือยัง" จากอะไรที่ฝังมากับ HTML ตรงๆ
-                    (function () {
+                    // รอ window 'load' เสมอ — axios ถูก enqueue แบบ in_footer จึงโหลดทีหลัง
+                    // inline script บล็อกนี้ (ที่อยู่กลาง body) ถ้าเรียก axios ทันทีจะชน ReferenceError
+                    window.addEventListener('load', function () {
                         RMN_Utils.getCurrentUser()
                             .then(function (user) {
                                 if (!user || !user.profile) return;
@@ -2489,9 +2607,21 @@ class Authentication {
                                 var accountTab = document.getElementById('mb_profile');
                                 if (authTab) authTab.style.display = 'none';
                                 if (accountTab) accountTab.style.display = 'flex';
+
+                                // MEMBER เท่านั้น: เปลี่ยน "การนัดหมาย" เป็น "ประวัติการติดต่อ" ลิงก์ไป my-contacts
+                                // (provider role คงข้อความ/พฤติกรรมเดิมไว้)
+                                var apptItem = document.getElementById('mb_appointment_item');
+                                if (apptItem && user.user_type === 'MEMBER') {
+                                    var apptLabel = apptItem.querySelector('span');
+                                    if (apptLabel) apptLabel.textContent = 'ประวัติการติดต่อ';
+                                    apptItem.style.cursor = 'pointer';
+                                    apptItem.addEventListener('click', function () {
+                                        window.location.href = 'https://ratemynurse.org/my-contacts/';
+                                    });
+                                }
                             })
                             .catch(function () {});
-                    })();
+                    });
                 </script>
             HTML;
 
@@ -2529,6 +2659,10 @@ class Authentication {
             HTML;
         }
 
+        // ฝังฟอร์มค้นหาจริง (shortcode [search]) ไว้ใน panel กลาง เพื่อให้ปุ่มค้นหาบน
+        // mobile bottom nav ใช้ได้ทุกหน้า ไม่ต้องพึ่งการฝัง [search] ผ่าน Oxygen เฉพาะหน้าแรก
+        $searchPanelContent = do_shortcode('[search]');
+
         return <<<HTML
             <div id="mb_nav" class="grid grid-cols-5 px-[8px] rounded-tl-[24px] rounded-tr-[24px] bg-white hover:text-[#286F51] hover:font-medium" style="box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;">
                 <div id="mb_home" class="mb_tab {$isHome} text-[#5A5A5A] hover:text-[#286F51] relative">
@@ -2551,10 +2685,16 @@ class Authentication {
             <div id="mb_authentication" class="hidden bg-white w-full h-full overflow-y-auto pb-[100px] fixed bottom-0 z-[-1] p-[15px]">
                 Authentication view
             </div>
-            <div id="mb_search" class="hidden">
-                Search view
+            <div id="mb_search_panel" class="hidden bg-white w-full h-full overflow-y-auto fixed top-0 left-0 z-[999999]">
+                <div class="flex flex-row justify-between items-center p-[15px] border-b border-[#ECECED]">
+                    <span class="text-[16px] font-semibold text-[#286F51]">ค้นหา</span>
+                    <span id="mb_search_close" class="cursor-pointer">
+                        <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/> </svg>
+                    </span>
+                </div>
+                {$searchPanelContent}
             </div>
-            
+
         HTML;
     }
 }

@@ -128,10 +128,11 @@ class NursingHomeController extends Controller {
     }
 
     /**
-     * สมัครสมาชิก provider (NURSING_HOME) แบบ atomic เดียว — สร้าง user + profile + token
+     * สมัครสมาชิก provider (NURSING_HOME) แบบ atomic เดียว — สร้าง user + profile
      * ในทรานแซคชันเดียวกัน กันไม่ให้เกิด user ค้าง (orphaned) ถ้าส่วนโปรไฟล์ล้มเหลวระหว่างทาง
+     * ไม่ออก access_token ทันที — ต้องยืนยัน OTP ผ่าน /api/otp/verify ก่อนถึงจะ login เข้าระบบได้จริง
      */
-    public function register(NursingHomeRegisterRequest $request)
+    public function register(NursingHomeRegisterRequest $request, \App\Services\OtpService $otpService)
     {
         try {
             $result = DB::transaction(function () use ($request) {
@@ -162,18 +163,17 @@ class NursingHomeController extends Controller {
                     'res_phone'  => $request->res_phone ?? null,
                 ]);
 
-                $token = $user->createToken('api-token')->plainTextToken;
-
                 return [
                     'user' => $user,
                     'nursinghome' => $nursinghome,
-                    'token' => $token,
                 ];
             });
 
+            $otpService->sendOtp($result['user']->id, $result['user']->phone);
+
             return response()->json([
                 'success' => true,
-                'message' => 'สมัครสมาชิกสำเร็จและเข้าสู่ระบบแล้ว',
+                'message' => 'สมัครสมาชิกสำเร็จ กรุณายืนยัน OTP เพื่อเข้าสู่ระบบ',
                 'data' => [
                     'user' => [
                         'id' => $result['user']->id,
@@ -185,8 +185,7 @@ class NursingHomeController extends Controller {
                         'id' => $result['nursinghome']->id,
                         'name' => $result['nursinghome']->name,
                     ],
-                    'access_token' => $result['token'],
-                    'token_type' => 'Bearer',
+                    'otp_required' => true,
                 ],
                 'errors' => null,
             ], 201);

@@ -7,16 +7,10 @@ use Illuminate\Http\Request;
 use App\Http\Requests\MemberContactCreateRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Repositories\API\MemberApiRepository;
-use App\Models\User;
-use App\Models\Member;
 use App\Models\Nursing;
 use App\Models\NursingHome;
 use App\Models\NursingProfile;
 use App\Models\NursingHomeProfile;
-use App\Models\MemberContact;
-use Illuminate\Database\QueryException;
-use App\Services\MemberContact\ActionMemberContact;
-use Illuminate\Auth\Access\AuthorizationException;
 
 class MemberContactController extends Controller
 {
@@ -67,17 +61,11 @@ class MemberContactController extends Controller
                 'data' => $contact
             ], Response::HTTP_CREATED);
 
-        } catch (QueryException $e) {
-
-            if ($e->getCode() === '23000') {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'DUPLICATE_CONTACT',
-                    'message' => 'คุณได้ติดต่อผู้ให้บริการรายนี้ไปแล้ว'
-                ], Response::HTTP_CONFLICT);
-            }
-
-            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_CONFLICT); // 409 Conflict สำหรับข้อมูลซ้ำ
         }
     }
 
@@ -105,8 +93,8 @@ class MemberContactController extends Controller
     private function getProviderFromContact(MemberContact $contact): ?User
     {
         $profile = match ($contact->provider_role) {
-            'NURSING' => NursingProfile::find($contact->provider_profile_id),
-            'NURSING_HOME' => NursingHomeProfile::find($contact->provider_profile_id),
+            'NURSING' => NursingProfile::find($contact->provider_id),
+            'NURSING_HOME' => NursingHomeProfile::find($contact->provider_id),
             default => null
         };
 
@@ -121,67 +109,24 @@ class MemberContactController extends Controller
         };
     }
 
-    public function getContacts(Request $request) 
-    {
+    public function getContacts() {
         $user = auth()->user();
-        if (!$user) {
+        if(!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found'
             ], 404);
         }
-
-        $perPage = $request->get('per_page', 20); // default 20 items per page
-        $useCache = filter_var(
-            $request->get('use_cache', true),
-            FILTER_VALIDATE_BOOLEAN
-        ); // แปลง 'false'/'0'/'no' (string) → false ให้ถูกต้อง
-
-        $result = $this->memberApiRepository->getContacts(
-            $user->id, 
-            $perPage,
-            $useCache
-        );
+        $result = $this->memberApiRepository->getContacts($user->id);
 
         return response()->json([
             'success' => true,
-            'data' => $result->items(), // items ในหน้านั้น
-            'pagination' => [
-                'current_page' => $result->currentPage(),
-                'last_page' => $result->lastPage(),
-                'per_page' => $result->perPage(),
-                'total' => $result->total(),
-                'from' => $result->firstItem(),
-                'to' => $result->lastItem(),
-            ]
+            'data' => $result
         ], 200);
     }
 
-    public function getContactById(Int $id) {
-        $user = auth()->user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found'
-            ], 404);
-        }
-
-        $contact = $this->memberApiRepository->getContactById($user->id, $id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $contact
-        ], 200);
-    }
-
-    public function getContactByIdForProvider(Int $id)
-    {
-        $contact = $this->memberApiRepository->getContactByIdForProvider($id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $contact
-        ], 200);
+    public function getContactById(Request $request) {
+        dd($request->all());
     }
 
     public function deleteContact(Request $request) {
@@ -190,53 +135,5 @@ class MemberContactController extends Controller
 
     public function updateContact(Request $request) {
         dd($request->all());
-    }
-
-    public function providerContactAccept(
-        Request $request,
-        ActionMemberContact $service
-    ) {
-        $request->validate([
-            'contact_id' => ['required', 'integer', 'exists:member_contacts,id'],
-        ]);
-
-        try {
-            $contact = $service->setAccept(
-                $request->input('contact_id'),
-                $request->user()
-            );
-
-            if ( $contact ) {
-                // send to provider
-                $provider = $contact->provider_role === 'NURSING_HOME'
-                    ? \App\Models\NursingHomeProfile::find($contact->provider_profile_id)
-                    : NursingProfile::find($contact->provider_profile_id);
-                $name = $provider->name ?? '';
-                $provider_name = "({$name})";
-                // send to member
-                $member = Member::find($contact->member_id);
-                $member->notifications()->create([
-                    'title' => 'คุณมีการติดต่อใหม่',
-                    'message' => "ผู้ให้บริการ {$provider_name} ตอบรับการนัดหมายของคุณแล้ว",
-                    'type' => 'USER',
-                    'is_read' => 0,
-                    'user_id' => $member->id
-                ]);
-
-                $this->memberApiRepository->invalidateMemberContactsCache($contact->member_id);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'ยืนยันการนัดหมายเรียบร้อยแล้ว',
-                'data' => $contact,
-            ]);
-            
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 403); // 403 Forbidden
-        }
     }
 }

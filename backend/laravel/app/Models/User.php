@@ -113,4 +113,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(MemberContact::class, 'member_id');
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id');
+    }
+
+    public function readNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id')->where('is_read', true);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id')->where('is_read', false);
+    }
+
+    public function memberContacts()
+    {
+        return $this->hasMany(MemberContact::class, 'member_id');
+    }
 }

@@ -24,7 +24,7 @@ class NursingController extends Controller {
         $this->nursing_api_repository = $nursing_api_repository;
     }
 
-    public function store(NursingCreateRequest $request)
+    public function store(NursingCreateRequest $request, \App\Services\OtpService $otpService)
     {
         try {
             $result = $this->nursing_api_repository->createNurse($request->all());
@@ -37,11 +37,14 @@ class NursingController extends Controller {
                 ], 500);
             }
 
+            $otpService->sendOtp($result['user']->id, $result['user']->phone);
+
             return response()->json([
                 'success' => true,
+                'message' => 'สมัครสมาชิกสำเร็จ กรุณายืนยัน OTP เพื่อเข้าสู่ระบบ',
                 'data' => [
                     'user' => $result['user'],
-                    'access_token' => $result['token'],
+                    'otp_required' => true,
                 ],
             ]);
         } catch (\Exception $e) {

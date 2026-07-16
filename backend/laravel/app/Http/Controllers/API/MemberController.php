@@ -32,7 +32,7 @@ class MemberController extends Controller
         ]);
     }
 
-    public function create(MemberCreateRequest $request)
+    public function create(MemberCreateRequest $request, \App\Services\OtpService $otpService)
     {
         try {
             $member = $this->member_repository->store($request->all());
@@ -43,27 +43,14 @@ class MemberController extends Controller
                 ], 500);
             }
 
-            if (!method_exists($member, 'createToken')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot create token for user',
-                ], 500);
-            }
-
-            $token = $member->createToken('api-token')->plainTextToken;
-
-            if (!$token) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to generate access token',
-                ], 500);
-            }
+            $otpService->sendOtp($member->id, $member->phone);
 
             return response()->json([
                 'success' => true,
+                'message' => 'สมัครสมาชิกสำเร็จ กรุณายืนยัน OTP เพื่อเข้าสู่ระบบ',
                 'data' => [
                     'user' => new MemberResource($member),
-                    'access_token' => $token,
+                    'otp_required' => true,
                 ],
             ]);
         } catch (\Exception $e) {

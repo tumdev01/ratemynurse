@@ -19,8 +19,8 @@ class MemberContactCreateRequest extends FormRequest {
             'phone'      => ['required', 'string'],
             'start_date' => ['required', 'date'],
             'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+
             'email'      => ['nullable', 'email'],
-            'type' => ['nullable', 'string'],
             'lineid'       => ['nullable', 'string'],
             'facebook'   => ['nullable', 'string'],
         ];

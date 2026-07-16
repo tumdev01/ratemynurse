@@ -9,47 +9,42 @@ class NursingHomeResource extends JsonResource
     public function toArray($request)
     {
         return [
+            // ===== User level =====
             'id' => $this->id,
-            'firstname' => $this->firstname,
-            'lastname'  => $this->lastname,
-            'email'     => $this->email,
-            'phone'     => $this->phone,
             'user_type' => $this->user_type,
-            'plan' => $this->plan,
 
-            // เดิม: profile (hasOne) → dump ทุก column + whenLoaded dot notation ไม่ทำงาน
-            // 'profile' => $this->whenLoaded('profile'),
-            // 'profile.province:id,name' => $this->whenLoaded('profile.province', function () {
-            //     return $this->profile->province?->name ?? null;
-            // }),
-            // 'profile.district:id,name' => $this->whenLoaded('profile.district', function () {
-            //     return $this->profile->district?->name ?? null;
-            // }),
-            // 'profile.subDistrict:id,name' => $this->whenLoaded('profile.subDistrict', function () {
-            //     return $this->profile->subDistrict?->name ?? null;
-            // }),
+            // ===== Profile =====
+            'profile' => $this->whenLoaded('profile', function () use ($request) {
+                return [
+                    'id' => $this->profile->id,
+                    'name' => $this->profile->name,
+                    'about' => $this->profile->about ?? null,
+                    'address' => $this->profile->address ?? null,
 
-            // ใหม่: profiles (hasMany) → เลือกเฉพาะ field ที่ต้องการ + coverImage ระดับ profile
-            'profiles' => $this->whenLoaded('profiles', function () {
-                return $this->profiles->map(function ($profile) {
-                    return [
-                        'id'   => $profile->id,
-                        'name' => $profile->name,
-                        'province'    => $profile->province?->name ?? null,
-                        'district'    => $profile->district?->name ?? null,
-                        'subDistrict' => $profile->subDistrict?->name ?? null,
-                        'coverImage'  => $profile->coverImage?->full_path ?? null,
-                        'rates'       => $profile->relationLoaded('rates') ? $profile->rates : [],
-                        'subscriptions' => $profile->relationLoaded('subscriptions') ? $profile->subscriptions : [],
-                        'current_active_subscription' => $profile->relationLoaded('currentActiveSubscription')
-                            ? $profile->currentActiveSubscription
-                            : null,
-                    ];
-                });
+                    // ⭐ favorite อยู่ที่ profile
+                    'is_favorite' => $this->profile->isFavoritedBy($request->user()),
+                ];
             }),
 
-            'notifications_count'   => $this->whenLoaded('notifications', fn () => $this->notifications->count()),
-            'unread_notifications_count' => $this->whenLoaded('unreadNotifications', fn () => $this->unreadNotifications->count()),
+            // ===== Images =====
+            'cover_image' => $this->whenLoaded('coverImage', function () {
+                return [
+                    'id' => $this->coverImage->id,
+                    'path' => $this->coverImage->path,
+                ];
+            }),
+
+            'images' => $this->whenLoaded('images', function () {
+                return $this->images->map(fn ($img) => [
+                    'id' => $img->id,
+                    'path' => $img->path,
+                ]);
+            }),
+
+            // ===== Extra relations =====
+            'staffs_count' => $this->whenLoaded('staffs', fn () => $this->staffs->count()),
+            'rooms_count'  => $this->whenLoaded('rooms', fn () => $this->rooms->count()),
+            'rates_avg'    => $this->whenLoaded('rates', fn () => round($this->rates->avg('score'), 1)),
         ];
     }
 }

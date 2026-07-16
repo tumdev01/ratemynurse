@@ -81,13 +81,8 @@ class NursingApiRepository
                 ]);
             }
 
-            // ออก token ในทรานแซคชันเดียวกันเลย — กันบั๊ก user+profile commit ไปแล้วแต่ token ออกไม่สำเร็จ
-            // (แบบเดียวกับที่เคยเกิดกับ NursingHome registration)
-            $token = $nursing->createToken('api-token')->plainTextToken;
-
             return [
                 'user'  => $nursing,
-                'token' => $token,
             ];
         });
     }

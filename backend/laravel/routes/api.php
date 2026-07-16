@@ -167,6 +167,7 @@ Route::get('/province/{tag}', [ProvinceController::class, 'getProvinceByTag']);
 
 Route::post('/otp/request', [OtpController::class, 'requestOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
+Route::post('/check-phone', [OtpController::class, 'checkPhone']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [UserController::class, 'getuser']);
