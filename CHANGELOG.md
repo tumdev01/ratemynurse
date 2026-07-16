@@ -48,6 +48,75 @@ DB, verify OTP สำเร็จได้ access_token) และผ่าน W
 เดียวกับที่ใช้ตอนรอ OTP request/verify อยู่แล้ว — reuse ของเดิมเพื่อความสม่ำเสมอ) ให้ผู้ใช้เห็นว่ากำลังตรวจสอบ
 อยู่ ไม่ใช่ค้าง ก่อนจะอนุญาตให้ไปขั้นตอนถัดไปได้
 
+### แก้ 2 บั๊กที่เจอระหว่างทดสอบจริง: cache ค้างของ getCurrentUser() + favorites() relation หายจาก NursingHomeProfile
+
+**บั๊ก A — เข้า login OTP ผ่านแล้วยังไม่แสดงข้อมูลสมาชิกจนกว่าจะ refresh**: แก้ `location.reload()` ออกไปรอบ
+ก่อนแล้ว แต่ลืมว่า `RMN_Utils.getCurrentUser()` แคช **Promise** ผลลัพธ์ไว้ที่ module-scope
+(`_rmnCurrentUserPromise`) ตลอดอายุของหน้า — ถ้าหน้าเว็บเคยเรียก `getCurrentUser()` ไปแล้วตอนยังไม่ login
+(ได้ผลลัพธ์ `null`) แล้วเรียก `updateUserUI()` ซ้ำหลัง login สำเร็จโดยไม่รีเซ็ต cache ก่อน จะได้ผลลัพธ์
+`null` เดิมซ้ำอยู่ดี ทั้งที่ login จริงแล้ว แก้โดยเพิ่ม `RMN_Utils.invalidateCurrentUserCache()`
+(รีเซ็ต `_rmnCurrentUserPromise = null`) เรียกก่อน `updateUserUI()` ทุกจุดที่เคยแทน `location.reload()`
+ไว้ (login ปกติ + 3 registration flow)
+
+**บั๊ก B — `/api/me` error 500 จริงระหว่างทดสอบ (`Call to undefined method
+App\Models\NursingHomeProfile::favorites()`)**: ตอนแก้ `NursingHomeResource` รอบก่อนให้เรียก
+`profile->isFavoritedBy()` ไปเจอว่า method นี้เรียก `$this->favorites()` ภายใน แต่
+`NursingHomeProfile` model **ไม่มี** relation `favorites()` เลย (บั๊กที่มีอยู่ก่อนแล้ว แค่ไม่เคยถูกเรียกจริง
+เพราะ resource เดิมพังจนไม่ถึงจุดนี้) เทียบกับ `NursingProfile` ที่มี `favorites()` (morphMany ไป
+`Favorite::class`) อยู่แล้ว เพิ่ม relation เดียวกันให้ `NursingHomeProfile` — ทดสอบยืนยันผ่าน `/api/me`
+จริงกับ user ที่เพิ่ง error สำเร็จแล้ว (คืนข้อมูลครบ: firstname, plan, profiles พร้อม is_favorite)
+
+### แก้ header/nav ไม่แสดงชื่อ+แพ็กเกจหลัง login (NURSING_HOME) + ไม่ต้อง reload หน้าหลัง OTP ผ่าน + logout เร็วขึ้น
+
+**บั๊ก 1 — ชื่อว่าง + แพ็กเกจ "undefined" เฉพาะ user_type = NURSING_HOME**: root cause คือ
+`NursingHomeResource.php` (backend) ไม่มี `firstname`/`lastname`/`plan` เลย และคืน `profile` (เอกพจน์) แทน
+`profiles` (พหูพจน์ ตามที่ route `/api/me` eager-load ไว้และ frontend JS อ่าน `user.profiles[0]`) — ต่างจาก
+`MemberResource`/`NursingResource` ที่มีครบถูกต้องอยู่แล้ว เขียนใหม่ให้มี `firstname`, `lastname`, `plan`,
+`plan_start`, `profiles` (array ของทุกสาขา), `notifications`/`read_notifications`/`unread_notifications` —
+ตาม domain model ที่ NursingHome หนึ่ง user มีได้หลายสาขา (`nursing_home_profiles.user_id` ชี้กลับมาที่
+user) ต่างจาก Nursing/Member ที่มีแค่ 1 profile ต่อ user เสมอ ปรับ `displayName` ฝั่ง frontend
+(`updateUserUI()`) ให้: มีสาขาเดียว → ใช้ชื่อสาขา (`profiles[0].name`) เหมือน Nursing ทั่วไป, มีหลายสาขา →
+ใช้ชื่อเจ้าของบัญชี (`firstname`+`lastname`) แทน เพราะไม่มีสาขาเดียวที่เป็นตัวแทนได้ชัดเจน — เพิ่ม fallback
+"ยังไม่มีแพ็กเกจ" กันแสดง literal "undefined"/"null" ตอน `user.plan` ว่าง
+
+**บั๊ก 2 — ต้อง refresh หน้าถึงจะเห็นสถานะ login ใหม่**: `updateUserUI()` เดิม insert user-menu ใหม่ทุกครั้งที่
+เรียกโดยไม่ลบอันเก่าออกก่อน (ไม่ idempotent) เรียกซ้ำจะเห็นข้อมูลซ้อนกัน 2 ชุด — นี่คือเหตุผลที่โค้ดเดิมใช้
+`location.reload()` หลัง login/OTP verify สำเร็จ แก้โดยให้ลบ `#rmn-user-menu` เก่าออกก่อนสร้างใหม่เสมอ
+(idempotent) แล้ว `window.updateUserUI = updateUserUI` expose เป็น global เรียกจากที่อื่นได้ — แทนที่
+`location.reload()` ทั้งใน login flow ปกติ (ปิด modal + เรียก `updateUserUI()` แทน) และใน 3
+registration-success callback (provider/nursing/member) ที่เดิมก็ไม่เคยรีเฟรช header เลยหลัง OTP ผ่าน
+
+**บั๊ก 3 (UX request) — logout ช้าเพราะรอ toast 2 วินาทีก่อน redirect**: ตัด toast "กำลังออกจากระบบ" +
+`timer: 2000` ออก redirect ทันทีที่ API สำเร็จแทน (หน้ากำลังจะเปลี่ยนอยู่แล้ว โชว์ toast ค้างไว้ไม่มีประโยชน์)
+
+ทดสอบ: ยิง `NursingHomeResource` ตรงๆ ผ่าน tinker (จำลอง eager-load ตาม route `/api/me` เป๊ะ) ยืนยันว่า
+`firstname`/`lastname`/`plan`/`profiles` ออกมาถูกต้องครบแล้ว — **ยังไม่ได้ทดสอบผ่านเบราว์เซอร์จริงสำหรับ
+ทั้ง 3 บั๊กนี้**
+
+### เพิ่ม UX เมื่อเจอเบอร์ซ้ำ: แสดง error message ใต้ช่องกรอก + highlight ขอบสีแดง
+
+เดิมตอนเจอเบอร์ซ้ำ (providerRegisFrm/nursingRegisFrm) แสดงแค่ toast มุมขวาบน ไม่มี inline feedback ที่ตัว
+input เลย เพิ่ม `rmnShowPhoneDuplicateError()`/`rmnClearPhoneDuplicateError()` เป็น helper กลาง ใช้ pattern
+เดียวกับ error อื่นๆ ในฟอร์มนี้ (`label.error` เป็น sibling ถัดจาก input) — เติมข้อความ "เบอร์โทรศัพท์นี้มี
+ผู้ใช้งานแล้ว" + เพิ่ม class `border-red-500` ที่ input ตอนเจอซ้ำ และล้างออกอัตโนมัติทันทีที่ผู้ใช้แก้เบอร์ใหม่
+(hook เข้ากับ `input` event listener เดิมที่มีอยู่แล้ว) — Member ฟอร์มมี behavior นี้อยู่แล้วจากรอบก่อน
+(ผ่าน `validateForm()`) ไม่ต้องแก้เพิ่ม
+
+### แก้ /api/check-phone กับ /api/otp/request ยิงตรงจาก browser ไปหา production เสมอ แม้ทดสอบ local
+
+`local-dev-overrides.php`'s `pre_http_request` filter ดักได้แค่ request ที่ยิงจากฝั่ง PHP server
+(`wp_remote_post`) เท่านั้น — แต่ `/api/check-phone` (ใหม่) และ `/api/otp/request` (เดิม) ถูกเรียกตรงจาก
+**browser** (axios) ไปหา `services.ratemynurse.org` เลย ไม่ผ่าน WordPress เลย จึงไม่โดน filter ดักไว้ —
+ทดสอบ local จึงเผลอยิงไป production เสมอ
+
+แก้โดยย้าย URL เหล่านี้เข้า `js/rmn-config.js` (`RMN_CONFIG.api.baseUrl`) จุดเดียว แทนการ hardcode ใน
+`Authentication.php` — working copy ตั้งเป็น `http://localhost:9000/api` (port ที่ docker-compose expose
+ให้ container `rmn_laravel_backend` โดยตรง เรียกจาก browser บนเครื่องเดียวกันได้เลย ไม่ต้องแก้ hosts file)
+ส่วน deploy copy คงเป็น `https://services.ratemynurse.org/api` เหมือนเดิม — **ไฟล์นี้ตั้งใจให้ต่างกันตรง
+บรรทัด baseUrl บรรทัดเดียวระหว่าง working copy กับ deploy copy ตลอดไป ห้าม sync ทับกันทั้งไฟล์**
+
+ทดสอบยืนยันแล้วว่า `http://localhost:9000/api/check-phone` เรียกจาก host machine ได้จริง (จำลอง browser)
+
 ### พบ production error `RMN_Utils is not defined` — สงสัยว่าไฟล์ใหม่บางไฟล์ยังไม่เคยอัปโหลดขึ้นจริง
 
 ตรวจสอบ `Authentication.php`/`job-post.php` (ทั้ง working copy และ deploy copy) แล้วพบว่าทุกจุดที่เรียก

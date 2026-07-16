@@ -300,6 +300,15 @@ const RMN_Utils = {
     }
     return _rmnCurrentUserPromise;
   },
+
+  /**
+   * ล้าง cache ของ getCurrentUser() — ต้องเรียกทันทีหลัง login/สมัครสมาชิก+ยืนยัน OTP สำเร็จ (ก่อนเรียก
+   * updateUserUI() ซ้ำ) เพราะ _rmnCurrentUserPromise แคชผลลัพธ์ (มักเป็น null ตอนยังไม่ login) ไว้ตลอดอายุ
+   * ของหน้า ถ้าไม่ล้างก่อน จะได้ผลลัพธ์เก่าซ้ำแม้ login สำเร็จแล้วจริงๆ
+   */
+  invalidateCurrentUserCache() {
+    _rmnCurrentUserPromise = null;
+  },
 };
 
 // Freeze เพื่อป้องกันการแก้ไข

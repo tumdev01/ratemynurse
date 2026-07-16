@@ -78,6 +78,17 @@ class OtpController extends Controller
     }
 
 
+    // เช็คว่าเบอร์นี้มีในระบบแล้วหรือยัง — เรียกตอนกด "ถัดไป" ในฟอร์มสมัครสมาชิก
+    // กันไม่ให้กรอกฟอร์มที่เหลือทั้งหมดจนจบแล้วมาเจอ error ซ้ำเบอร์ตอน submit สุดท้าย
+    public function checkPhone(Request $request)
+    {
+        $request->validate(['phone' => 'required|string']);
+
+        return response()->json([
+            'exists' => User::where('phone', $request->phone)->exists(),
+        ]);
+    }
+
     // API สำหรับดึงข้อมูล subset ของ user
     public function me(Request $request)
     {

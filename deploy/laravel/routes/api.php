@@ -167,6 +167,7 @@ Route::get('/province/{tag}', [ProvinceController::class, 'getProvinceByTag']);
 
 Route::post('/otp/request', [OtpController::class, 'requestOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
+Route::post('/check-phone', [OtpController::class, 'checkPhone']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [UserController::class, 'getuser']);
@@ -257,8 +258,7 @@ Route::middleware(['verify.internal.token'])->group(function () {
     Route::get('/job/{id}', [JobController::class, 'getJob']);
 
     Route::post('/member/create', [MemberController::class, 'create']);
-    Route::post('/nursinghome/create', [NursingHomeController::class, 'userCreate']);
-    Route::post('/nursinghome/profile/create', [NursingHomeController::class, 'userCreateProfile']);
+    Route::post('/nursinghome/create', [NursingHomeController::class, 'register']);
 
     Route::post('/nursing/create', [NursingController::class, 'store']);
     Route::get('internal/nursing/{id}', [NursingController::class, 'getNursingById']);

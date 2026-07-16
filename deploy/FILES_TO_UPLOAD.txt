@@ -222,3 +222,73 @@ modal จริงไหม)
 provider_register + verify_otp ครบวงจรสำเร็จ — **ยังไม่ได้ทดสอบผ่านฟอร์มจริงในเบราว์เซอร์แบบเต็มขั้นตอน**
 (กด next เช็คเบอร์ซ้ำ, กรอกจนจบ, เห็น modal OTP ขึ้นจริง, กรอก OTP แล้ว popup สำเร็จขึ้นจริง) — ควรทดสอบ
 ทั้ง 3 ฟอร์มก่อน deploy จริง
+
+=== รอบ 2026-07-17 (6): แก้ /api/check-phone กับ /api/otp/request ยิงตรงจาก browser ไปหา production เสมอ ===
+
+**สาเหตุ**: 2 endpoint นี้ถูกเรียกตรงจาก browser (axios) ไปหา `services.ratemynurse.org` เลย ไม่ผ่าน
+`wp_remote_post()` ฝั่ง server เหมือนจุดอื่น จึงไม่โดน filter `pre_http_request` ใน
+`local-dev-overrides.php` (mu-plugin, local-only) ดักไว้ — ทำให้ทดสอบ local เผลอไปสร้าง/เช็คข้อมูลบน
+production จริงอยู่เรื่อยๆ
+
+25. js/rmn-config.js (ไฟล์ใหม่ ไม่เคยอยู่ใน deploy/ มาก่อน แต่ไฟล์นี้มีอยู่บน production แล้วตั้งแต่ก่อน
+    หน้านี้ — อัปโหลดรอบนี้จริงๆ **ไม่จำเป็นเร่งด่วน** เพราะค่า `baseUrl` ที่แก้ในไฟล์ deploy คือค่าเดิมที่
+    production ใช้อยู่แล้ว แก้แค่ comment เพิ่มเติมเท่านั้น)
+    local:  deploy/wp-content/plugins/rmn-services/js/rmn-config.js
+    server: wp-content/plugins/rmn-services/js/rmn-config.js
+    **สำคัญมาก**: ไฟล์นี้ตั้งใจให้ `api.baseUrl` ต่างจาก working copy ตรงบรรทัดเดียว — deploy copy
+    ต้องเป็น `"https://services.ratemynurse.org/api"` เสมอ (working copy local ใช้
+    `"http://localhost:9000/api"` เพื่อชี้ Laravel container ตรงๆ ผ่าน port ที่ expose ไว้ ให้ browser
+    เรียกได้ตรงๆ) **ห้าม sync ไฟล์นี้ทับกันทั้งไฟล์เด็ดขาด** ต้องเช็คบรรทัด baseUrl ทุกครั้งก่อนอัปโหลด
+
+26. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/services/authentication/Authentication.php
+    แก้: เปลี่ยน `rmnCheckPhoneExists()` และ `requestOtp()` จาก hardcode
+    `https://services.ratemynurse.org/api/...` ตรงๆ เป็นอ้างอิงผ่าน `RMN_CONFIG.api.baseUrl` แทน (ไฟล์นี้
+    เหมือนกันทั้ง working copy และ deploy copy ไม่มีความต่างเพิ่มแล้ว เพราะย้าย URL ที่ต่างกันไปไว้ที่
+    rmn-config.js จุดเดียว)
+
+หมายเหตุรอบนี้: แก้เพื่อให้ dev คนอื่นทดสอบ local ได้โดยไม่เผลอยิงไป production อีก — ยังไม่ได้ทดสอบผ่าน
+browser จริงว่า `http://localhost:9000/api/check-phone` เรียกจาก browser ได้จริง (ควร เพราะ docker-compose
+expose port 9000 ไว้แล้ว) ก่อน deploy ต้องเช็คให้แน่ใจว่า deploy copy ของ rmn-config.js ยัง
+`baseUrl` เป็น production URL อยู่
+
+=== รอบ 2026-07-17 (7): header/nav ไม่แสดงชื่อ+แพ็กเกจหลัง login (NURSING_HOME) + ไม่ต้อง reload หลัง OTP + logout เร็วขึ้น ===
+
+27. app/Http/Resources/NursingHomeResource.php (backend — deploy ผ่าน git push main)
+    แก้: เพิ่ม firstname/lastname/plan/plan_start/profiles (พหูพจน์)/notifications ที่หายไปทั้งหมด —
+    เดิมไฟล์นี้ไม่มีฟิลด์เหล่านี้เลย ทำให้ header แสดงชื่อว่างและแพ็กเกจเป็น "undefined" เฉพาะ user ประเภท
+    NURSING_HOME (คนละ user_type กับ Nursing/Member ที่ไม่มีปัญหานี้)
+
+28. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/services/authentication/Authentication.php
+    แก้:
+    - `updateUserUI()` ทำให้ idempotent (ลบ `#rmn-user-menu` เก่าก่อนสร้างใหม่เสมอ) + expose เป็น
+      `window.updateUserUI` เรียกซ้ำจากที่อื่นได้
+    - แทนที่ `location.reload()` ทั้งหมด (login flow ปกติ + 3 registration-success callback) ด้วยการเรียก
+      `updateUserUI()` แทน — ไม่ต้อง reload หน้าอีกต่อไปหลัง login/สมัครสมาชิก+ยืนยัน OTP สำเร็จ
+    - `displayName` (NURSING_HOME): มีสาขาเดียว → ใช้ชื่อสาขา, หลายสาขา → ใช้ชื่อเจ้าของบัญชี
+    - เพิ่ม fallback "ยังไม่มีแพ็กเกจ" กัน literal "undefined"/"null" ตอนไม่มี plan
+    - Logout: ตัด toast 2 วินาทีออก redirect ทันทีหลัง API สำเร็จ
+
+หมายเหตุรอบนี้: ทดสอบผ่าน tinker (จำลอง NursingHomeResource ตาม eager-load ของ route /api/me เป๊ะ) ยืนยัน
+firstname/lastname/plan/profiles ออกมาถูกต้อง — **ยังไม่ได้ทดสอบผ่านเบราว์เซอร์จริง**
+
+=== รอบ 2026-07-17 (8): แก้ 2 บั๊กที่เจอจริงระหว่างผู้ใช้ทดสอบ browser (cache ค้าง + favorites() หาย) ===
+
+29. app/Models/NursingHomeProfile.php (backend — deploy ผ่าน git push main)
+    แก้: เพิ่ม relation `favorites()` (morphMany ไป Favorite::class) ที่หายไป — ทำให้ `/api/me` error 500
+    จริงตอนทดสอบ (`isFavoritedBy()` เรียก `$this->favorites()` แต่ relation ไม่มีอยู่) เทียบ/มิเรอร์จาก
+    `NursingProfile::favorites()` ที่มีอยู่แล้ว
+
+30. js/rmn-utils.js (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/js/rmn-utils.js
+    แก้: เพิ่ม `RMN_Utils.invalidateCurrentUserCache()` — ล้าง cache Promise ของ `getCurrentUser()` ที่ค้าง
+    อยู่ตลอดอายุหน้า (เดิมถ้าเคยเรียกตอนยังไม่ login จะได้ผล null ซ้ำแม้ login สำเร็จแล้วจริง)
+
+31. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/services/authentication/Authentication.php
+    แก้: เรียก `RMN_Utils.invalidateCurrentUserCache()` ก่อน `updateUserUI()` ทุกจุด (login ปกติ + 3
+    registration flow) ให้ข้อมูลสมาชิกอัปเดตจริงหลัง OTP ผ่าน ไม่ใช้ cache เก่าที่เป็น null
+
+หมายเหตุรอบนี้: ทดสอบ `/api/me` จริงผ่าน curl กับ user ที่เพิ่ง error 500 ยืนยันสำเร็จแล้ว (คืนข้อมูลครบ)
+ผู้ใช้แจ้งว่าจะทดสอบผ่านเบราว์เซอร์เองต่อแล้ว deploy พร้อมกันทีเดียว

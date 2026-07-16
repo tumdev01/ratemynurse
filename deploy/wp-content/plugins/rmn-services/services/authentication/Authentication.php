@@ -826,7 +826,7 @@ class Authentication {
                 // fail-open: ถ้าเช็คไม่ได้ (เช่น network error) ปล่อยผ่านไปก่อน backend จะเช็คซ้ำตอน submit จริงอีกที
                 async function rmnCheckPhoneExists(phoneNumber) {
                     try {
-                        const response = await axios.post('https://services.ratemynurse.org/api/check-phone', {
+                        const response = await axios.post(RMN_CONFIG.api.baseUrl + '/check-phone', {
                             phone: phoneNumber,
                         });
                         return !!response.data?.exists;
@@ -851,6 +851,24 @@ class Authentication {
 
                     window._rmnOtpVerifiedCallback = onVerified;
                     startCountdown();
+                }
+
+                // แสดง error "เบอร์นี้มีผู้ใช้งานแล้ว" ใต้ช่องกรอกเบอร์ + highlight ขอบสีแดง
+                // (ใช้ pattern เดียวกับ error อื่นๆ ในฟอร์มนี้ — label.error เป็น sibling ถัดจาก input)
+                function rmnShowPhoneDuplicateError(inputEl) {
+                    inputEl.classList.add('border-red-500');
+                    const errorEl = inputEl.nextElementSibling;
+                    if (errorEl && errorEl.classList.contains('error')) {
+                        errorEl.innerText = 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว';
+                    }
+                }
+
+                function rmnClearPhoneDuplicateError(inputEl) {
+                    inputEl.classList.remove('border-red-500');
+                    const errorEl = inputEl.nextElementSibling;
+                    if (errorEl && errorEl.classList.contains('error')) {
+                        errorEl.innerText = '';
+                    }
                 }
 
                 function checkAllFilled() {
@@ -1079,7 +1097,19 @@ class Authentication {
                                 window._rmnOtpVerifiedCallback = null;
                                 cb();
                             } else {
-                                location.reload();
+                                // login ปกติสำเร็จ — ปิด modal สมัคร/login แล้วรีเฟรช header ใหม่เลย
+                                // ไม่ต้อง reload หน้าทั้งหน้าอีกต่อไป (เร็วกว่า ไม่มี flash ของหน้าเปล่า)
+                                document.querySelectorAll('.step').forEach(step => {
+                                    step.style.display = 'none';
+                                });
+                                const authnTab = document.getElementById('authen');
+                                if (authnTab) authnTab.style.display = 'flex';
+                                const modalTarget = document.getElementById('section-678-21');
+                                if (modalTarget) modalTarget.style.display = 'none';
+
+                                // ล้าง cache ผลลัพธ์ getCurrentUser() เก่า (มักเป็น null ตอนยังไม่ login) ก่อนเรียก updateUserUI() ซ้ำ
+                                RMN_Utils.invalidateCurrentUserCache();
+                                if (window.updateUserUI) window.updateUserUI();
                             }
                         }
                     } catch (err) {
@@ -1137,7 +1167,7 @@ class Authentication {
 
                     lockAuthUI();
                     // เรียก API request OTP
-                    axios.post("https://services.ratemynurse.org/api/otp/request", {
+                    axios.post(RMN_CONFIG.api.baseUrl + "/otp/request", {
                         phone: phone
                     })
                     .then(function (response) {
@@ -1192,7 +1222,7 @@ class Authentication {
 
                     function createPopUp(title = '', description = '', next = null)
                     {
-                        return '<div class="backdrop-blur-sm w-full h-full flex flex-col justify-center items-center fixed top-0 p-[30px]"><div class="text-center w-full flex flex-col max-w-[461px] h-full max-h-[491px] rounded-lg p-[24px] justify-center items-center gap-[24px] bg-white"><span>X</span><img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png"/><span class="font-semibold text-[18px]">'+title+'</span><span class="text-[15px]">'+description+'</span><div class="grid grid-cols-2 gap-[24px] font-semibold"><button onclick="location.reload()" class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#D9D8DC] bg-white text-[#5A5A5A] rounded-md leading-[48px]">ไว้ทีหลัง</button><a class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#286F51] bg-[#286F51] text-white rounded-md leading-[48px]" href="https://ratemynurse.org/job-board/">ค้นหาเลย</a></div></div></div>';
+                        return '<div class="backdrop-blur-sm w-full h-full flex flex-col justify-center items-center fixed top-0 p-[30px]"><div class="text-center w-full flex flex-col max-w-[461px] h-full max-h-[491px] rounded-lg p-[24px] justify-center items-center gap-[24px] bg-white"><span>X</span><img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png"/><span class="font-semibold text-[18px]">'+title+'</span><span class="text-[15px]">'+description+'</span><div class="grid grid-cols-2 gap-[24px] font-semibold"><button onclick="this.closest(\'.backdrop-blur-sm\').remove()" class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#D9D8DC] bg-white text-[#5A5A5A] rounded-md leading-[48px]">ไว้ทีหลัง</button><a class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#286F51] bg-[#286F51] text-white rounded-md leading-[48px]" href="https://ratemynurse.org/job-board/">ค้นหาเลย</a></div></div></div>';
                     }
 
                     // ตรวจสอบตัวเลขเท่านั้น
@@ -1318,6 +1348,9 @@ class Authentication {
                                     form.reset();
                                     btn.classList.add('disabled', 'opacity-50', 'cursor-not-allowed');
                                     document.getElementById('section-678-21').style.display = 'none';
+                                    // ล้าง cache ผลลัพธ์ getCurrentUser() เก่า (มักเป็น null ตอนยังไม่ login) ก่อนเรียก updateUserUI() ซ้ำ
+                                RMN_Utils.invalidateCurrentUserCache();
+                                if (window.updateUserUI) window.updateUserUI();
                                     let popup = createPopUp('สมัครสมาชิกสำเร็จ', 'เราพร้อมช่วยคุณหาผู้ดูแลมืออาชีพที่ไว้ใจได้ เพื่อคนที่คุณรัก เริ่มค้นหาผู้ดูแลที่ใช่ได้เลยตอนนี้');
                                     document.querySelector('body').insertAdjacentHTML('beforeend', popup);
                                 });
@@ -1375,12 +1408,17 @@ class Authentication {
 
                             document.querySelectorAll(".authen").forEach(el => el.style.display = 'none');
 
+                            // เรียกซ้ำได้ (เช่น หลัง OTP verify สำเร็จ โดยไม่ต้อง reload หน้า) — ลบ user-menu
+                            // เก่าออกก่อนเสมอ กัน insert ซ้ำซ้อนกัน 2 ชุด
+                            document.getElementById('rmn-user-menu')?.remove();
+
                             // แสดง user name
                             const lastAuth = document.querySelector(".mega_menu_wrap .authen:last-child");
                             if (!lastAuth) return;
-                            
+
                             // สร้าง container ครอบทั้งหมด
                             const userMenu = document.createElement("div");
+                            userMenu.id = 'rmn-user-menu';
 
                             document.addEventListener("click", (e) => {
                                 const logoutBtn = e.target.closest('.js-logout');
@@ -1401,18 +1439,9 @@ class Authentication {
                                 axios.post('/wp-admin/admin-ajax.php', formData)
                                     .then((res) => {
                                         if (res.data.success) {
-                                            Swal.fire({
-                                                toast: true,
-                                                position: 'top-end',
-                                                icon: 'success',
-                                                title: 'กำลังออกจากระบบ',
-                                                showConfirmButton: false,
-                                                timer: 2000,
-                                                timerProgressBar: true,
-                                                didClose: () => {
-                                                    window.location.href = "https://ratemynurse.org";
-                                                }
-                                            });
+                                            // ออกจากระบบสำเร็จ redirect ทันที ไม่ต้องรอ toast
+                                            // (หน้าจะเปลี่ยนอยู่แล้ว โชว์ toast ค้างไว้ไม่มีประโยชน์ มีแต่ทำให้ช้า)
+                                            window.location.href = "https://ratemynurse.org";
                                         } else {
                                             Swal.fire({
                                                 toast: true,
@@ -1469,9 +1498,17 @@ class Authentication {
                             userImage.className = "w-6 h-6 rounded-full";
                             userLink.appendChild(userImage);
 
+                            // NURSING_HOME: หนึ่ง user มีได้หลายสาขา (profiles) — ถ้ามีสาขาเดียวให้โชว์ชื่อสาขา
+                            // (user.profiles[0].name) เหมือน Nursing ทั่วไป แต่ถ้ามีหลายสาขาต้องโชว์ชื่อ
+                            // เจ้าของบัญชี (firstname/lastname จาก users table) แทน เพราะไม่มีสาขาเดียวที่
+                            // เป็นตัวแทนได้ชัดเจน
                             const displayName = user.user_type === 'NURSING'
                             ? (user.profile?.name ?? '')
-                            : ((user.firstname ?? '') + ' ' + (user.lastname ?? '')).trim();
+                            : user.user_type === 'NURSING_HOME'
+                                ? (Array.isArray(user.profiles) && user.profiles.length === 1
+                                    ? (user.profiles[0]?.name ?? '')
+                                    : ((user.firstname ?? '') + ' ' + (user.lastname ?? '')).trim())
+                                : ((user.firstname ?? '') + ' ' + (user.lastname ?? '')).trim();
 
                             const nameText = displayName.length > 12
                             ? displayName.slice(0, 12) + '...'
@@ -1517,8 +1554,9 @@ class Authentication {
                             let subscription = ( user.profile?.subscriptions ? user.profile.subscriptions : null);
                             let current_active_subscription = user?.profile?.current_active_subscription?.plan ?? null;
                             if (user.user_type != 'NURSING') {
-                                current_active_subscription = user.plan;
+                                current_active_subscription = user.plan ?? null;
                             }
+                            const planLabel = current_active_subscription || 'ยังไม่มีแพ็กเกจ';
                             let coin = '';
                             let plan_icon2 = '';
                             let plan_icon = document.createElement('span');
@@ -1550,7 +1588,7 @@ class Authentication {
                                     <div class="flex flex-row justify-between">
                                         <div class="flex flex-row gap-[8px]">
                                             <span class="leading-[20px]">ระดับของฉัน :</span>
-                                            <span class="py-[4px] px-[8px] bg-white rounded-xl text-[#286F51] font-semibold flex flex-row gap-[5px] items-center">\${current_active_subscription}\${coin}</span>
+                                            <span class="py-[4px] px-[8px] bg-white rounded-xl text-[#286F51] font-semibold flex flex-row gap-[5px] items-center">\${planLabel}\${coin}</span>
                                         </div>
                                         <a class="flex flex-row gap-[8px] justify-center">
                                             <span class="leading-[20px]">ต่ออายุแพ็กเกจ</span>
@@ -1781,8 +1819,10 @@ class Authentication {
                         } catch (error) {
                             console.error(error);
                         }
-                        
+
                     }
+                    // expose ให้เรียกซ้ำได้จาก script อื่น (เช่น หลัง OTP verify สำเร็จ แทนการ location.reload())
+                    window.updateUserUI = updateUserUI;
                     updateUserUI();
                 });
             </script>
@@ -1870,7 +1910,8 @@ class Authentication {
                         const nextBtn = providerRegisFrm.querySelector('#nextTab');
                         if (nextBtn) nextBtn.setAttribute('disabled', true);
 
-                        const phoneValue = document.getElementById('main_phone').value;
+                        const mainPhoneInput = document.getElementById('main_phone');
+                        const phoneValue = mainPhoneInput.value;
                         lockAuthUI();
                         let phoneExists;
                         try {
@@ -1882,12 +1923,14 @@ class Authentication {
                         if (nextBtn) nextBtn.removeAttribute('disabled');
 
                         if (phoneExists) {
+                            rmnShowPhoneDuplicateError(mainPhoneInput);
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
                                 icon: 'error',
                                 title: 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว',
                                 showConfirmButton: false,
+                                timer: 3000,
                                 timerProgressBar: true,
                             });
                             return;
@@ -1964,6 +2007,9 @@ class Authentication {
 
                                 rmnShowRegistrationOtpModal(registeredPhone, () => {
                                     registerFrame.style.display = 'none';
+                                    // ล้าง cache ผลลัพธ์ getCurrentUser() เก่า (มักเป็น null ตอนยังไม่ login) ก่อนเรียก updateUserUI() ซ้ำ
+                                RMN_Utils.invalidateCurrentUserCache();
+                                if (window.updateUserUI) window.updateUserUI();
 
                                     const popUpSuccessFrameHTML = `
                                     <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
@@ -2050,6 +2096,8 @@ class Authentication {
                         if (this.value.length > 10) {
                             this.value = this.value.slice(0, 10);
                         }
+
+                        rmnClearPhoneDuplicateError(this); // แก้เบอร์ใหม่แล้ว ต้องเช็คซ้ำอีกครั้งตอนกด "ถัดไป"
 
                         const thaiPhonePattern = /^0[0-9]{9}$/;
                         const errorElement = this.nextElementSibling;
@@ -2171,12 +2219,14 @@ class Authentication {
                         nextTabBtn.removeAttribute('disabled');
 
                         if (phoneExists) {
+                            rmnShowPhoneDuplicateError(nursingPhone);
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
                                 icon: 'error',
                                 title: 'เบอร์โทรศัพท์นี้มีผู้ใช้งานแล้ว',
                                 showConfirmButton: false,
+                                timer: 3000,
                                 timerProgressBar: true,
                             });
                             return;
@@ -2192,6 +2242,8 @@ class Authentication {
                         if (this.value.length > 10) {
                             this.value = this.value.slice(0, 10);
                         }
+
+                        rmnClearPhoneDuplicateError(this); // แก้เบอร์ใหม่แล้ว ต้องเช็คซ้ำอีกครั้งตอนกด "ถัดไป"
 
                         const thaiPhonePattern = /^0[0-9]{9}$/;
                         const errorElement = this.nextElementSibling;
@@ -2369,6 +2421,9 @@ class Authentication {
 
                                 rmnShowRegistrationOtpModal(registeredPhone, () => {
                                     registerFrame.style.display = 'none';
+                                    // ล้าง cache ผลลัพธ์ getCurrentUser() เก่า (มักเป็น null ตอนยังไม่ login) ก่อนเรียก updateUserUI() ซ้ำ
+                                RMN_Utils.invalidateCurrentUserCache();
+                                if (window.updateUserUI) window.updateUserUI();
 
                                     const popUpSuccessFrameHTML = `
                                     <div id="regisSuccessFrame" style="width: 100vw;height: 100vh;background-color: #000000ab;z-index: 999;position: fixed;top: 0;">
@@ -2394,7 +2449,6 @@ class Authentication {
                                     // ปุ่มปิด popup
                                     document.querySelector('.close_frame').addEventListener('click', () => {
                                         document.getElementById('regisSuccessFrame').remove();
-                                        location.reload();
                                     });
                                 });
                             }
