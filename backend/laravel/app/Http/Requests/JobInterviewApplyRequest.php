@@ -1,5 +1,7 @@
 <?php
 namespace App\Http\Requests;
+use App\Models\NursingProfile;
+use App\Models\NursingHomeProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Validation\Rule;
@@ -8,30 +10,41 @@ class JobInterviewApplyRequest extends FormRequest  {
     protected function prepareForValidation()
     {
         if ($this->user()) {
-            // เพิ่ม user_id ลงใน request
+            $user = $this->user();
+            $profile = match ($user->user_type) {
+                'NURSING'      => NursingProfile::where('user_id', $user->id)->first(),
+                'NURSING_HOME' => NursingHomeProfile::where('user_id', $user->id)->first(),
+                default        => null,
+            };
             $this->merge([
-                'user_id' => $this->user()->id,
+                'profile_id' => $profile?->id,
+                'type'       => $user->user_type,
             ]);
         }
+    }
+
+    public function messages()
+    {
+        return [
+            'job_id.unique' => 'คุณได้สมัครงานนี้ไปแล้ว',
+        ];
     }
 
     public function rules()
     {
         return [
-            'job_id' => [
+            'job_id'         => [
                 'required',
-                Rule::exists('jobs', 'id')
+                Rule::exists('jobs', 'id'),
+                Rule::unique('job_interviews')
+                    ->where('profile_id', $this->profile_id)
+                    ->where('type', $this->type),
             ],
-            'user_id' => [
-                'required',
-                Rule::exists('users', 'id')->where(function ($query) {
-                    $query->whereIn('user_type', [
-                        UserType::NURSING->value,
-                        UserType::NURSING_HOME->value
-                    ]);
-                }),
-            ],
-            'description' => ['string', 'required'],
+            'profile_id'     => ['required', 'integer'],
+            'message'        => ['required', 'string', 'min:100'],
+            'price'          => ['required', 'numeric', 'min:1'],
+            'start_date'     => ['required', 'date'],
+            'attach_profile' => ['nullable', 'boolean'],
         ];
     }
 }

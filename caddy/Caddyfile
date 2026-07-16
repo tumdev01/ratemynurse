@@ -1,0 +1,9 @@
+services.ratemynurse.org {
+	tls internal
+	reverse_proxy laravel:80
+}
+
+ratemynurse.org, www.ratemynurse.org {
+	tls internal
+	reverse_proxy wordpress:80
+}

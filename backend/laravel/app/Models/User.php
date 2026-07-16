@@ -38,7 +38,7 @@ class User extends Authenticatable
 
     public function member()
     {
-        return $this->hasOne(MemberProfile::class, 'user_id', id);
+        return $this->hasOne(MemberProfile::class, 'user_id', 'id');
     }
 
     // เช็ค type
@@ -62,7 +62,8 @@ class User extends Authenticatable
     {
         return match ($this->user_type) {
             'NURSING' => $this->nursing(),
-            'NURSING_HOME' => $this->nursingHome(),
+            // 'NURSING_HOME' => $this->nursingHome(), // เดิม: method ชื่อไม่ตรง (nursingHome vs nursingHomes)
+            'NURSING_HOME' => $this->nursingHomes(),
             'MEMBER' => $this->member(),
             default => null,
         };
@@ -78,13 +79,38 @@ class User extends Authenticatable
         return $this->hasMany(Rate::class, 'user_id', 'id');
     }
 
-    public function images()
+    // public function images()
+    // {
+    //     return $this->morphMany(Image::class, 'imageable')->where('is_cover', false);
+    // }
+
+    // public function coverImage()
+    // {
+    //     return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+    // }
+
+    public function notifications()
     {
-        return $this->morphMany(Image::class, 'imageable')->where('is_cover', false);
+        return $this->hasMany(Notification::class, 'user_id', 'id')
+            ->latest(); // ✅ เทียบเท่า orderBy('created_at', 'desc')
     }
 
-    public function coverImage()
+    public function readNotifications()
     {
-        return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+        return $this->hasMany(Notification::class, 'user_id', 'id')
+            ->where('is_read', true)
+            ->latest();
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'id')
+            ->where('is_read', false)
+            ->latest();
+    }
+
+    public function memberContacts()
+    {
+        return $this->hasMany(MemberContact::class, 'member_id');
     }
 }

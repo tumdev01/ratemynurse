@@ -68,6 +68,8 @@ class NursingHomeRepository
         $order     = Arr::get($filters, 'order', 'DESC');
         $limit     = Arr::get($filters, 'limit', 8); 
         $certified = Arr::get($filters, 'certified');
+        $province  = Arr::get($filters, 'province');
+        $zone      = Arr::get($filters, 'zone');
 
         $query = NursingHomeProfile::query()
             ->with([
@@ -80,7 +82,7 @@ class NursingHomeRepository
                 'rates.rate_details',
             ])
             ->withCount(['rates as review_count'])
-            ->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description'])
+            ->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month', 'facilities', 'private_room_no', 'duo_room_no', 'center_highlights'])
             ->selectSub(function ($q) {
                 $q->from('rate_details')
                 ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
@@ -88,13 +90,10 @@ class NursingHomeRepository
                 ->whereColumn('rates.rateable_id', 'nursing_home_profiles.id')
                 ->where('rates.rateable_type', NursingHomeProfile::class);
             }, 'average_score')
+            ->whereHas('owner', function ($q) {
+                $q->where('status', 1);
+            })
             ->whereNull('deleted_at');
-
-        // Filter certified
-        if (!is_null($certified)) {
-            $certifiedBool = filter_var($certified, FILTER_VALIDATE_BOOLEAN);
-            $query->where('certified', $certifiedBool ? 1 : 0);
-        }
 
         // Filter province
         if (isset($filters['province'])) {
@@ -102,7 +101,186 @@ class NursingHomeRepository
             $query->where('province_id', $province_id);
         }
 
-        return $query->orderBy($orderby, $order)->paginate($limit);
+        // Apply grid filters (facilities, cost, room, rate)
+        $this->applyGridFilters($query, $filters);
+        // Priority sorting
+        $query->orderByRaw("
+            CASE 
+                WHEN sort_order > 0 THEN 0
+                ELSE 1
+            END
+        ")->orderByRaw("
+            CASE 
+                WHEN sort_order > 0 THEN sort_order
+                ELSE NULL
+            END ASC
+        ");
+        $query->orderBy($orderby, $order);
+
+        return $query->paginate($limit);
+    }
+
+    public function countByProvince(array $filters = [])
+    {
+        $certified = Arr::get($filters, 'certified');
+        $province  = Arr::get($filters, 'province');
+
+        $query = NursingHomeProfile::query()
+            ->selectRaw('nursing_home_profiles.*')
+            ->selectSub(function ($q) {
+                $q->from('rate_details')
+                ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+                ->selectRaw('AVG(rate_details.scores)')
+                ->whereColumn('rates.rateable_id', 'nursing_home_profiles.id')
+                ->where('rates.rateable_type', NursingHomeProfile::class);
+            }, 'average_score')
+            ->whereHas('owner', function ($q) {
+                $q->where('status', 1);
+            })
+            ->whereNull('deleted_at');
+
+        if (isset($filters['province'])) {
+            $province_id = Province::where('code', $filters['province'])->value('id');
+            $query->where('province_id', $province_id);
+        }
+
+        // Apply grid filters (facilities, cost, room, rate)
+        $this->applyGridFilters($query, $filters);
+
+        return $query->count();
+    }
+
+    public function getNursingHomeWithZone(array $filters = [])
+    {
+        $orderby   = Arr::get($filters, 'orderby', 'id') ?: 'id';
+        $order     = Arr::get($filters, 'order', 'DESC');
+        $certified = Arr::get($filters, 'certified');
+        $province  = Arr::get($filters, 'province');
+        $zone      = Arr::get($filters, 'zone');
+        $additionalLimit = Arr::get($filters, 'additional_limit', 10);
+        
+        // ถ้าไม่มี zone แต่มี province ให้ดึง zone จาก province
+        if (!$zone && $province) {
+            $zone = Province::where('code', $province)->value('zone');
+        }
+        
+        // ดึงข้อมูลจากจังหวัดที่เลือก
+        $provinceHomes = $this->getHomesQuery($filters)
+            ->when(isset($filters['province']), function ($q) use ($filters) {
+                $province_id = Province::where('code', $filters['province'])->value('id');
+                $q->where('province_id', $province_id);
+            })
+            ->orderBy($orderby, $order)
+            ->get();
+        
+        $provinceHomesIds = $provinceHomes->pluck('id')->toArray();
+        
+        // ดึงข้อมูลเพิ่มจาก zone (ไม่รวมจังหวัดที่เลือก)
+        $zoneHomes = collect();
+        if ($zone) {
+            $zoneHomes = $this->getHomesQuery($filters)
+                ->whereHas('province', function ($q) use ($zone) {
+                    $q->where('zone', $zone);
+                })
+                ->when(isset($filters['province']), function ($q) use ($filters) {
+                    $province_id = Province::where('code', $filters['province'])->value('id');
+                    $q->where('province_id', '!=', $province_id);
+                })
+                ->whereNotIn('id', $provinceHomesIds)
+                ->inRandomOrder()
+                ->limit($additionalLimit)
+                ->get();
+        }
+        
+        // รวมข้อมูล: จังหวัดที่เลือกก่อน แล้วตามด้วย zone
+        return $provinceHomes->concat($zoneHomes);
+    }
+
+    private function getHomesQuery(array $filters = [])
+    {
+        $certified = Arr::get($filters, 'certified');
+
+        $query = NursingHomeProfile::query()
+            ->with([
+                'owner:id,firstname,lastname,user_type,status',
+                'province:id,name',
+                'district:id,name',
+                'subDistrict:id,name',
+                'coverImage:id,imageable_id,imageable_type,path,is_cover',
+                'images:id,imageable_id,imageable_type,path,is_cover',
+                'rates.rate_details',
+            ])
+            ->withCount(['rates as review_count'])
+            ->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month', 'facilities', 'private_room_no', 'duo_room_no'])
+            ->selectSub(function ($q) {
+                $q->from('rate_details')
+                ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+                ->selectRaw('AVG(rate_details.scores)')
+                ->whereColumn('rates.rateable_id', 'nursing_home_profiles.id')
+                ->where('rates.rateable_type', NursingHomeProfile::class);
+            }, 'average_score')
+            ->whereHas('owner', function ($q) {
+                $q->where('status', 1);
+            })
+            ->whereNull('deleted_at');
+
+        $this->applyGridFilters($query, $filters);
+
+        return $query;
+    }
+
+    /**
+     * Apply grid filters: facilities, cost, room, rate, search
+     */
+    private function applyGridFilters($query, array $filters)
+    {
+        $facilities = Arr::get($filters, 'facilities', []);
+        $costRanges = Arr::get($filters, 'cost', []);
+        $room       = Arr::get($filters, 'room');
+        $rate       = Arr::get($filters, 'rate');
+        $search     = Arr::get($filters, 'search');
+
+        // Search by name
+        if (!empty($search)) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        // Facilities — JSON column contains [{"key":"NURSE_STATION","value":"..."},...]
+        if (!empty($facilities) && is_array($facilities)) {
+            foreach ($facilities as $facility) {
+                $query->whereRaw(
+                    "JSON_SEARCH(facilities, 'one', ?, NULL, '\$[*].key') IS NOT NULL",
+                    [$facility]
+                );
+            }
+        }
+
+        // Cost — multiple price ranges (OR logic)
+        if (!empty($costRanges) && is_array($costRanges)) {
+            $query->where(function ($q) use ($costRanges) {
+                foreach ($costRanges as $range) {
+                    if (str_contains($range, '-')) {
+                        [$min, $max] = explode('-', $range);
+                        $q->orWhereBetween('cost_per_month', [(int) $min, (int) $max]);
+                    } else {
+                        // Open-ended range like "16001"
+                        $q->orWhere('cost_per_month', '>=', (int) $range);
+                    }
+                }
+            });
+        }
+
+        // Room type
+        if ($room === 'SINGLE_BED') {
+            $query->where('private_room_no', '>', 0);
+        } elseif ($room === 'DOUBLE_BED') {
+            $query->where('duo_room_no', '>', 0);
+        }
+
+        // Rating — minimum average score
+        if (!empty($rate) && is_numeric($rate)) {
+            $query->having('average_score', '>=', (int) $rate);
+        }
     }
 
     public function getInfo(int $id) 
@@ -189,6 +367,7 @@ class NursingHomeRepository
         try {
             $data = $request->validated();
             $user = NursingHomeProfile::findOrFail($id);
+
             DB::transaction(function () use ($request, $user) {
                 if ($user && $user->id) {
                     $home_service_type = null;
@@ -253,7 +432,21 @@ class NursingHomeRepository
                         $facilities = json_encode($pre_facilities);
                     }
 
-                    NursingHomeProfile::updateOrCreate(
+                    $center_highlights = null;
+                    if ($request->center_highlights) {
+                        $pre_center_highlights = [];
+                        $allServices = CenterHighlightType::list();
+                        foreach ($request->center_highlights as $serviceKey) {
+                            if (isset($allServices[$serviceKey])) {
+                                $pre_center_highlights[] = [
+                                    'key'   => $serviceKey,
+                                    'value' => $allServices[$serviceKey],
+                                ];
+                            }
+                        }
+                        $center_highlights = json_encode($pre_center_highlights);
+                    }
+                    $profile = NursingHomeProfile::updateOrCreate(
                         ['id' => $user->id], // เงื่อนไขหา record
                         [
                             'name'    => $request->name,
@@ -319,7 +512,7 @@ class NursingHomeRepository
                             'private_health_insurance' => $request->private_health_insurance ?? 0,
                             'installment' => $request->installment ?? 0,
                             'payment_methods' => $request->payment_methods ?? NULL,
-                            'center_highlights' => $request->center_highlights,
+                            'center_highlights' => $center_highlights,
                             'patients_target' => $request->patients_target,
                             'visiting_time' => $request->visiting_time,
                             'patient_admission_policy' => $request->patient_admission_policy,
@@ -359,7 +552,9 @@ class NursingHomeRepository
                                     'type'          => 'NURSING_HOME',
                                     'filetype'      => $file->getClientMimeType(),
                                     'is_cover'      => $first,
-                                    'imageable_id'  => $user->id,
+                                    'imageable_id'  => $profile->id,
+                                    'imageable_type' => 'App\Models\NursingHomeProfile',
+                                    'user_id' => $profile->user_id
                                 ]);
 
                                 // ✅ ถ้ามีภาพเดิมแล้ว → รูปใหม่ทั้งหมดเป็น false
@@ -628,6 +823,376 @@ class NursingHomeRepository
             $input['user_id'] = $user_id;
             return NursingHomeProfile::create($input);
         }
+    }
+
+    public function getProfileById(int $user_id, int $profile_id)
+    {
+        return NursingHomeProfile::query()
+            ->with(['coverImage', 'images', 'licenses', 'staffs', 'province', 'district', 'subDistrict'])
+            ->where('user_id', $user_id)
+            ->where('id', $profile_id)
+            ->firstOrFail();
+    }
+
+    public function updateGeneralProfile(int $user_id, array $inputs)
+    {
+        $profile = NursingHomeProfile::findOrFail(Arr::get($inputs, 'profile_id'));
+        $profile->name = Arr::get($inputs, 'name');
+        $profile->email = Arr::get($inputs, 'email');
+        $profile->main_phone = Arr::get($inputs, 'main_phone');
+        $profile->res_phone  = Arr::get($inputs, 'res_phone');
+        $profile->facebook   = Arr::get($inputs, 'facebook');
+        $profile->website    = Arr::get($inputs, 'website');
+        $profile->address    = Arr::get($inputs, 'address');
+        $profile->province_id= Arr::get($inputs, 'province_id');
+        $profile->district_id= Arr::get($inputs, 'district_id');
+        $profile->sub_district_id = Arr::get($inputs, 'sub_district_id');
+        $profile->map_show   = Arr::get($inputs, 'map_show');
+        $profile->update();
+        return $profile;
+    }
+
+    public function updateAboutProfile(int $user_id, array $inputs, array $files = [], array $staffAvatars = [])
+    {
+        $profile = NursingHomeProfile::findOrFail(Arr::get($inputs, 'profile_id'));
+        $profile->license_no = Arr::get($inputs, 'license_no');
+        $profile->license_start_date = Arr::get($inputs, 'license_start_date');
+        $profile->license_exp_date   = Arr::get($inputs, 'license_exp_date');
+        $profile->license_by = Arr::get($inputs, 'license_by');
+        $profile->certificates = Arr::get($inputs, 'certificates');
+        $profile->hospital_no  = Arr::get($inputs, 'hospital_no');
+        $profile->cost_per_day = Arr::get($inputs, 'cost_per_day');
+        $profile->cost_per_month = Arr::get($inputs, 'cost_per_month');
+        $profile->deposit = Arr::get($inputs, 'deposit');
+        $profile->registration_fee = Arr::get($inputs, 'registration_fee');
+        $profile->special_food_expenses = Arr::get($inputs, 'special_food_expenses');
+        $profile->physical_therapy_fee  = Arr::get($inputs, 'physical_therapy_fee');
+        $profile->delivery_fee = Arr::get($inputs, 'delivery_fee');
+        $profile->laundry_service = Arr::get($inputs, 'laundry_service');
+        $profile->social_security = Arr::get($inputs, 'social_security');
+        $profile->private_health_insurance = Arr::get($inputs, 'private_health_insurance');
+        $profile->installment = Arr::get($inputs, 'installment');
+        $profile->payment_methods = Arr::get($inputs, 'payment_methods');
+        $profile->update();
+
+        // Handle license file uploads
+        $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+        foreach ($files as $file) {
+            if (!$file->isValid()) continue;
+            if (!in_array($file->getMimeType(), $allowedMimes)) continue;
+            if ($file->getSize() > 5 * 1024 * 1024) continue;
+
+            $extension  = $file->getClientOriginalExtension();
+            $hashedName = md5(uniqid($profile->id, true)) . '.' . $extension;
+            $destPath   = 'images/nursing-home/' . $profile->id . '/license/' . $hashedName;
+            $destFull   = public_path($destPath);
+
+            File::ensureDirectoryExists(dirname($destFull));
+            File::copy($file->getRealPath(), $destFull);
+
+            $profile->licenses()->create([
+                'filename' => $file->getClientOriginalName(),
+                'filetype' => $file->getMimeType(),
+                'path'     => $destPath,
+            ]);
+        }
+
+        // Staff sync: delete all existing, re-create from submitted data
+        $staffsData = Arr::pull($inputs, 'staffs', []);
+
+        // Collect existing_image paths that will be preserved
+        $preserveImages = [];
+        foreach ($staffsData as $item) {
+            if (!empty($item['existing_image'])) {
+                $preserveImages[] = $item['existing_image'];
+            }
+        }
+
+        // Delete old staff images from disk (skip images that will be reused)
+        $oldStaffs = NursingHomeStaff::where('nursing_home_profile_id', $profile->id)->get();
+        foreach ($oldStaffs as $old) {
+            if ($old->image && !in_array($old->image, $preserveImages) && File::exists(public_path($old->image))) {
+                File::delete(public_path($old->image));
+            }
+        }
+        NursingHomeStaff::where('nursing_home_profile_id', $profile->id)->delete();
+
+        foreach ($staffsData as $index => $item) {
+            $name = $item['name'] ?? '';
+            if (empty(trim($name))) continue;
+
+            $staff = NursingHomeStaff::create([
+                'user_id'                  => $user_id,
+                'nursing_home_profile_id'  => $profile->id,
+                'name'           => $name,
+                'responsibility' => $item['position'] ?? '',
+            ]);
+
+            // Handle avatar
+            if (isset($staffAvatars[$index]) && $staffAvatars[$index]->isValid()) {
+                $file = $staffAvatars[$index];
+                $ext = $file->getClientOriginalExtension();
+                $hashed = md5(uniqid($staff->id, true)) . '.' . $ext;
+                $destPath = 'images/nursing-home/' . $profile->id . '/staff/' . $hashed;
+                File::ensureDirectoryExists(dirname(public_path($destPath)));
+                File::copy($file->getRealPath(), public_path($destPath));
+                $staff->image = $destPath;
+                $staff->save();
+            } elseif (!empty($item['existing_image'])) {
+                // Preserve existing image path (sent from frontend for staff that weren't re-uploaded)
+                $staff->image = $item['existing_image'];
+                $staff->save();
+            }
+        }
+
+        return $profile->load(['licenses', 'staffs']);
+    }
+
+    public function updateMoreInfoProfile(int $user_id, array $inputs, array $files = [])
+    {
+        $profile = NursingHomeProfile::findOrFail(Arr::get($inputs, 'profile_id'));
+        $profile->description = Arr::get($inputs, 'about') ?? '';
+        $profile->youtube_url = Arr::get($inputs, 'youtube_url') ?? NULL;
+        $profile->etc_service = Arr::get($inputs, 'etc_services') ?? '';
+        $home_service_type = null;
+        if (Arr::get($inputs, 'home_service_type')) {
+            $pre_home_service_type = [];
+            $allServices = HomeServiceType::list();
+            foreach (Arr::get($inputs, 'home_service_type') as $serviceKey) {
+                if (isset($allServices[$serviceKey])) {
+                    $pre_home_service_type[] = [
+                        'key'   => $serviceKey,
+                        'value' => $allServices[$serviceKey],
+                    ];
+                }
+            }
+            $home_service_type = json_encode($pre_home_service_type);
+        }
+        $profile->home_service_type = $home_service_type ?? NULL;
+
+        $additional_service_type = null;
+        if (Arr::get($inputs, 'additional_service_type')) {
+            $pre_additional_service_type = [];
+            $allServices = AdditionalServiceType::list();
+            foreach (Arr::get($inputs, 'additional_service_type') as $serviceKey) {
+                if (isset($allServices[$serviceKey])) {
+                    $pre_additional_service_type[] = [
+                        'key'   => $serviceKey,
+                        'value' => $allServices[$serviceKey],
+                    ];
+                }
+            }
+            $additional_service_type = json_encode($pre_additional_service_type);
+        }
+        $profile->additional_service_type = $additional_service_type ?? NULL;
+
+        $special_facilities = null;
+        if (Arr::get($inputs, 'special_facilities')) {
+            $pre_special_facilities = [];
+            $allServices = SpecialFacilityType::list();
+            foreach (Arr::get($inputs, 'special_facilities') as $serviceKey) {
+                if (isset($allServices[$serviceKey])) {
+                    $pre_special_facilities[] = [
+                        'key'   => $serviceKey,
+                        'value' => $allServices[$serviceKey],
+                    ];
+                }
+            }
+            $special_facilities = json_encode($pre_special_facilities);
+        }
+        $profile->special_facilities = $special_facilities ?? NULL;
+
+        $facilities = null;
+        if (Arr::get($inputs, 'facilities')) {
+            $pre_facilities = [];
+            $allServices = FacilityType::list();
+            foreach (Arr::get($inputs, 'facilities') as $serviceKey) {
+                if (isset($allServices[$serviceKey])) {
+                    $pre_facilities[] = [
+                        'key'   => $serviceKey,
+                        'value' => $allServices[$serviceKey],
+                    ];
+                }
+            }
+            $facilities = json_encode($pre_facilities);
+        }
+        $profile->facilities = $facilities ?? NULL;
+
+        $center_highlights = null;
+        if (Arr::get($inputs, 'center_highlights')) {
+            $pre_center_highlights = [];
+            $allServices = CenterHighlightType::list();
+            foreach (Arr::get($inputs, 'center_highlights') as $serviceKey) {
+                if (isset($allServices[$serviceKey])) {
+                    $pre_center_highlights[] = [
+                        'key'   => $serviceKey,
+                        'value' => $allServices[$serviceKey],
+                    ];
+                }
+            }
+            $center_highlights = json_encode($pre_center_highlights);
+        }
+        $profile->center_highlights = $center_highlights ?? NULL;
+
+        $profile->building_no = Arr::get($inputs, 'building_no') ?? 0;
+        $profile->total_room = Arr::get($inputs, 'total_room') ?? 0;
+        $profile->private_room_no = Arr::get($inputs, 'private_room_no') ?? 0;
+        $profile->duo_room_no = Arr::get($inputs, 'duo_room_no') ?? 0;
+        $profile->shared_room_three_beds = Arr::get($inputs, 'shared_room_three_beds') ?? 0;
+        $profile->max_serve_no = Arr::get($inputs, 'max_serve_no') ?? 0;
+        $profile->area = Arr::get($inputs, 'area') ?? 0;
+        $profile->ambulance = Arr::get($inputs, 'ambulance') ?? 0;
+        $profile->ambulance_amount = Arr::get($inputs, 'ambulance_amount') ?? 0;
+        $profile->van_shuttle = Arr::get($inputs, 'van_shuttle') ?? 0;
+        $profile->special_medical_equipment = Arr::get($inputs, 'special_medical_equipment') ?? '';
+        $profile->update();
+
+        // -------------------------------------------------------
+        // จัดการ detail_images + image_order (reorder)
+        // -------------------------------------------------------
+        $imageOrder = Arr::get($inputs, 'image_order');
+        $hasNewFiles = !empty($files);
+
+        if ($imageOrder) {
+            $order = json_decode($imageOrder, true) ?? [];
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            // Save new files first, map index → new Image id
+            $newImageIds = [];
+            if ($hasNewFiles) {
+                foreach ($files as $idx => $file) {
+                    if (!$file->isValid()) continue;
+                    if (!in_array($file->getMimeType(), $allowedMimes)) continue;
+                    if ($file->getSize() > 5 * 1024 * 1024) continue;
+
+                    $extension    = $file->getClientOriginalExtension();
+                    $hashedName   = md5(uniqid($profile->id, true)) . '.' . $extension;
+                    $destPath     = 'images/nursing-home/' . $profile->id . '/detail/' . $hashedName;
+                    $destFullPath = public_path($destPath);
+
+                    File::ensureDirectoryExists(dirname($destFullPath));
+                    File::copy($file->getRealPath(), $destFullPath);
+
+                    $newImage = Image::create([
+                        'user_id'        => $user_id,
+                        'name'           => $file->getClientOriginalName(),
+                        'path'           => $destPath,
+                        'filetype'       => $file->getMimeType(),
+                        'is_cover'       => false,
+                        'type'           => 'NURSING_HOME_DETAIL',
+                        'imageable_id'   => $profile->id,
+                        'imageable_type' => 'App\Models\NursingHomeProfile',
+                    ]);
+                    $newImageIds[$idx] = $newImage->id;
+                }
+            }
+
+            // Apply order: position 0 = cover, rest = not cover
+            foreach ($order as $pos => $entry) {
+                $imageId = null;
+                if (($entry['type'] ?? '') === 'existing') {
+                    $imageId = $entry['id'] ?? null;
+                } elseif (($entry['type'] ?? '') === 'new') {
+                    $imageId = $newImageIds[$entry['index'] ?? -1] ?? null;
+                }
+                if ($imageId) {
+                    Image::where('id', $imageId)
+                        ->where('imageable_id', $profile->id)
+                        ->where('imageable_type', 'App\Models\NursingHomeProfile')
+                        ->update(['is_cover' => $pos === 0]);
+                }
+            }
+
+        } elseif ($hasNewFiles) {
+            // No order info but new files — legacy behavior
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            $hasExistingImages = Image::where('imageable_id', $profile->id)
+                                    ->where('imageable_type', 'App\Models\NursingHomeProfile')
+                                    ->exists();
+
+            $first = !$hasExistingImages;
+
+            foreach ($files as $file) {
+                if (!$file->isValid()) continue;
+                if (!in_array($file->getMimeType(), $allowedMimes)) continue;
+                if ($file->getSize() > 5 * 1024 * 1024) continue;
+
+                $extension    = $file->getClientOriginalExtension();
+                $hashedName   = md5(uniqid($profile->id, true)) . '.' . $extension;
+                $destPath     = 'images/nursing-home/' . $profile->id . '/detail/' . $hashedName;
+                $destFullPath = public_path($destPath);
+
+                File::ensureDirectoryExists(dirname($destFullPath));
+                File::copy($file->getRealPath(), $destFullPath);
+
+                if ($first) {
+                    Image::where('imageable_id', $profile->id)
+                        ->where('imageable_type', 'App\Models\NursingHomeProfile')
+                        ->where('is_cover', true)
+                        ->update(['is_cover' => false]);
+                }
+
+                Image::create([
+                    'user_id'        => $user_id,
+                    'name'           => $file->getClientOriginalName(),
+                    'path'           => $destPath,
+                    'filetype'       => $file->getMimeType(),
+                    'is_cover'       => $first,
+                    'type'           => 'NURSING_HOME_DETAIL',
+                    'imageable_id'   => $profile->id,
+                    'imageable_type' => 'App\Models\NursingHomeProfile',
+                ]);
+
+                $first = false;
+            }
+        }
+        return $profile->load(['coverImage', 'images']);
+    }
+
+    public function getProfileByCollections(array $filters)                                                                                                                                                                                                             
+    {
+      $clauseMap = [                                                                                                                                                                                                                                                            'owner_by'   => 'user_id',
+          'managed_by' => 'manager_id',                                                                                                                                                                                                                               
+          'created_by' => 'created_by',
+      ];
+
+      $provinceId = $filters['province_id'] ?? null;
+      $clause     = $filters['clause'] ?? null;
+      $ids        = $filters['ids'] ?? [];
+
+      // หา zone จาก province_id แล้วดึง province_id ทั้งหมดใน zone เดียวกัน
+      $zoneProvinceIds = [];
+      if ($provinceId) {
+          $zone = Province::where('id', $provinceId)->value('zone');
+
+          if ($zone) {
+              $zoneProvinceIds = Province::where('zone', $zone)->pluck('id')->toArray();
+          }
+      }
+
+      $query = NursingHomeProfile::query()
+          ->with([
+              'province:id,name',
+              'district:id,name',
+              'rates.rate_details',
+              'coverImage'
+          ]);
+
+      // ต้องตรง ids AND อยู่ใน zone เดียวกัน
+      if ($clause && isset($clauseMap[$clause]) && !empty($ids)) {
+          $column = $clauseMap[$clause];
+          $query->whereIn($column, $ids);
+      }
+
+      if (!empty($zoneProvinceIds)) {
+          $query->whereIn('province_id', $zoneProvinceIds);
+      }
+
+      return $query
+          ->inRandomOrder()
+          ->limit(8)
+          ->get();
     }
 
 }

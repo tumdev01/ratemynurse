@@ -16,6 +16,9 @@ final class SpecialFacilityType
     const MEETING_ROOM = 'ห้องประชุม';
     const OFFICE_ROOM = 'ห้องออฟฟิศ';
     const LAUNDRY_ROOM = 'ห้องซักรีด';
+    const GARDEN_ACTIVITIES = 'สวนหย่อม/พื้นที่นันทนาการ';
+    const SWIMMING_POOL = 'สระว่ายน้ำ';
+    const PHYSICAL_TREATMENT = 'ห้องกายภาพบำบัด';
 
     public static function list(): array
     {

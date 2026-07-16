@@ -18,16 +18,7 @@ class JobController extends Controller {
         dd($request->all());
     }
 
-    /*public function store(JobCreateRequest $request)
-    {
-        $data = $request->validated(); // รวม user_id แล้ว
-
-        $result = $this->job_repository->store($data);
-
-        return response()->json($result);
-    }*/
-
-    public function store(Request $request, JobRepository $repo)
+    public function store(JobCreateRequest $request, JobRepository $repo)
     {
         try {
             $data = $request->validated(); // รวม user_id แล้ว
@@ -72,7 +63,7 @@ class JobController extends Controller {
         }
     }
 
-    public function getJob(Int $id) 
+    public function getJob(Int $id)
     {
         $job = $this->job_repository->getJob((int) $id);
         return response()->json([
@@ -81,4 +72,46 @@ class JobController extends Controller {
             'results' => $job
         ], 200);
     }
+
+    public function close(Int $id, Request $request)
+    {
+        $owner = $request->user();
+        if (!$owner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        $job = $this->job_repository->getJob((int) $id);
+
+        if (!$job) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job not found'
+            ], 404);
+        }
+
+        if ((int) $job->user_id !== (int) $owner->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permission denied'
+            ], 403);
+        }
+
+        $job->status = 'CLOSED';
+
+        if ($job->save()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Job closed successfully'
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to close job'
+        ], 500);
+    }
+
 }

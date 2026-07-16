@@ -15,7 +15,8 @@ class Job extends Model
 
     protected $fillable = [
         'user_id',
-        'user_id',
+        'profile_id',
+        'profile_type',
         'name',
         'service_type',
         'hire_type',
@@ -83,5 +84,15 @@ class Job extends Model
     public function profile(): BelongsTo
     {
         return $this->belongsTo(MemberProfile::class, 'user_id', 'user_id');
+    }
+
+    public function owner()
+    {
+        return $this->morphTo('owner', 'profile_type', 'profile_id');
+    }
+
+    public function interviews()
+    {
+        return $this->hasMany(JobInterview::class);
     }
 }

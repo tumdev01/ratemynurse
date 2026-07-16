@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class MemberProfile extends Model
 {
@@ -38,6 +40,8 @@ class MemberProfile extends Model
         'policy',
         'newsletter',
         'cardid',
+        'facebook',
+        'lineid'
     ];
 
     /**
@@ -93,5 +97,32 @@ class MemberProfile extends Model
     public function job()
     {
         return $this->belongsTo(Job::class, 'user_id', 'id');
+    }
+
+    /**
+     * รูปโปรไฟล์ทั้งหมด (Polymorphic)
+     */
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable')
+            ->where('is_cover', false);
+    }
+
+    /**
+     * รูปปก (Polymorphic)
+     */
+    public function coverImage(): MorphOne
+    {
+        return $this->morphOne(Image::class, 'imageable')
+            ->where('is_cover', true);
+    }
+
+    /**
+     * Get profile image URL
+     */
+    public function getProfileImageAttribute(): ?string
+    {
+        $image = $this->images()->first();
+        return $image?->full_path;
     }
 }

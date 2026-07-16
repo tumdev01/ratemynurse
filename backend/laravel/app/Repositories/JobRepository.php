@@ -4,22 +4,73 @@ namespace App\Repositories;
 use Illuminate\Support\Arr;
 use App\Models\Job;
 use App\Models\User;
+use App\Models\NursingProfile;
+use App\Models\NursingHomeProfile;
 use Yajra\DataTables\DataTables;
 
 class JobRepository extends BaseRepository {
 
     public function getJob(Int $id)
     {
-        return Job::query()
-        ->with([
-            'province:id,name',
-            'district:id,name',
-            'sub_district:id,name',
-            'user'
-        ])
-        ->where('id', (int) $id)
-        ->whereNull('deleted_at')
-        ->first();
+      $job = Job::query()                                                                                                                                                                                                                                             
+          ->with([
+              'province:id,name',
+              'district:id,name',
+              'sub_district:id,name',
+              'user',
+              'interviews'
+          ])
+          ->where('id', (int) $id)
+          ->whereNull('deleted_at')
+          ->first();
+
+      if ($job && $job->interviews->isNotEmpty()) {
+            $nursingIds = $job->interviews->where('type', 'NURSING')->pluck('profile_id')->unique();
+            $nursingHomeIds = $job->interviews->where('type', 'NURSING_HOME')->pluck('profile_id')->unique();
+
+            $nursingProfiles = $nursingIds->isNotEmpty()
+              ? NursingProfile::select('id', 'user_id', 'name', 'nickname', 'certified', 'about', 'skill', 'province_id', 'district_id')->whereIn('id', $nursingIds)->with([
+                'coverImage', 
+                'province:id,name', 'district:id,name'])
+                ->withCount(['rates as review_count'])
+                ->selectSub(function ($q) {
+                $q->from('rate_details')
+                    ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+                    ->selectRaw('AVG(rate_details.scores)')
+                    ->whereColumn('rates.rateable_id', 'nursing_profiles.id')
+                    ->where('rates.rateable_type', NursingProfile::class);
+                }, 'average_score')
+                ->get()->keyBy('id')
+              : collect();
+
+            $nursingHomeProfiles = $nursingHomeIds->isNotEmpty()
+              ? NursingHomeProfile::select('id', 'name', 'certified', 'province_id', 'district_id', 'cost_per_month', 'description')->whereIn('id', $nursingHomeIds)->with([
+                'coverImage',
+                'province:id,name', 
+                'district:id,name'
+                ])
+                ->withCount(['rates as review_count'])
+                ->selectSub(function ($q) {
+                    $q->from('rate_details')
+                    ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
+                    ->selectRaw('AVG(rate_details.scores)')
+                    ->whereColumn('rates.rateable_id', 'nursing_home_profiles.id')
+                    ->where('rates.rateable_type', NursingHomeProfile::class);
+                }, 'average_score')
+                ->get()->keyBy('id')
+              : collect();
+
+            $job->interviews->each(function ($interview) use ($nursingProfiles, $nursingHomeProfiles) {
+              $profile = match ($interview->type) {
+                  'NURSING'      => $nursingProfiles->get($interview->profile_id),
+                  'NURSING_HOME' => $nursingHomeProfiles->get($interview->profile_id),
+                  default        => null,
+              };
+              $interview->setRelation('profile', $profile);
+          });
+      }
+
+      return $job;
     }
 
     public function store(array $params)
@@ -28,6 +79,8 @@ class JobRepository extends BaseRepository {
 
         return Job::create([
             'user_id'        => $user->id,
+            'profile_id'     => Arr::get($params, 'profile_id'),
+            'profile_type'   => Arr::get($params, 'profile_type'),
             'name'           => Arr::get($params, 'name'),
             'service_type'   => Arr::get($params, 'service_type'),
             'care_type'      => Arr::get($params, 'care_type'),

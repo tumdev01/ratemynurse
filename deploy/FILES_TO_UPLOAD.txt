@@ -1,0 +1,151 @@
+ไฟล์ที่ต้อง deploy (แก้ปัญหา Login OTP: ป้องกันกดซ้ำ + cache ข้อมูล user ข้ามคน + OTP หมดอายุเร็วไป)
+
+=== ส่วนที่ 1: WordPress (host บน wordpress.com) — อัปโหลดผ่าน FTP/SFTP ===
+แทนที่ไฟล์เดิมตำแหน่งเดียวกันบนเซิร์ฟเวอร์ ในปลั๊กอิน rmn-services:
+
+1. rmn-services.php
+   local:  deploy/wp-content/plugins/rmn-services/rmn-services.php
+   server: wp-content/plugins/rmn-services/rmn-services.php
+   แก้: เอาข้อมูล user ออกจาก RMN_AUTH ที่ฝังใน HTML (กัน WordPress.com Batcache cache ข้ามคน)
+
+2. Authentication.php
+   local:  deploy/wp-content/plugins/rmn-services/services/authentication/Authentication.php
+   server: wp-content/plugins/rmn-services/services/authentication/Authentication.php
+   แก้: loading/lock ระหว่างรอ OTP, เมนูมือถือ (mb_navigation) ไม่ฝังชื่อ user ลง HTML ที่ cache ได้แล้ว,
+        เมนูเดสก์ท็อป (updateUserUI) ดึงข้อมูล user ผ่าน ajax เสมอแทนการเชื่อค่าที่ฝังมา
+
+3. job-post.php
+   local:  deploy/wp-content/plugins/rmn-services/services/board/job-post.php
+   server: wp-content/plugins/rmn-services/services/board/job-post.php
+   แก้: จุดเดียวกับข้อ 2 (ดึง user ผ่าน ajax เสมอ)
+
+=== ส่วนที่ 2: Laravel backend (VPS แยกต่างหาก 128.199.140.164) — deploy ตามวิธีที่ใช้ปกติ (git pull/SSH ฯลฯ) ===
+
+4. app/Http/Controllers/API/OtpController.php
+   local:  deploy/laravel/app/Http/Controllers/API/OtpController.php
+   server: app/Http/Controllers/API/OtpController.php
+   แก้: ขยายเวลาหมดอายุ OTP จาก 30 วินาที เป็น 60 วินาที
+
+หมายเหตุ
+- โฟลเดอร์นี้ (deploy/) จัดโครงสร้างให้ตรงกับ path บนเซิร์ฟเวอร์แล้ว ลากทับของเดิมได้เลย หรือจะอัปทีละไฟล์ตาม path ด้านบนก็ได้
+- แนะนำให้สำรอง (backup) ไฟล์เดิมบนเซิร์ฟเวอร์ไว้ก่อนทับทุกไฟล์ เผื่อต้อง rollback
+- หลังอัปโหลดแล้ว ให้เทส:
+  1) เปิด DevTools > Network เช็คว่าเพจที่ login แล้วมี header Cache-Control: private, no-store และ Vary: Cookie
+  2) ลองกดปุ่ม login/OTP รัวๆ ว่าจอ lock ไม่ให้กดซ้ำ
+  3) login จาก 2 เครื่อง/บัญชีต่างกัน สลับกันเปิดหน้าเดิมซ้ำๆ หลายรอบ เช็คว่าไม่มีใครเห็นชื่อของอีกฝ่าย
+     (จุดนี้สำคัญสุด เพราะ local ทดสอบไม่ได้เนื่องจากไม่มี WordPress.com Batcache จำลอง)
+
+=== รอบ 2026-07-17: แก้ /api/me ถูกยิงซ้ำบ่อย (performance) ===
+
+พบว่า login แล้วทุกหน้าจะยิง /api/me แบบ block (ผ่าน AccessGuard::checkSubscriptionExpiry() บน
+template_redirect) ซ้ำเติมด้วย JS อีกอย่างน้อย 3 จุดที่ยิง action get_current_user (ซึ่งคือ /api/me
+เดียวกัน) แบบไม่รู้จักกัน — รวมแล้วหน้าเดียวอาจยิงได้ถึง 4 ครั้ง แก้โดยเพิ่ม cache 30 วินาที (transient,
+key เดียวกันทั้ง server-side และ client-side เพื่อแชร์ cache ร่วมกัน) + รวม JS ทั้ง 3 จุดให้เรียกผ่าน
+helper เดียว (cache เป็น promise เดียวกันทั้งหน้า ไม่ fetch ซ้ำ)
+
+5. includes/AccessGuard.php (ไฟล์ใหม่ ไม่เคย deploy มาก่อน)
+   local:  deploy/wp-content/plugins/rmn-services/includes/AccessGuard.php
+   server: wp-content/plugins/rmn-services/includes/AccessGuard.php
+   แก้: me() cache ผล /api/me ไว้ 30 วินาทีต่อ token (transient key rmn_me_<hash>)
+
+6. js/rmn-utils.js (ไฟล์ใหม่ ไม่เคย deploy มาก่อน)
+   local:  deploy/wp-content/plugins/rmn-services/js/rmn-utils.js
+   server: wp-content/plugins/rmn-services/js/rmn-utils.js
+   แก้: เพิ่ม RMN_Utils.getCurrentUser() — cache เป็น promise เดียวกันทั้งหน้า กันหลาย script ยิง
+        get_current_user ซ้ำกันเอง
+
+7. rmn-services.php (อัปเดตเพิ่มจากรอบเดิม)
+   แก้เพิ่ม: rmn_get_current_user() cache ผล 30 วินาที ด้วย transient key เดียวกับ AccessGuard::me()
+   (rmn_me_<hash>) เพื่อให้ทั้ง server-side (ทุกหน้า) และ client-side (ajax) แชร์ cache ร่วมกัน
+
+8. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+   แก้เพิ่ม: desktop nav (updateUserUI) และ mobile nav เปลี่ยนไปเรียก RMN_Utils.getCurrentUser() แทน
+   axios ตรงๆ
+
+9. job-post.php (อัปเดตเพิ่มจากรอบเดิม)
+   แก้เพิ่ม: เปลี่ยนไปเรียก RMN_Utils.getCurrentUser() แทน axios ตรงๆ เช่นกัน
+
+หมายเหตุรอบนี้: ทดสอบผ่าน local docker แล้วว่ากลไก cache ทำงานถูกต้อง (จำลอง set/get transient
+ตรงๆ ยืนยันว่า key ตรงกันทั้ง 2 จุด) แต่ยังไม่ได้ทดสอบผ่าน browser จริงกับ session login จริงบน
+production เพราะ local ไม่มี Batcache/ผู้ใช้จริงให้ทดสอบ — หลัง deploy แล้วให้เปิด DevTools > Network
+เช็คว่า /api/me (ทั้งจาก server และจาก action=get_current_user) ถูกยิงจริงแค่ครั้งเดียวต่อ ~30 วินาที
+ไม่ใช่ทุกครั้งที่โหลดหน้า
+
+=== รอบ 2026-07-17 (2): แก้ Nursing (พยาบาลรายบุคคล) register 3 บั๊ก ===
+
+10. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    แก้เพิ่ม: เพิ่ม feature "บังคับอัปโหลดรูปถ่ายตอนสมัคร" ทั้งชุด (UI + JS) เข้าไปให้ตรงกับ working
+    copy เพราะ deploy copy เดิมเป็นเวอร์ชันเก่ากว่าที่ไม่มี feature นี้เลย, เพิ่ม toggle ให้ช่อง
+    รายละเอียดประวัติแพ้ยา (เดิม hardcode `class="hidden"` ไม่มีทาง toggle เลย), ส่ง
+    medical_condition_detail/history_of_drug_allergy_detail ไปด้วยตอน submit
+    หมายเหตุ: deploy copy ของไฟล์นี้ยังมี location-selector แบบเก่า (raw select2, ไม่ใช่
+    RMN_LocationSelector) ต่างจาก working copy — จงใจไม่แตะส่วนนั้นเพราะไม่เกี่ยวกับบั๊กรอบนี้
+
+11. rmn-services.php (อัปเดตเพิ่มจากรอบเดิม)
+    แก้เพิ่ม: เขียน rmn_nursing_register() ใหม่จาก wp_remote_post()+JSON เป็น curl_exec()+CURLFile
+    (เดิมไฟล์รูปที่ผู้ใช้อัปโหลดหายไปเงียบๆ ไม่เคยถึง backend เลย) เพิ่ม
+    medical_condition_detail/history_of_drug_allergy_detail เข้า payload ที่ส่งไป Laravel
+
+หมายเหตุรอบนี้: ทดสอบผ่าน local docker ครบทุกจุดแล้ว — ยิง /api/nursing/create ตรงๆ ด้วยไฟล์รูปจริง
+สำเร็จ, ทดสอบ retry ตอน validation fail ไม่มี row ค้าง, ทดสอบ logic การประกอบ curl+CURLFile ของ WP
+proxy แยกต่างหาก (ชี้ไป Laravel container ใน local แทน production กันสร้าง record จริงบน production)
+สำเร็จเช่นกัน — ยังไม่ได้ทดสอบผ่านฟอร์มจริงในเบราว์เซอร์ (JS จริง + WP จริง + Laravel จริงพร้อมกันทั้ง
+สาย) หลัง deploy แล้วให้ทดสอบสมัครพยาบาลจริง 1 รอบ เช็คว่ารูปถ่าย + รายละเอียดโรค/แพ้ยา บันทึกถูกต้อง
+
+=== รอบ 2026-07-17 (3): เปลี่ยน select2 → Tom Select ===
+
+12. rmn-services.php (อัปเดตเพิ่มจากรอบเดิม)
+    แก้เพิ่ม: เปลี่ยนจุด enqueue จาก select2 CDN เป็น Tom Select CDN (tom-select@2.3.1) + แปลง inline
+    CSS fallback เป็น class ของ Tom Select + แก้ dependency array ของ rmn-location-selector
+
+13. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    แก้เพิ่ม: แปลง CSS .select2-* เป็น .ts-control/.ts-dropdown เทียบเท่า
+    **แก้ข้อที่เคยตั้งใจข้ามไว้ในรอบ (2)**: ไฟล์นี้ (เฉพาะ deploy copy) มี dropdown
+    จังหวัด/อำเภอ/ตำบลอีกชุดที่ implement เป็น raw select2 ตรงๆ แยกจาก RMN_LocationSelector โดยสิ้นเชิง
+    (ฟังก์ชัน handleSelectProvince()/ajaxCallDropdownOption() + HTML bug เสริม <select> ปิดผิดเป็น
+    <select> แทน </select>) — แทนที่ทั้งชุดด้วย new RMN_LocationSelector({...}) เดียวกับ working copy
+    แล้ว ลบฟังก์ชัน select2 เดิมทิ้งทั้งหมด แก้ HTML ปิด tag ถูกต้อง
+
+14. js/rmn-location-selector.js (ไฟล์ใหม่ ไม่เคย deploy มาก่อน)
+    local:  deploy/wp-content/plugins/rmn-services/js/rmn-location-selector.js
+    server: wp-content/plugins/rmn-services/js/rmn-location-selector.js
+    แก้: rewrite ทั้งไฟล์ให้ใช้ Tom Select แทน select2 (คง public API เดิมทั้งหมด)
+
+หมายเหตุรอบนี้: ทดสอบ syntax ผ่านหมด (PHP+JS) เปิดหน้าเว็บ local จริงยืนยันแล้วว่า Tom Select โหลด
+ถูกต้อง ไม่มี select2 เหลือ ไม่มี PHP error, markup + script enqueue ถูกต้อง — **ยังไม่ได้ทดสอบ
+interaction ในเบราว์เซอร์แบบละเอียด** (cascading select จังหวัด→อำเภอ→ตำบล, ค้นหา, clear button,
+ตำแหน่ง dropdown) ผู้ใช้แจ้งว่าจะทดสอบรวมกับงานอื่นทีเดียวทีหลัง — ควรทดสอบทั้งฟอร์มที่ใช้
+RMN_LocationSelector (สมัคร NursingHome, สมัครพยาบาล, my-profile ทั้ง 2 แบบ, ลงประกาศงาน)
+
+=== รอบ 2026-07-17 (4): แก้ user.status ตอนสมัคร NursingHome + toast โผล่หลัง modal + ขยาย OTP เป็น 90 วิ ===
+
+15. app/Http/Controllers/API/NursingHomeController.php (backend — deploy ผ่าน git push main, auto-deploy
+    GitHub Actions แล้ว ไม่ต้องผ่าน deploy/laravel/ อีกต่อไป)
+    แก้: register() เดิม set user.status = 0 แต่ nursing_home_profile.status default = 1 ทำให้ค่าไม่
+    ตรงกัน (user มองว่ายัง inactive แต่ profile active) แก้เป็น status = 1 ให้ตรงกันตั้งแต่สมัครสำเร็จ
+    ทดสอบยืนยันแล้วผ่าน local: สมัครทดสอบ 1 รอบ user.status และ nursing_home_profile.status = 1
+    ตรงกันทั้งคู่ (ลบข้อมูลทดสอบออกแล้ว)
+
+16. rmn-services.php (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/rmn-services.php
+    แก้: SweetAlert2 (toast/alert) ใช้ z-index เริ่มต้นของตัวเอง (~1060) ต่ำกว่า modal/dropdown ในระบบ
+    (.authen-loading-overlay 100000, .ts-dropdown 999999) ทำให้ error toast ตอนสมัครสมาชิกไม่สำเร็จ
+    โผล่ไปอยู่ "หลัง" modal มองไม่เห็น เพิ่ม inline style ใหม่บังคับ .swal2-container z-index
+    999999999 !important ให้อยู่บนสุดเสมอ
+
+17. app/Http/Controllers/API/OtpController.php + app/Services/OtpService.php (backend — deploy ผ่าน git
+    push main เช่นกัน)
+    แก้: ขยายเวลาหมดอายุ OTP จาก 60 วินาที เป็น 90 วินาที (ทั้งค่าที่ส่งจริงและ default parameter)
+    ปรับข้อความ SMS ที่แจ้งเวลาหมดอายุให้ตรงกับของจริง (เดิมข้อความบอก "30 วินาที" ทั้งที่ตั้งไว้ 60 —
+    ไม่ตรงกันมาตั้งแต่รอบก่อน) ทดสอบยืนยันผ่าน tinker แล้วว่า record OTP หมดอายุ 90 วินาทีจริง
+
+18. Authentication.php (อัปเดตเพิ่มจากรอบเดิม)
+    local:  deploy/wp-content/plugins/rmn-services/services/authentication/Authentication.php
+    แก้: นับเวลาถอยหลังฝั่ง frontend (countdown ก่อนกด "ขอรับรหัสอีกครั้ง") จาก data-timer="30"
+    (ไม่ตรงกับ backend ที่ตั้งไว้ 60 วินาทีอยู่แล้วตั้งแต่รอบก่อน) เป็น data-timer="90" ให้ตรงกับ
+    backend รอบนี้ (เดิม fallback ในโค้ด JS ก็เป็น 30 เช่นกัน แก้เป็น 90 ด้วย)
+
+หมายเหตุรอบนี้: ทดสอบผ่าน local docker ครบทุกจุด — สมัคร NursingHome จริง 1 รอบเช็ค status, ยิง
+OtpService::generate() ตรงๆ เช็ค expires_at ต่างจาก now() 90 วินาทีจริง — ยังไม่ได้ทดสอบ toast
+z-index ผ่านเบราว์เซอร์จริง (ต้องลอง trigger error ตอน submit form แล้วดูว่า toast ลอยขึ้นมาเหนือ
+modal จริงไหม)

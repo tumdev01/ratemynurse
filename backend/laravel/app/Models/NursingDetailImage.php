@@ -7,10 +7,11 @@ class NursingDetailImage extends Model {
     protected $table = 'nursing_detail_images';
 
     protected $fillable = [
+        'user_id',
         'detail_id',
         'filename',
         'path',
-        'fullpath'
+        'filetype'
     ];
 
     protected $appends = ['full_path'];

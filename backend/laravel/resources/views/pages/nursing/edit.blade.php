@@ -4,8 +4,13 @@
 <div class="p-4 sm:ml-64">
     @include('pages.nursing.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.store') }}" enctype="multipart/form-data">
+        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.update', $nursing->id) }}" enctype="multipart/form-data">
             @csrf
+            @if(session('success'))
+                <div class="flex flex-col justify-start bg-green-500 p-[16px] rounded-md text-white mb-4">
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
             @if(session('error'))
                 <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
                     <span>
@@ -118,16 +123,33 @@
 
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="date_of_birth">วัน/เดือน/ปีเกิด <span class="req">*</span></label>
-                    <input required type="text" name="date_of_birth" id="date_of_birth" placeholder="วว/ดด/ปป"
+                    <label for="date_of_birth">วัน/เดือน/ปีเกิด </label>
+                    <input type="text" name="date_of_birth" id="date_of_birth" placeholder="วว/ดด/ปป"
                         class="border rounded-lg px-3 py-2" value="{{ old('date_of_birth', $nursing->profile->date_of_birth ?? '') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px] hidden">
                     <label for="blood">กรุ๊ปเลือด(ถ้ามี) </label>
                     <input type="text" name="blood" id="blood" placeholder="กรุ๊ปเลือด"
                         class="border rounded-lg px-3 py-2" value="{{ old('blood', $nursing->profile->blood ?? '') }}"/>
                     <label class="error text-xs text-red-600"></label>
+                </div>
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label for="care_type">ประเภท <span class="req">*</span></label>
+                    <select name="care_type" id="care_type" class="border rounded-lg px-3 py-2" required>
+                        @foreach (\App\Enums\CareType::cases() as $careType)
+                            <option value="{{ $careType->name }}" @selected(old('care_type', $nursing->profile->care_type ?? '') == $careType->name)>{{ $careType->value }}</option>
+                        @endforeach
+                    </select>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <label for="certified">ได้รับการรับรอง</label>
+                <div class="toggle-switch">
+                    <input class="toggle-input" id="certified-toggle" name="certified" type="checkbox" value="1" {{ (old('certified', $nursing->profile->certified ?? false) ? 'checked' : '') }}>
+                    <label class="toggle-label" for="certified-toggle"></label>
                 </div>
             </div>
 
@@ -288,6 +310,9 @@
         transform: translateX(16px);
         }
         #map_show iframe {width: 100%!important; height: 100% !important;}
+        .swal2-confirm {
+            background-color: #286F51;
+        }
     </style>
 @endsection
 @section('javascript')
@@ -474,4 +499,16 @@
             subDistrictTxt = $('#sub_district option:selected').text() ?? '';
         }
     </script>
+
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: "{{ session('success') }}",
+                });
+            });
+        </script>
+    @endif
 @endsection

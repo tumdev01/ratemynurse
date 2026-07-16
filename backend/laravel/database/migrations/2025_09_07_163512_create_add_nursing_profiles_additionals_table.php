@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('nursing_profiles', function (Blueprint $table) {
-            $table->string('job_role')->nullable()->after('name');
             $table->string('description')->nullable()->after('about');
             $table->integer('exp_year')->default(0);
             $table->string('work_style')->nullable()->default(NULL);
@@ -27,7 +26,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('nursing_profiles', function (Blueprint $table) {
-            $table->dropColumn('job_role');
             $table->dropColumn('description');
             $table->dropColumn('exp_year');
             $table->dropColumn('work_style');

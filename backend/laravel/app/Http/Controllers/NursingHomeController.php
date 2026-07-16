@@ -127,6 +127,21 @@ class NursingHomeController extends Controller {
                         $facilities = json_encode($pre_facilities);
                     }
 
+                    $center_highlights = null;
+                    if ($request->center_highlights) {
+                        $pre_center_highlights = [];
+                        $allServices = CenterHighlightType::list();
+                        foreach ($request->center_highlights as $serviceKey) {
+                            if (isset($allServices[$serviceKey])) {
+                                $pre_center_highlights[] = [
+                                    'key'   => $serviceKey,
+                                    'value' => $allServices[$serviceKey],
+                                ];
+                            }
+                        }
+                        $center_highlights = json_encode($pre_center_hightlights);
+                    }
+
                     // ====== Create Profile ======
                     $profile = NursingHomeProfile::create([
                         'user_id'   => $user->id,
@@ -173,6 +188,7 @@ class NursingHomeController extends Controller {
                         'ambulance' => $request->ambulance ?? 0,
                         'ambulance_amount' => $request->ambulance_amount ?? 0,
                         'van_shuttle' => $request->van_shuttle ?? 0,
+                        'van_shuttle_amount' => $request->van_shuttle_amount ?? 0,
                         'special_medical_equipment' => $request->special_medical_equipment ?? NULL,
 
                         // staff
@@ -205,7 +221,7 @@ class NursingHomeController extends Controller {
                         'payment_methods' => $request->payment_methods ?? NULL,
 
                         // ข้อมูลเพิ่มเติม
-                        'center_highlights' => $request->center_highlights,
+                        'center_highlights' => $center_highlights,
                         'patients_target' => $request->patients_target,
                         'visiting_time' => $request->visiting_time,
                         'patient_admission_policy' => $request->patient_admission_policy,
@@ -290,6 +306,7 @@ class NursingHomeController extends Controller {
         $nursinghome->additional_service_type = json_decode($nursinghome->additional_service_type) ?? [];
         $nursinghome->special_facilities = json_decode($nursinghome->special_facilities) ?? [];
         $nursinghome->facilities = json_decode($nursinghome->facilities) ?? [];
+        $nursinghome->center_highlights = json_decode($nursinghome->center_highlights) ?? [];
 
         return view('pages.nursinghome.edit', compact('nursinghome'));
     }

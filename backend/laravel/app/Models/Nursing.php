@@ -43,15 +43,16 @@ class Nursing extends User
     {
         return $this->hasOne(Image::class, 'user_id', 'id')->where('is_cover', true);
     }
-    
-    public function rates()
-    {
-        return $this->hasMany(Rate::class, 'user_id', 'id');
-    }
 
     public function costs()
     {
         return $this->hasMany(NursingCost::class, 'user_id', 'id');
+    }
+
+    public function lowestCost()
+    {
+        return $this->hasOne(NursingCost::class, 'user_id', 'id')
+            ->ofMany('cost', 'min');
     }
 
     public function cvs()

@@ -136,7 +136,6 @@ class NursingHomeUpdateRequest extends FormRequest
             'payment_methods.*' => ['string'],
 
             // Description
-            'center_highlights' => ['nullable', 'string'],
             'patients_target' => ['nullable', 'string'],
             'visiting_time' => ['nullable', 'string'],
             'patient_admission_policy' => ['nullable', 'string'],

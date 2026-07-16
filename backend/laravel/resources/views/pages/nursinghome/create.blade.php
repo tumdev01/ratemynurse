@@ -338,6 +338,70 @@
                             <path d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
                                 stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
+                        <span class="text-md text-white font-semibold">จุดเด่นของศูนย์</span>
+                    </span>
+
+                    <div class="p-[16px] gap-[16px] flex flex-col bg-[#F8F8F8] rounded-[8px]">
+                        <div class="sub_topic flex flex-row gap-[8px] items-center">
+                            จุดเด่น
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-[32px]">
+                            @php
+                                $home_service_type_checked = old('home_service_type') ?? []; // array ของค่าที่ติ๊กตอน submit
+                            @endphp
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="DAYCARE"
+                                    {{ in_array('DAYCARE', $home_service_type_checked) ? 'checked' : '' }}>
+                                การดูแลประจำวัน (Day Care)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="RESIDENTIAL_CARE"
+                                    {{ in_array('RESIDENTIAL_CARE', $home_service_type_checked) ? 'checked' : '' }}>
+                                การดูแลแบบพักอาศัย (Residential Care)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="RESPITE_CARE"
+                                    {{ in_array('RESPITE_CARE', $home_service_type_checked) ? 'checked' : '' }}>
+                                การดูแลระยะสั้น (Respite Care)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="SPECIAL_CARE"
+                                    {{ in_array('SPECIAL_CARE', $home_service_type_checked) ? 'checked' : '' }}>
+                                การดูแลผู้ป่วยพิเศษ (Special Care)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="REHABILITATION"
+                                    {{ in_array('REHABILITATION', $home_service_type_checked) ? 'checked' : '' }}>
+                                การบำบัดฟื้นฟู (Rehabilitation)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="REHABILITATION_PALLIATIVE_CARE"
+                                    {{ in_array('REHABILITATION_PALLIATIVE_CARE', $home_service_type_checked) ? 'checked' : '' }}>
+                                การบำบัดฟื้นฟู (การดูแลประคับประคอง)
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="DEMENTIA_PATIENTS"
+                                    {{ in_array('DEMENTIA_PATIENTS', $home_service_type_checked) ? 'checked' : '' }}>
+                                การดูแลผู้ป่วยสมองเสื่อม
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="home_service_type[]" value="EMERGENCY_SERVICE"
+                                    {{ in_array('EMERGENCY_SERVICE', $home_service_type_checked) ? 'checked' : '' }}>
+                                บริการฉุกเฉิน 24 ชั่วโมง
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <label>บริการพิเศษอื่นๆ</label>
+                            <input type="text" class="w-full border rounded-lg px-3 py-2" name="etc_service" value="{{ old('etc_service') }}">
+                        </div>
+                    </div>
+
+                    <span class="topic w-full flex flex-row gap-[8px] px-[12px] py-[8px] rounded-lg bg-[#286F51]">
+                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+                            <path d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <span class="text-md text-white font-semibold">บริการและการดูแล</span>
                     </span>
 
@@ -639,10 +703,14 @@
                         </div>
                         <div class="flex flex-row gap-[24px] items-center">
                             <label>รถตู้/รถรับส่ง :</label>
-                            <input type="radio" name="van_shuttle" value="1" {{ old('van_shuttle') == 1 ? 'checked' : '' }}>
-                            <label>มี</label>
                             <input type="radio" name="van_shuttle" value="0" {{ old('van_shuttle') == 0 ? 'checked' : '' }}>
                             <label>ไม่มี</label>
+                            <input type="radio" name="van_shuttle" value="1" {{ old('van_shuttle') == 1 ? 'checked' : '' }}>
+                            <label>มี</label>
+                            <input type="number" name="van_shuttle_amount" 
+                                class="border rounded-lg px-3 py-2" 
+                                placeholder="จำนวนคัน"
+                                value="{{ old('van_shuttle') }}">
                         </div>
                         <div class="w-full">
                             <label>อุปกรณ์การแพทย์พิเศษ	</label>

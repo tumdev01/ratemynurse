@@ -4,7 +4,7 @@
 <div class="p-4 sm:ml-64">
     @include('pages.nursing.components.navigation')
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex flex-row justify-between">
-        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.store') }}" enctype="multipart/form-data">
+        <form id="registerNurse" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" method="POST" action="{{ route('nursing.history.store', $nursing->id) }}" enctype="multipart/form-data">
             @csrf
             @if(session('error'))
                 <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
@@ -49,19 +49,38 @@
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="graducated">วุฒิการศึกษา <span class="req">*</span></label>
                     <select name="graducated" id="graducated" class="border rounded-lg px-3 py-2" required>
-                        <option value="JHS">มัธยมศึกษาตอนต้น (ม.3)</option>
-                        <option value="SHS">มัธยมศึกษาตอนปลาย (ม.6)</option>
-                        <option value="VOC">ประกาศนียบัตรวิชาชีพ (ปวช.)</option>
-                        <option value="HVC">ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)</option>
-                        <option value="AD">อนุปริญญา</option>
-                        <option value="BA">ปริญญาตรี</option>
+                        <option value="">-- เลือกระดับการศึกษา --</option>
+
+                        @php
+                            $selectedGrad = old('graducated', optional($nursing->cvs)->graducated);
+                        @endphp
+
+                        <option value="JHS" @selected($selectedGrad === 'JHS')>
+                            มัธยมศึกษาตอนต้น (ม.3)
+                        </option>
+                        <option value="SHS" @selected($selectedGrad === 'SHS')>
+                            มัธยมศึกษาตอนปลาย (ม.6)
+                        </option>
+                        <option value="VOC" @selected($selectedGrad === 'VOC')>
+                            ประกาศนียบัตรวิชาชีพ (ปวช.)
+                        </option>
+                        <option value="HVC" @selected($selectedGrad === 'HVC')>
+                            ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)
+                        </option>
+                        <option value="AD" @selected($selectedGrad === 'AD')>
+                            อนุปริญญา
+                        </option>
+                        <option value="BA" @selected($selectedGrad === 'BA')>
+                            ปริญญาตรี
+                        </option>
                     </select>
+
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="edu_ins">สถานบันการศึกษา <span class="req">*</span></label>
-                    <input type="text" name="edu_ins" id="edu_ins" maxlength="10" placeholder="สถาบันการศึกษา"
-                        class="border rounded-lg px-3 py-2" value="{{ old('edu_ins') }}"/>
+                    <input type="text" name="edu_ins" id="edu_ins" placeholder="สถาบันการศึกษา"
+                        class="border rounded-lg px-3 py-2" value="{{ old('edu_ins', optional($nursing->cvs)->edu_ins) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -69,17 +88,32 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="graducated_year">ปีที่จบการศึกษา <span class="req">*</span></label>
+                    @php
+                        $selectedYear = old(
+                            'graducated_year',
+                            optional($nursing->cvs)->graducated_year
+                        );
+                    @endphp
+
                     <select name="graducated_year" id="graducated_year" class="border rounded-lg px-3 py-2" required>
+                        <option value="">-- เลือกปีที่จบ --</option>
+
                         @for ($year = now()->year; $year >= now()->year - 20; $year--)
-                            <option value="{{ $year + 543 }}">{{ $year + 543 }} ({{$year}})</option>
+                            @php
+                                $thaiYear = $year + 543;
+                            @endphp
+                            <option value="{{ $thaiYear }}" @selected($selectedYear == $thaiYear)>
+                                {{ $thaiYear }} ({{ $year }})
+                            </option>
                         @endfor
                     </select>
+
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="gpa">เกรดเฉลี่ยน (GPA) <span class="req">*</span></label>
-                    <input type="text" name="gpa" id="gpa" maxlength="10" placeholder="เกรดเฉลี่ย (GPA)"
-                        class="border rounded-lg px-3 py-2" value="{{ old('gpa') }}"/>
+                    <input type="text" name="gpa" id="gpa" placeholder="เกรดเฉลี่ย (GPA)"
+                        class="border rounded-lg px-3 py-2" value="{{ old('gpa', optional($nursing->cvs)->gpa) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -87,8 +121,14 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="cert_no">เลขที่ใบประกอบวิชาชีพ <span class="req">*</span></label>
-                    <input required type="text" name="cert_no" id="cert_no" maxlength="10" placeholder="เลขที่ใบประกอบวิชาชีพ"
-                        class="border rounded-lg px-3 py-2" value="{{ old('cert_no') }}"/>
+                    <input required
+                        type="text"
+                        name="cert_no"
+                        id="cert_no"
+                        placeholder="เลขที่ใบประกอบวิชาชีพ"
+                        class="border rounded-lg px-3 py-2"
+                        value="{{ old('cert_no', optional($nursing->cvs)->cert_no) }}"
+                    />
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -97,13 +137,13 @@
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="cert_date">วันที่ออกใบประกอบวิชาชีพ <span class="req">*</span></label>
                     <input required type="text" name="cert_date" id="cert_date" placeholder="วว/ดด/ปป"
-                        class="border rounded-lg px-3 py-2" value="{{ old('cert_date') }}"/>
+                        class="border rounded-lg px-3 py-2" value="{{ old('cert_date', optional($nursing->cvs)->cert_date) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="cert_expire">วันหมดอายุใบประกอบวิชาชีพ <span class="req">*</span></label>
                     <input required type="text" name="cert_expire" id="cert_expire" placeholder="วว/ดด/ปป"
-                        class="border rounded-lg px-3 py-2" value="{{ old('cert_expire') }}"/>
+                        class="border rounded-lg px-3 py-2" value="{{ old('cert_expire', optional($nursing->cvs)->cert_expire) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -112,29 +152,55 @@
                 <label class="mb-2 text-[#5A5A5A]" for="cvs_images">หลักฐานใบอนุญาตประกอบวิชาชีพ</label>
                 <div class="border border-dashed rounded-lg h-[130px] flex justify-center items-center">
                     <div id="certificate_upload" class="flex flex-row gap-[16px] justify-center items-center">
-                        <img id="avatar" src="https://ratemynurse.org/wp-content/uploads/2025/08/upload2.png" loading="lazy" width="70" height="67">
+                        <img id="certificate_avatar" src="https://ratemynurse.org/wp-content/uploads/2025/08/upload2.png" loading="lazy" width="70" height="67">
                         <div class="flex flex-col gap-[8px]">
                             <label class="text-sm text-[#286F51]">เพิ่มไฟล์เอกสาร</label>
                             <span class="text-xs text-[#8C8A94]">รองรับไฟล์ .pdf, jpg, ,jpeg, .png | ขนาดไม่เกิน 5 MB</span>
-                            <input type="file" id="hiddenProfileUpload" name="cvs_images[]" multiple style="display:none">
+                            <input type="file" id="certificateUpload" name="cvs_images[]" multiple style="display:none">
                         </div>
                     </div>
                 </div>
-                @if ( old('coverImage') || old('images'))
-                <div id="image_listing" class="p-[16px] gap-[16px] bg-[#F8F8F8] rounded-[8px] mt-4">
-                    
+                <div id="cv_preview" class="mt-2">
+                    @if($nursing->cvs && $nursing->cvs->images->count())
+                        @foreach($nursing->cvs->images as $image)
+                            <div data-cv-id="{{ $image->id }}" class="file-item flex flex-row justify-between bg-[#FBFBFB] rounded-md p-[12px] mb-2">
+                                <div class="file-info flex flex-row gap-[8px]">
+                                    @if($image->filetype =='application/pdf')
+                                        <img class="file-icon w-16 h-16 object-cover" src="https://cdn-icons-png.flaticon.com/512/337/337946.png">
+                                    @else
+                                        <img class="file-icon w-16 h-16 object-cover" src="{{ $image->full_path }}">
+                                    @endif
+                                <div>
+                                    <div class="file-name text-sm font-medium">{{ $image->name }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="remove-btn" onclick="removeCvFile({{ $image->id }})">
+                                <svg class="w-6 h-6 text-[#D62416]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166
+                                    m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084
+                                    a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0
+                                    a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                                    c.34-.059.68-.114 1.022-.165m0 0
+                                    a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                                    c0-1.18-.91-2.164-2.09-2.201
+                                    a51.964 51.964 0 0 0-3.32 0
+                                    c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0
+                                    a48.667 48.667 0 0 0-7.5 0"></path>
+                        </svg>
+                    </button></div>
+                        @endforeach
+                    @endif
                 </div>
-                @endif
             </div>
 
             <div class="flex flex-col gap-[8px]">
-                <label class="text-[#5A5A5A]" for="cert_etc">ใบประกาศนียบัตรเพิ่มเติม (ไม่บังคับ) <span class="req">*</span></label>
-                <textarea id="cert_etc" name="cert_etc" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น BLS, ACLS, CPN, หรือการอบรมพิเศษอื่นๆ">{{ old('address') }}</textarea>
+                <label class="text-[#5A5A5A]" for="cert_etc">ใบประกาศนียบัตรเพิ่มเติม (ไม่บังคับ)</label>
+                <textarea id="cert_etc" name="cert_etc" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น BLS, ACLS, CPN, หรือการอบรมพิเศษอื่นๆ">{{ old('cert_etc', optional($nursing->cvs)->cert_etc) }}</textarea>
             </div>
 
             <div class="flex flex-col gap-[8px]">
-                <label class="text-[#5A5A5A]" for="extra_courses">การศึกษาต่อเนื่อง/การอบรม ในช่วง 2 ปีที่ผ่านมา (ไม่บังคับ) <span class="req">*</span></label>
-                <textarea id="extra_courses" name="extra_courses" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุหลักสูตรอบรมสัมนา หรือการศึกษาต่อเนื่องที่เข้าร่วม">{{ old('extra_courses') }}</textarea>
+                <label class="text-[#5A5A5A]" for="extra_courses">การศึกษาต่อเนื่อง/การอบรม ในช่วง 2 ปีที่ผ่านมา (ไม่บังคับ)</label>
+                <textarea id="extra_courses" name="extra_courses" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุหลักสูตรอบรมสัมนา หรือการศึกษาต่อเนื่องที่เข้าร่วม">{{ old('extra_courses', optional($nursing->cvs)->extra_courses) }}</textarea>
             </div>
 
             <div class="flex flex-row justify-between bg-[#F7FCF9] px-[12px] py-[8px] rounded-md">
@@ -151,8 +217,8 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full flex flex-col gap-[8px]">
                     <label class="text-[#5A5A5A]" for="current_workplace">โรงพยาบาล/สถานพยาบาลปัจจุบัน <span class="req">*</span></label>
-                    <input required type="text" name="current_workplace" id="current_workplace" maxlength="10" placeholder="โรงพยาบาล/สถานพยาบาลปัจจุบัน"
-                        class="border rounded-lg px-3 py-2" value="{{ old('current_workplace') }}"/>
+                    <input required type="text" name="current_workplace" id="current_workplace" placeholder="โรงพยาบาล/สถานพยาบาลปัจจุบัน"
+                        class="border rounded-lg px-3 py-2" value="{{ old('current_workplace', optional($nursing->cvs)->current_workplace) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -160,20 +226,36 @@
             <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                 <div class="flex flex-col">
                     <label class="text-[#5A5A5A]" for="department">แผนก/หน่วยงาน <span class="req">*</span></label>
-                    <select id="department" name="department" class="border rounded-lg px-3 py-2" required>
-                        <option value="">ศัลยกรรม</option>
-                    <select>
+                    <input required type="text" name="department" id="department" placeholder="แผนก/หน่วยงาน"
+                        class="border rounded-lg px-3 py-2" value="{{ old('department', optional($nursing->cvs)->department) }}"/>
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[#5A5A5A]" for="position">ตำแหน่ง <span class="req">*</span></label>
-                    <select id="position" name="position" class="border rounded-lg px-3 py-2" required>
-                        <option value="RN">พยาบาลวิชาชีพ (RN)</option>
-                        <option value="PN">ผู้ช่วยพยาบาล (PN)</option>
-                        <option value="NA">พนักงานผู้ช่วยการพยาบาล (NA)</option>
-                        <option value="CG">คนดูแล (CG)</option>
-                        <option value="MAIN">แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)</option>
-                        <option value="ETC">อื่น</option>
-                    <select>
+                    <select name="position" id="position" class="border rounded-lg px-3 py-2" required>
+                        <option value="">-- เลือกระดับการศึกษา --</option>
+                        @php
+                            $seletedPosition = old('position', optional($nursing->cvs)->position);
+                        @endphp
+
+                        <option value="RN" @selected($seletedPosition === 'RN')>
+                            พยาบาลวิชาชีพ (RN)
+                        </option>
+                        <option value="PN" @selected($seletedPosition === 'PN')>
+                            ผู้ช่วยพยาบาล (PN)
+                        </option>
+                        <option value="NA" @selected($seletedPosition === 'NA')>
+                            พนักงานผู้ช่วยการพยาบาล (NA)
+                        </option>
+                        <option value="CG" @selected($seletedPosition === 'CG')>
+                            คนดูแล (CG)
+                        </option>
+                        <option value="MAIN" @selected($seletedPosition === 'MAIN')>
+                            แม่บ้าน (ดูแล ทำงานบ้านได้ด้วย)
+                        </option>
+                        <option value="ETC" @selected($seletedPosition === 'ETC')>
+                            อื่น
+                        </option>
+                    </select>
                 </div>
             </div>
 
@@ -181,16 +263,25 @@
                 <div class="flex flex-col">
                     <label class="text-[#5A5A5A]" for="exp">ประสบการณ์ทำงาน (ปี) <span class="req">*</span></label>
                     <select id="exp" name="exp" class="border rounded-lg px-3 py-2" required>
+                        @php
+                            $selectedExp = old('exp', optional($nursing->cvs)->exp);
+                        @endphp
                         @for ( $i = 1; $i <= 10; $i++)    
-                            <option value="{{$i}}">{{ $i }} ปี</option>
+                            <option value="{{$i}}" @selected($selectedExp === $i)>{{ $i }} ปี</option>
                         @endfor
                     <select>
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[#5A5A5A]" for="work_type">ลักษณะการทำงาน <span class="req">*</span></label>
                     <select id="work_type" name="work_type" class="border rounded-lg px-3 py-2" required>
-                        <option value="FULL_TIME">Full-time</option>
-                        <option value="PART_TIME">Part-time</option>
+                        @php
+                            $selectedWorkType = old('work_type', optional($nursing->cvs)->work_type);
+                        @endphp
+                        <option value="FULLTIME" @selected($selectedWorkType === 'FULLTIME')>เต็มเวลา</option>
+                        <option value="PARTTIME" @selected($selectedWorkType === 'PARTTIME')>ไม่เต็มเวลา</option>
+                        <option value="DEPEND_ON" @selected($selectedWorkType === 'DEPEND_ON')>ตามงาน</option>
+                        <option value="ROUND_TRIP" @selected($selectedWorkType === 'ROUND_TRIP')>ไป-กลับ</option>
+                        <option value="STAY" @selected($selectedWorkType === 'STAY')>ค้างคืน</option>
                     <select>
                 </div>
             </div>
@@ -199,13 +290,21 @@
                 <div class="flex flex-col">
                     <label for="extra_shirft" class="text-[#5A5A5A]">ความพร้อมในการทำงานเวรพิเศษ <span class="req">*</span></label>
                     <select id="extra_shirft" name="extra_shirft" class="border rounded-lg px-3 py-2" required>
-                        <option>สามารถทำเวรดึกและเวรเสาร์-อาทิตย์</option>
-                    <select>
+                        @php
+                            $selectedExtraShirft = old('extra_shirft', optional($nursing->cvs)->extra_shirft);
+                        @endphp
+                        <option value="NIGHT_WEEKEND" @selected($selectedExtraShirft === 'NIGHT_WEEKEND')>สามารถทำเวรดึกและเวรเสาร์-อาทิตย์</option>
+                        <option value="NIGHT" @selected($selectedExtraShirft === 'NIGHT')>สามารถทำเวรดึก</option>
+                        <option value="WEEKEND" @selected($selectedExtraShirft === 'WEEKEND')>สามารถทำเวรเสาร์-อาทิตย์</option>
+                        <option value="ROUND_TRIP" @selected($selectedExtraShirft === 'ROUND_TRIP')>สามารถทำเวรไป-กลับ</option>
+                        <option value="STAY" @selected($selectedExtraShirft === 'STAY')>สามารถทำเวรค้างคืน</option>
+                        <option value="OTHER" @selected($selectedExtraShirft === 'OTHER')>สามารถทำเวรอื่นๆ</option>
+                    </select>
                 </div>
                 <div class="flex flex-col">
                     <label for="languages" class="text-[#5A5A5A]">ภาษาที่สามารถสื่อสารได้ <span class="req">*</span></label>
                     <input required type="text" name="languages" id="languages" placeholder="เช่น ไทย, อังกฤษ"
-                        class="border rounded-lg px-3 py-2" value="{{ old('languages') }}"/>
+                        class="border rounded-lg px-3 py-2" value="{{ old('languages', optional($nursing->cvs)->languages) }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
             </div>
@@ -318,6 +417,35 @@
         transform: translateX(16px);
         }
         #map_show iframe {width: 100%!important; height: 100% !important;}
+        .swal2-confirm-custom {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: #fff !important;
+            padding: 10px 24px !important;
+            font-weight: 500 !important;
+            border-radius: 0.25rem !important;
+        }
+
+        .swal2-cancel-custom {
+            background-color: #6c757d !important;
+            border-color: #6c757d !important;
+            color: #fff !important;
+            padding: 10px 24px !important;
+            font-weight: 500 !important;
+            border-radius: 0.25rem !important;
+        }
+
+        .swal2-confirm-custom:hover,
+        .swal2-confirm-custom:focus {
+            background-color: #bb2d3b !important;
+            border-color: #b02a37 !important;
+        }
+
+        .swal2-cancel-custom:hover,
+        .swal2-cancel-custom:focus {
+            background-color: #5c636a !important;
+            border-color: #565e64 !important;
+        }
     </style>
 @endsection
 @section('javascript')
@@ -330,63 +458,110 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        let CVSselectedFiles = [];
 
-        document.querySelector('.profile-upload').addEventListener('click', () => {
-            document.getElementById('hiddenProfileUpload').click();
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const certificate_upload = document.getElementById('certificate_upload');
+            const certificateUpload = document.getElementById('certificateUpload');
+            const cv_preview = document.getElementById('cv_preview');
+            const imgallowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const hiddenInput = document.getElementById('hiddenProfileUpload');
-            const profilePreview = document.getElementById('profile-preview');
-            const uploadSpan = document.querySelector('#profile_upload .profile-upload:not(#profile-preview)');
-            const errorEl = document.querySelector('#profile_upload .upload_error');
+            if (!certificate_upload || !certificateUpload || !cv_preview) return;
 
-            if (!hiddenInput || !profilePreview || !uploadSpan || !errorEl) return;
-
-            // ✅ ให้คลิกได้แค่ปุ่ม "อัพโหลดรูปภาพ"
-            uploadSpan.addEventListener('click', () => hiddenInput.click());
-
-            hiddenInput.addEventListener('change', function () {
-                errorEl.innerHTML = '';
-                removePreview();
-
-                const file = this.files[0];
-                if (!file) return;
-
-                const maxSize = 5 * 1024 * 1024; // 5MB
-                if (file.size > maxSize) {
-                    errorEl.innerHTML = "❌ ไฟล์ต้องมีขนาดไม่เกิน 5MB";
-                    this.value = "";
-                    return;
-                }
-
-                const allowedTypes = ['image/jpeg', 'image/png'];
-                if (!allowedTypes.includes(file.type)) {
-                    errorEl.innerHTML = "❌ อนุญาตเฉพาะไฟล์ JPG และ PNG เท่านั้น";
-                    this.value = "";
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.createElement('img');
-                    img.setAttribute('data-profile-preview', '1');
-                    img.src = e.target.result;
-                    img.alt = 'Profile preview';
-                    img.className = 'absolute top-0 left-0 w-full h-full object-cover rounded-full';
-
-                    profilePreview.insertBefore(img, profilePreview.firstChild);
-                };
-                reader.readAsDataURL(file);
-            });
-
-            function removePreview() {
-                const existing = profilePreview.querySelector('img[data-profile-preview]');
-                if (existing) existing.remove();
+            // ⭐ sync files กลับเข้า input
+            function updateFileInput() {
+                const dataTransfer = new DataTransfer();
+                CVSselectedFiles.forEach(file => dataTransfer.items.add(file));
+                certificateUpload.files = dataTransfer.files;
             }
+
+            certificate_upload.addEventListener('click', () => certificateUpload.click());
+
+            certificateUpload.addEventListener('change', (event) => {
+                const files = Array.from(event.target.files);
+
+                files.forEach(file => {
+                    if (!imgallowedTypes.includes(file.type)) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            text: 'อนุญาตเฉพาะ WEBP, JPG, JPEG, PNG, PDF เท่านั้น',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        return;
+                    }
+
+                    // ป้องกันไฟล์ซ้ำ
+                    if (CVSselectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+                        return;
+                    }
+
+                    CVSselectedFiles.push(file);
+                    updateFileInput(); // ✅ สำคัญ
+
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    const listItem = document.createElement('div');
+                    listItem.className = 'file-item flex flex-row justify-between bg-[#FBFBFB] rounded-md p-[12px] mb-2';
+
+                    let fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info flex flex-row gap-[8px]';
+
+                    let icon = document.createElement('img');
+                    icon.className = 'file-icon w-16 h-16 object-cover';
+                    icon.src = file.type === 'application/pdf'
+                        ? 'https://cdn-icons-png.flaticon.com/512/337/337946.png'
+                        : URL.createObjectURL(file);
+
+                    let details = document.createElement('div');
+                    details.innerHTML = `
+                        <div class="file-name text-base font-medium">${file.name}</div>
+                        <div class="file-size text-sm">ขนาดไฟล์: ${fileSize} MB</div>
+                    `;
+
+                    let removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = `
+                        <svg class="w-6 h-6 text-[#D62416]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166
+                                m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084
+                                a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0
+                                a48.108 48.108 0 0 0-3.478-.397m-12 .562
+                                c.34-.059.68-.114 1.022-.165m0 0
+                                a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916
+                                c0-1.18-.91-2.164-2.09-2.201
+                                a51.964 51.964 0 0 0-3.32 0
+                                c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0
+                                a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                    `;
+
+                    // 🗑 ลบไฟล์ + sync input
+                    removeBtn.addEventListener('click', () => {
+                        listItem.remove();
+                        CVSselectedFiles = CVSselectedFiles.filter(f => f !== file);
+                        updateFileInput(); // ✅ แก้ปัญหา cvs_images[] ยังส่ง
+                        console.log('เหลือไฟล์:', CVSselectedFiles.length);
+                    });
+
+                    fileInfo.appendChild(icon);
+                    fileInfo.appendChild(details);
+                    listItem.appendChild(fileInfo);
+                    listItem.appendChild(removeBtn);
+                    cv_preview.appendChild(listItem);
+                });
+
+                console.log('ไฟล์ทั้งหมด:', CVSselectedFiles.length);
+            });
         });
 
-        flatpickr('#date_of_birth', {
+
+        flatpickr('#cert_date, #cert_expire', {
             yearModifier: 543,
             altInput: true,
             altFormat: 'd F B',
@@ -401,107 +576,70 @@
             },
         });
 
-        const phone = document.getElementById('phone');
-        phone.addEventListener('input', function () {
-            let typingTimer;
-            const doneTypingInterval = 500; // 0.5 วินาที
-            clearTimeout(typingTimer); // reset timer ทุกครั้งที่พิมพ์
-            typingTimer = setTimeout(() => {
-                validatePhone(this);
-            }, doneTypingInterval);
-        });
+        function removeCvFile(cv_id) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบไฟล์นี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก',
+                customClass: {
+                    confirmButton: 'swal2-confirm-custom',
+                    cancelButton: 'swal2-cancel-custom'
+                },
+                buttonsStyling: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังลบ...',
+                        html: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-        ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
-
-        function setOldValue(id, oldValue, oldText) {
-            if(oldValue && oldText) {
-                const option = new Option(oldText, oldValue, true, true);
-                $(id).append(option).trigger('change');
-            }
-        }
-
-        // เรียกหลัง initialize Select2
-        setOldValue('#province', "{{ old('province_id') }}", "{{ old('province_name') }}");
-        setOldValue('#district', "{{ old('district_id') }}", "{{ old('district_name') }}");
-        setOldValue('#sub_district', "{{ old('sub_district_id') }}", "{{ old('sub_district_name') }}");
-    
-        let provinceTxt = $('#provinceTxt').val() ?? '';
-        $('#province:selected').html(provinceTxt);
-
-        let districtTxt = $('#districtTxt').val() ?? '';
-        $('#district:selected').html(districtTxt);
-
-        let subDistrictTxt = $('#subDistrictTxt').val() ?? '';
-        $('#sub_district:selected').html(subDistrictTxt);
-        
-
-        function validatePhone(input) {
-            const thaiPhonePattern = /^0[0-9]{9}$/;
-            const errorElement = input.parentElement.querySelector('.error');
-
-            if (errorElement) {
-                if (!thaiPhonePattern.test(input.value)) {
-                    errorElement.textContent = "เบอร์โทรต้องขึ้นต้นด้วย 0 และมีทั้งหมด 10 หลัก";
-                } else {
-                    errorElement.textContent = "";
-                }
-            }
-        }
-
-        function ajaxCallDropdownOption(id, url, placeholder) {
-            $(id).select2({
-                placeholder: placeholder,
-                ajax: {
-                    transport: function (params, success, failure) {
-                        axios.get(url, {
-                            params: params.data // ส่ง query ไปกับ request เช่น search, pagination
-                        })
-                        .then(function (response) {
-                            const results = response.data.data.map(function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.id
-                                };
-                            });
-
-                            // ถ้าอยากเซ็ตค่า textbox ตอนเลือก dropdown ให้ทำใน event ของ select2
-                            $(id).on('select2:select', function (e) {
-                                const data = e.params.data;
-                                if(id === '#province') {
-                                    $('#provinceTxt').val(data.text);
-                                } else if (id === '#district') {
-                                    $('#districtTxt').val(data.text);
-                                } else if(id === '#sub_district') {
-                                    $('#subDistrictTxt').val(data.text);
+                    axios.delete(`/nursing/cv/${cv_id}/delete`, {
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.success) {
+                            Swal.fire({
+                                title: 'ลบสำเร็จ!',
+                                text: 'ไฟล์ถูกลบเรียบร้อยแล้ว',
+                                icon: 'success',
+                                confirmButtonText: 'ตกลง',
+                                customClass: {
+                                    confirmButton: 'swal2-confirm-custom'
+                                }
+                            }).then(() => {
+                                const element = document.querySelector(`[data-cv-id="${cv_id}"]`);
+                                if (element) {
+                                    element.style.transition = 'opacity 0.3s';
+                                    element.style.opacity = '0';
+                                    setTimeout(() => element.remove(), 300);
                                 }
                             });
-
-                            success({ results: results });
-                        })
-                        .catch(function (error) {
-                            failure(error);
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'เกิดข้อผิดพลาด!',
+                            text: error.response?.data?.message || 'ไม่สามารถลบไฟล์ได้',
+                            icon: 'error',
+                            confirmButtonText: 'ตกลง',
+                            customClass: {
+                                confirmButton: 'swal2-confirm-custom'
+                            }
                         });
-                    },
-                    delay: 250,
-                    cache: true
+                    });
                 }
             });
         }
 
-        function handleSelectProvince() {
-            let province = $('#province option:selected');
-            provinceTxt = province.text() ?? '';
-            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
-        }
-        function handleSelectDistrict() {
-            let district = $('#district');
-            districtTxt = $('#district option:selected').text() ?? '';
-            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
-        }
-
-        function handleSelectSubDistrict() {
-            let subDistrict = $('#sub_district');
-            subDistrictTxt = $('#sub_district option:selected').text() ?? '';
-        }
     </script>
 @endsection

@@ -14,15 +14,25 @@ use Illuminate\Database\QueryException;
 
 class NursingHomeRoomController extends Controller {
 
-    public function index(Int $id, NursingHomeRoomRepository $repo) 
+    public function index(Int $id, NursingHomeRoomRepository $repo)
     {
         $nursingHome = NursingHome::where('id', $id)->first();
+
+        if (!$nursingHome) {
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลสถานดูแลผู้สูงอายุ');
+        }
+
         return view('pages.nursinghome.room.index', compact('nursingHome'));
     }
 
     public function create(Int $user_id)
     {
         $nursingHome = NursingHome::where('id', $user_id)->first();
+
+        if (!$nursingHome) {
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลสถานดูแลผู้สูงอายุ');
+        }
+
         return view('pages.nursinghome.room.create', compact('nursingHome'));
     }
 

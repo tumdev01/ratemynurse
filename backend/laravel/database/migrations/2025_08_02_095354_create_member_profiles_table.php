@@ -25,6 +25,8 @@ return new class extends Migration
             $table->date('date_of_birth')->nullable();
             $table->string('address')->nullable();
             $table->string('cardid');
+            $table->string('facebook')->nullable();
+            $table->string('lineid')->nullable();
             $table->foreignId('sub_district_id')->nullable()
                 ->references('id')->on('sub_districts')
                 ->cascadeOnUpdate()->nullOnDelete();

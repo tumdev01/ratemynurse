@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Province;
+use Illuminate\Support\Facades\Cache;
 
 class ProvinceRepository extends BaseRepository
 {
@@ -29,6 +30,16 @@ class ProvinceRepository extends BaseRepository
             ->select('name')
             ->where('id', $id)
             ->get();
+        });
+    }
+
+    public function getProvinceByTag(string $tag)
+    {
+        return Cache::remember('province_' . $tag, 86400, function () use ($tag) { // 24 hours
+            return Province::query()
+                ->select('id', 'name', 'code', 'zone')
+                ->where('code', $tag)
+                ->first();
         });
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Rate extends Model
 {
@@ -29,7 +30,9 @@ class Rate extends Model
         'author_id',
         'name',
         'description',
-        'user_type'
+        'user_type',
+        'rateable_id',
+        'rateable_type'
     ];
 
     /**
@@ -59,5 +62,10 @@ class Rate extends Model
     public function rate_details(): HasMany
     {
         return $this->hasMany(RateDetail::class, 'rate_id', 'id');
+    }
+
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 }

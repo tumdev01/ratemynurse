@@ -3,10 +3,11 @@ namespace App\Enums;
 
 final class NursingHomeRateType
 {
-    const SERVICE = 'การบริการ';
-    const COMMUNICATION = 'การสื่อสาร';
-    const PUNCTUALITY = 'ตรงต่อเวลา';
-    const TAKE_CARE = 'ดูแลเอาใจใส่';
+    const SERVICE = 'คุณภาพและบริการ';
+    const ENVIRONMENT = 'สิ่งแวดล้อมและความสะอาด';
+    const SECURE = 'ความปลอดภัยและมาตรการดูแล';
+    const VALUE = 'ความคุ้มค่า';
+    const INFORMATION = 'การให้ข้อมูล';
 
     public static function list(): array
     {

@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\NursingRateType;
 use App\Enums\NursingHomeRateType;
 
 class RateDetail extends Model
@@ -17,7 +18,12 @@ class RateDetail extends Model
 
     public function getScoresForLabelAttribute()
     {
-        $map = NursingHomeRateType::list();
+        $rate = $this->rate;
+        if ($rate && $rate->user_type === 'NURSING_HOME') {
+            $map = NursingHomeRateType::list();
+        } else {
+            $map = NursingRateType::list();
+        }
         return $map[$this->scores_for] ?? $this->scores_for;
     }
 

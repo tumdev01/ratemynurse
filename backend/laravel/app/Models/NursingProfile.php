@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use \App\Traits\HasSubscriptions;
 
 class NursingProfile extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasSubscriptions;
 
     protected $table = 'nursing_profiles';
 
@@ -25,6 +27,7 @@ class NursingProfile extends Model
         'about',
         'description',
         'gender',
+        'care_type',
         'date_of_birth',
         'nationality',
         'cost',
@@ -41,7 +44,9 @@ class NursingProfile extends Model
         'blood',
         'address',
         'medical_condition',
-        'history_of_drug_allergy'
+        'history_of_drug_allergy',
+        'medical_condition_detail',
+        'history_of_drug_allergy_detail'
     ];
 
     /**
@@ -57,12 +62,14 @@ class NursingProfile extends Model
         'sub_district_id' => 'integer',
     ];
 
+    protected $appends = ['summary_cost', 'summary_cost_by_type'];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo|\App\Models\User
      */
-    public function user()
+    public function owner()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function province()
@@ -79,4 +86,79 @@ class NursingProfile extends Model
     {
         return $this->belongsTo(SubDistrict::class, 'sub_district_id', 'id');
     }
+
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable')->where('is_cover', false);
+    }
+
+    public function coverImage()
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('is_cover', true);
+    }
+
+    public function favorites()
+    {
+        return $this->morphMany(Favorite::class, 'profile');
+    }
+
+    public function isFavoritedBy($user)
+    {
+        if (!$user) return false;
+
+        return $this->favorites()
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function memberContacts()
+    {
+        return $this->morphMany(MemberContact::class, 'provider');
+    }
+
+    public function rates()
+    {
+        return $this->morphMany(Rate::class, 'rateable');
+    }
+
+    public function costs()
+    {
+        return $this->hasMany(NursingCost::class, 'user_id', 'user_id');
+    }
+
+    public function getSummaryCostAttribute()
+    {
+        // ถ้ามี eager loaded costs → ใช้ collection
+        if ($this->relationLoaded('costs')) {
+            return [
+                'lower_cost'  => $this->costs->min('cost'),
+                'higher_cost' => $this->costs->max('cost'),
+            ];
+        }
+
+        // fallback → query ครั้งเดียว
+        $summary = $this->costs()
+            ->selectRaw('MIN(cost) as lower_cost, MAX(cost) as higher_cost')
+            ->first();
+
+        return [
+            'lower_cost'  => $summary->lower_cost ?? 0,
+            'higher_cost' => $summary->higher_cost ?? 0,
+        ];
+    }
+
+    public function getSummaryCostByTypeAttribute()
+    {
+        $costs = $this->relationLoaded('costs')
+            ? $this->costs
+            : $this->costs()->get();
+
+        return $costs
+            ->groupBy('type')
+            ->map(fn ($items) => [
+                'lower_cost'  => $items->min('cost'),
+                'higher_cost' => $items->max('cost'),
+            ]);
+    }
+
 }

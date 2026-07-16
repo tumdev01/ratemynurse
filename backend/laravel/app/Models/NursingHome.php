@@ -6,6 +6,11 @@ class NursingHome extends User
 {
     protected $table = 'users'; // <<=== เพิ่มบรรทัดนี้
 
+    protected $fillable = [
+        'firstname', 'lastname', 'email', 'password', 'user_type', 'phone', 'status',
+        'plan', 'plan_start',
+    ];
+
     protected static function booted()
     {
         static::addGlobalScope('user_type', function (Builder $builder) {
@@ -19,9 +24,15 @@ class NursingHome extends User
         return $this->profile?->name; // null-safe operator
     }
 
-    public function profile()
+    // TODO: เดิมเป็น hasOne — แต่ NURSING_HOME มีได้หลาย profile
+    // public function profile()
+    // {
+    //     return $this->hasOne(NursingHomeProfile::class, 'user_id', 'id');
+    // }
+
+    public function profiles()
     {
-        return $this->hasOne(NursingHomeProfile::class, 'user_id', 'id');
+        return $this->hasMany(NursingHomeProfile::class, 'user_id', 'id');
     }
 
     public function images()

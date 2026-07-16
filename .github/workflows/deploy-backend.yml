@@ -1,0 +1,50 @@
+name: Deploy Laravel Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/laravel/**'
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.DO_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync backend/laravel to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='.git' \
+            --exclude='vendor' \
+            --exclude='node_modules' \
+            --exclude='storage' \
+            --exclude='bootstrap/cache' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            backend/laravel/ "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/ratemynurse/backend/laravel/"
+
+      - name: Post-deploy (composer install, clear caches, migrate)
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}" '
+            set -e
+            docker exec rmn_laravel_backend composer install --no-dev --optimize-autoloader --no-interaction
+            docker exec rmn_laravel_backend php artisan config:clear
+            docker exec rmn_laravel_backend php artisan cache:clear
+            docker exec rmn_laravel_backend php artisan route:clear
+            docker exec rmn_laravel_backend php artisan migrate --force
+          '

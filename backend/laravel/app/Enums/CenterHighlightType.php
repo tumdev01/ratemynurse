@@ -5,12 +5,14 @@ final class CenterHighlightType
 {
     const RESORT = 'โรงแรมสไตล์รีสอร์ท';
     const PHYSICAL_THERAPY = 'กายภาพบำบัดภายในศูนย์';
-    const SECURITY = 'รักษาความปลอดภัย';
+    const SECURITY = 'รักษาความปลอดภัย 24 ชม';
     const SUPPORT24 = 'พยาบาล/แพทย์ประจำ 24 ชม.';
     const HEALTH_CHECK_YEARLY = 'บริการตรวจสุขภาพประจำปี';
     const GARDEN = 'สวนหย่อม/พื้นที่นันทนาการ';
     const CLOSE_TOWN = 'ศูนย์ดูแลใกล้ตัวเมือง';
     const MOUTAIN_VIEW = 'ใกล้ชิดธรรมชาติ วิวภูเขา';
+    const TRANSPORT = 'เดินทางสะดวก';
+    const AIRPORT = 'ใกล้สนามบิน';
 
     public static function list(): array
     {

@@ -69,13 +69,13 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label for="firstname">ชื่อจริง <span class="req">*</span></label>
-                    <input required type="text" name="firstname" id="firstname" maxlength="10" placeholder="ชื่อจริง"
+                    <input required type="text" name="firstname" id="firstname" placeholder="ชื่อจริง"
                         class="border rounded-lg px-3 py-2" value="{{ old('firstname') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label for="lastname">นามสกุล <span class="req">*</span></label>
-                    <input type="text" name="lastname" id="lastname" maxlength="10" placeholder="นามสกุล"
+                    <input type="text" name="lastname" id="lastname" placeholder="นามสกุล"
                         class="border rounded-lg px-3 py-2" value="{{ old('lastname') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
@@ -91,8 +91,9 @@
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
                     <label for="gender">เพศ <span class="req">*</span></label>
                     <select name="gender" id="gender" class="border rounded-lg px-3 py-2">
-                        <option value="MALE" @selected(old('gender') == 'MALE')>ชาย</option>
-                        <option value="FEMALE" @selected(old('gender') == 'FEMALE')>หญิง</option>
+                        @foreach (\App\Enums\Gender::cases() as $gender)
+                            <option value="{{ $gender->name }}" @selected(old('gender') == $gender->name)>{{ $gender->value }}</option>
+                        @endforeach
                     </select>
                     <label class="error text-xs text-red-600"></label>
                 </div>
@@ -115,16 +116,33 @@
 
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
-                    <label for="date_of_birth">วัน/เดือน/ปีเกิด <span class="req">*</span></label>
-                    <input required type="text" name="date_of_birth" id="date_of_birth" placeholder="วว/ดด/ปป"
+                    <label for="date_of_birth">วัน/เดือน/ปีเกิด </label>
+                    <input type="text" name="date_of_birth" id="date_of_birth" placeholder="วว/ดด/ปป"
                         class="border rounded-lg px-3 py-2" value="{{ old('date_of_birth') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>
-                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px] hidden">
                     <label for="blood">กรุ๊ปเลือด(ถ้ามี) </label>
                     <input type="text" name="blood" id="blood" placeholder="กรุ๊ปเลือด"
                         class="border rounded-lg px-3 py-2" value="{{ old('blood') }}"/>
                     <label class="error text-xs text-red-600"></label>
+                </div>
+                <div class="w-full md:w-[calc(50%-16px)] flex flex-col gap-[8px]">
+                    <label for="blood">ประเภท <span class="req">*</span></label>
+                    <select name="care_type" id="care_type" class="border rounded-lg px-3 py-2" required>
+                        @foreach (\App\Enums\CareType::cases() as $careType)
+                            <option value="{{ $careType->name }}" @selected(old('care_type') == $careType->name)>{{ $careType->value }}</option>
+                        @endforeach
+                    </select>
+                    <label class="error text-xs text-red-600"></label>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <label for="certified">ได้รับการรับรอง</label>
+                <div class="toggle-switch">
+                    <input class="toggle-input" id="certified-toggle" name="certified" type="checkbox" value="1" {{ (old('certified') ? 'checked' : '') }}>
+                    <label class="toggle-label" for="certified-toggle"></label>
                 </div>
             </div>
 

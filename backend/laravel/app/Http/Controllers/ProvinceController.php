@@ -23,4 +23,8 @@ class ProvinceController extends Controller
     public function getProvinceById(int $id) {
         return $this->province_repository->getProvinceById((int) $id);
     }
+
+    public function getProvinceByTag(string $tag) {
+        return $this->province_repository->getProvinceByTag($tag);
+    }
 }

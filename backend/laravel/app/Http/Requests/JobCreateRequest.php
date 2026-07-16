@@ -12,10 +12,26 @@ class JobCreateRequest extends FormRequest
     protected function prepareForValidation()
     {
         if ($this->user()) {
-            // เพิ่ม user_id ลงใน request
+            $classMap = [
+                'MEMBER'       => \App\Models\MemberProfile::class,
+                'NURSING'      => \App\Models\NursingProfile::class,
+                'NURSING_HOME' => \App\Models\NursingHomeProfile::class,
+            ];
+
+            $userType = $this->user()->user_type;
+
             $this->merge([
-                'user_id' => $this->user()->id,
+                'user_id'      => $this->user()->id,
+                'profile_type' => $classMap[$userType] ?? null,
             ]);
+
+            // MEMBER / NURSING → auto-set profile_id
+            if ($userType === 'MEMBER') {
+                $this->merge(['profile_id' => $this->user()->member?->id]);
+            } elseif ($userType === 'NURSING') {
+                $this->merge(['profile_id' => $this->user()->nursing?->id]);
+            }
+            // NURSING_HOME → profile_id มาจาก request (user เลือกเอง)
         }
     }
 
@@ -26,10 +42,14 @@ class JobCreateRequest extends FormRequest
                 'required',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->whereIn('user_type', [
-                        UserType::MEMBER->value
+                        UserType::MEMBER->value,
+                        UserType::NURSING->value,
+                        UserType::NURSING_HOME->value,
                     ]);
                 }),
             ],
+            'profile_id' => ['required', 'integer'],
+            'profile_type' => ['required', 'string'],
             'name' => ['string', 'required'],
             'service_type' => ['required', 'string', 'in:NURSING,NURSING_HOME'],
             'care_type' => ['required', 'string', 'in:RN,PN,NA,CG,MAID,ETC'],
@@ -72,7 +92,12 @@ class JobCreateRequest extends FormRequest
     {
         return [
             'user_id.required' => 'กรุณาเลือกผู้ใช้',
-            'user_id.exists' => 'ผู้ใช้ที่เลือกไม่ถูกต้องหรือไม่ใช่สมาชิก',
+            'user_id.exists' => 'ผู้ใช้ที่เลือกไม่ถูกต้อง',
+
+            'profile_id.required' => 'กรุณาเลือกโปรไฟล์',
+            'profile_id.integer' => 'โปรไฟล์ไม่ถูกต้อง',
+            'profile_type.required' => 'ไม่พบประเภทโปรไฟล์',
+            'profile_type.string' => 'ประเภทโปรไฟล์ไม่ถูกต้อง',
 
             'name.required' => 'กรุณากรอกชื่อ',
             'name.string' => 'ชื่อต้องเป็นตัวอักษร',

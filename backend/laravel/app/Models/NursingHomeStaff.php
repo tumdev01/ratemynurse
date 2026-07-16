@@ -11,7 +11,7 @@ class NursingHomeStaff extends Model
     protected $appends = ['full_path'];
 
     protected $fillable = [
-        'user_id', 'name', 'responsibility', 'image'
+        'user_id', 'nursing_home_profile_id', 'name', 'responsibility', 'image'
     ];
 
     public function down(): void

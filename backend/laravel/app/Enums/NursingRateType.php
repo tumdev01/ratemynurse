@@ -1,12 +1,13 @@
 <?php
 namespace App\Enums;
 
-final class NursingRateType extends Enum
+final class NursingRateType
 {
-    const SERVICE = 'การบริการ';
-    const COMMUNICATION = 'การสื่อสาร';
-    const PUNCTUALITY = 'ตรงต่อเวลา';
-    const CARE = 'ดูแลเอาใจใส่';
+    const SERVICE = 'คุณภาพการบริการ';
+    const COMMUNICATION = 'การสื่อสารเข้าใจง่าย';
+    const TIME = 'ความตรงต่อเวลา';
+    const CARE = 'การดูแลเอาใจใส่';
+    const APPOINTMENT = 'การนัดหมาย';
 
     public static function list(): array
     {

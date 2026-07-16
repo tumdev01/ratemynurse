@@ -75,6 +75,7 @@ return new class extends Migration
             $table->boolean('ambulance')->default(0);
             $table->integer('ambulance_amount')->nullable()->default(0);
             $table->boolean('van_shuttle')->default(0);
+            $table->integer('van_shuttle_amount')->default(0);
             $table->string('special_medical_equipment')->nullable();
 
             // In house staff ข้อมูลบุคลากร

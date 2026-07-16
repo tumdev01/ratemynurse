@@ -20,9 +20,11 @@ class NursingCreateRequest extends FormRequest
             'lastname'  => ['required', 'string', 'max:50'],
             'nickname'  => ['required', 'string', 'max:25'],
             'user_type' => ['required', 'in:NURSING'],
-            'date_of_birth' => ['required', 'date'],
+            'date_of_birth' => ['nullable', 'date'],
             'blood'     => ['nullable', 'string'],
             'gender'    => ['required', 'string', 'in:MALE,FEMALE,OTHER'],
+            'care_type' => ['nullable', 'string', 'in:RN,PN,NA,CG,MAID'],
+            'certified' => ['nullable', 'boolean'],
             'email' => [
                 'required',
                 'string',
@@ -35,10 +37,9 @@ class NursingCreateRequest extends FormRequest
                 'size:10',
                 Rule::unique('users', 'phone')->whereNull('deleted_at'),
             ],
-            // 'profile_image' => [
-            //     'max:50000',
-            //     'mimes:jpeg,png'
-            // ],
+            'profile_photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'medical_condition_detail' => ['nullable', 'string'],
+            'history_of_drug_allergy_detail' => ['nullable', 'string'],
             // 'address' => ['required', 'string', 'max:255'],
             // 'province_id' => ['required', 'integer'],
             // 'district_id' => ['required', 'integer'],
@@ -66,6 +67,10 @@ class NursingCreateRequest extends FormRequest
             'phone.size'         => 'หมายเลขโทรศัพท์ต้องมี 10 ตัว',
             'email.unique'       => 'อีเมล์นี้มีผู้ใช้งานแล้ว',
             'date_of_birth.date' => 'วัน/เดือน/ปีเกิด ไม่ถูกต้อง',
+            'profile_photo.required' => 'กรุณาอัปโหลดรูปถ่าย',
+            'profile_photo.image'    => 'ไฟล์ที่อัปโหลดต้องเป็นรูปภาพ',
+            'profile_photo.mimes'    => 'รองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .webp',
+            'profile_photo.max'      => 'ขนาดไฟล์ต้องไม่เกิน 5MB',
         ];
     }
 }

@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Repositories\NursingHomeRepository;
 use App\Http\Requests\NursingHomeCreateRequest;
-use App\Http\Requests\NursingHomeUserCreateRequest;
-use App\Http\Requests\NursingHomeProfileCreateRequest;
+use App\Http\Requests\NursingHomeRegisterRequest;
 use App\Models\User;
 use App\Models\NursingHome;
 use App\Models\NursingHomeProfile;
 use App\Models\Image;
+use App\Models\NursingHomeLicenseImage;
+use App\Models\NursingHomeStaff;
 use App\Enums\UserType;
 use App\Enums\HomeServiceType;
 use App\Enums\AdditionalServiceType;
@@ -19,14 +20,24 @@ use App\Enums\SpecialFacilityType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use App\Http\Resources\NursingHomeProfileCompareResource;
+use App\Http\Requests\updateGeneralProfileUpdateRequest;
+use App\Http\Requests\updateMoreInfoProfileRequest;
+use App\Http\Requests\updateAboutProfileRequest;
+use App\Services\NursingHome\NursingHomeService;
+use App\Http\Resources\NursingHomeProfileResource;
 
 class NursingHomeController extends Controller {
     protected $nursing_home_repository;
+    protected $service;
 
-    public function __construct(NursingHomeRepository $nursing_home_repository)
+    public function __construct(NursingHomeRepository $nursing_home_repository, NursingHomeService $service)
     {
         $this->nursing_home_repository = $nursing_home_repository;
+        $this->service = $service;
     }
 
     public function getNursingHomes(Request $request)
@@ -40,25 +51,74 @@ class NursingHomeController extends Controller {
 
     public function getNuringHomePagination(Request $request)
     {
-        $limit = $request->input('limit');
+        $limit = $request->input('limit', 8);
         $certified = $request->input('certified');
         $orderby  = $request->input('order_by');
         $order     = $request->input('order');
         $province  = $request->input('province');
-        $homes = $this->nursing_home_repository->getNursingHomePagination([
-            'limit' => $limit,
+        $zone      = $request->input('zone');
+        $page      = $request->input('page', 1);
+
+        // Filter params
+        $facilities = $request->input('facilities', []);
+        $cost       = $request->input('cost', []);
+        $room       = $request->input('room');
+        $rate       = $request->input('rate');
+        $search     = $request->input('search');
+
+        $filterParams = [
             'certified' => $certified,
-            'orderby' => $orderby,
-            'order' => $order,
-            'province' => $province
-        ]);
-        
+            'orderby' => $orderby ?? 'id',
+            'order' => $order ?? 'DESC',
+            'province' => $province,
+            'zone' => $zone,
+            'facilities' => $facilities,
+            'cost' => $cost,
+            'room' => $room,
+            'rate' => $rate,
+            'search' => $search,
+        ];
+
+        // นับจำนวนทั้งหมดในจังหวัดก่อน
+        $provinceTotal = $this->nursing_home_repository->countByProvince($filterParams);
+
+        // ถ้าจังหวัดมีข้อมูล > 10 ใช้ pagination ปกติ
+        if ($provinceTotal > 10) {
+            $homes = $this->nursing_home_repository->getNursingHomePagination(
+                array_merge($filterParams, ['limit' => $limit])
+            );
+
+            return response()->json([
+                'data' => $homes->items(),
+                'total' => $homes->total(),
+                'per_page' => $homes->perPage(),
+                'current_page' => $homes->currentPage(),
+                'last_page' => $homes->lastPage(),
+                'from' => $homes->firstItem(),
+                'to' => $homes->lastItem(),
+            ]);
+        }
+
+        // ถ้าจังหวัดมีข้อมูล <= 10 ให้รวมกับ zone
+        $allHomes = $this->nursing_home_repository->getNursingHomeWithZone(
+            array_merge($filterParams, ['additional_limit' => 16])
+        );
+
+        // Manual pagination
+        $total = $allHomes->count();
+        $items = $allHomes->forPage($page, $limit)->values();
+        $lastPage = ceil($total / $limit);
+        $from = $total > 0 ? (($page - 1) * $limit) + 1 : null;
+        $to = min($page * $limit, $total);
+
         return response()->json([
-            'data' => $homes->items(),
-            'total' => $homes->total(),
-            'per_page' => $homes->perPage(),
-            'current_page' => $homes->currentPage(),
-            'last_page' => $homes->lastPage(),
+            'data' => $items,
+            'total' => $total,
+            'per_page' => $limit,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'from' => $from,
+            'to' => $to > 0 ? $to : null,
         ]);
     }
 
@@ -67,207 +127,79 @@ class NursingHomeController extends Controller {
         return response()->json($result);
     }
 
-    public function userCreate(NursingHomeUserCreateRequest $request)
+    /**
+     * สมัครสมาชิก provider (NURSING_HOME) แบบ atomic เดียว — สร้าง user + profile + token
+     * ในทรานแซคชันเดียวกัน กันไม่ให้เกิด user ค้าง (orphaned) ถ้าส่วนโปรไฟล์ล้มเหลวระหว่างทาง
+     */
+    public function register(NursingHomeRegisterRequest $request)
     {
         try {
-            return DB::transaction(function () use ($request) {
-                return NursingHome::create([
+            $result = DB::transaction(function () use ($request) {
+                $user = NursingHome::create([
                     'firstname' => $request->firstname,
                     'lastname'  => $request->lastname,
                     'email'     => $request->email,
-                    'status'    => 0,
+                    'status'    => 1,
                     'phone'     => $request->phone,
                     'user_type' => UserType::NURSING_HOME->value,
-                    'password'  => Hash::make($request->phone)
+                    'password'  => Hash::make($request->phone),
+                    'plan'       => 'BASIC',
+                    'plan_start' => Carbon::today()->toDateString(),
                 ]);
+
+                $nursinghome = NursingHomeProfile::create([
+                    'name' => $user->firstname,
+                    'email' => $user->email,
+                    'address' => $request->address,
+                    'province_id' => $request->province_id,
+                    'district_id' => $request->district_id,
+                    'sub_district_id' => $request->sub_district_id,
+                    'zipcode'  => $request->zipcode,
+                    'user_id'  => $user->id,
+                    'facebook' => $request->facebook ?? null,
+                    'website'  => $request->website ?? null,
+                    'main_phone' => $user->phone,
+                    'res_phone'  => $request->res_phone ?? null,
+                ]);
+
+                $token = $user->createToken('api-token')->plainTextToken;
+
+                return [
+                    'user' => $user,
+                    'nursinghome' => $nursinghome,
+                    'token' => $token,
+                ];
             });
-        } catch (QueryException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'อีเมลนี้มีผู้ใช้งานแล้ว');
-            }
-            throw $e;
-        }
-    }
-    
-    /*
-    public function userCreateProfile(NursingHomeProfileCreateRequest $request)
-    {
-        try {
-            $user = User::where('user_type', 'NURSING_HOME')
-                ->where('id', $request->user_id)
-                ->first();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่พบผู้ใช้งานประเภท NURSING_HOME กรุณาติดต่อผู้ดูแลระบบ',
-                    'errors'  => null,
-                ], 404);
-            }
-
-            DB::beginTransaction();
-
-            $nursinghome = NursingHomeProfile::create([
-                'name' => $user->firstname,
-                'email' => $user->email,
-                'address' => $request->address,
-                'province_id' => $request->province_id,
-                'district_id' => $request->district_id,
-                'sub_district_id' => $request->sub_district_id,
-                'zipcode'  => $request->zipcode,
-                'user_id'  => $user->id,
-                'facebook' => $request->facebook ?? null,
-                'website'  => $request->website ?? null,
-                'main_phone' => $user->phone,
-                'res_phone'  => $request->res_phone ?? null,
-            ]);
-
-            if (!$nursinghome) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่สามารถสร้างโปรไฟล์ได้ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ',
-                    'errors'  => null,
-                ], 500);
-            }
-
-            $token = $user->createToken('api-token')->plainTextToken;
-
-            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'สร้างโปรไฟล์สำเร็จและเข้าสู่ระบบแล้ว',
+                'message' => 'สมัครสมาชิกสำเร็จและเข้าสู่ระบบแล้ว',
                 'data' => [
                     'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
+                        'id' => $result['user']->id,
+                        'name' => $result['user']->name,
+                        'email' => $result['user']->email,
+                        'phone' => $result['user']->phone,
                     ],
                     'nursing_home' => [
-                        'id' => $nursinghome->id,
-                        'name' => $nursinghome->name,
+                        'id' => $result['nursinghome']->id,
+                        'name' => $result['nursinghome']->name,
                     ],
-                    'access_token' => $token,
+                    'access_token' => $result['token'],
                     'token_type' => 'Bearer',
                 ],
                 'errors' => null,
             ], 201);
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดจากฐานข้อมูล',
-                'errors'  => [$e->getMessage()],
-            ], 500);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดไม่คาดคิด',
-                'errors'  => [$e->getMessage()],
-            ], 500);
-        }
-    }
-    */
-
-    public function userCreateProfile(NursingHomeProfileCreateRequest $request)
-    {
-        try {
-            $user = User::where('user_type', 'NURSING_HOME')
-                ->where('id', $request->user_id)
-                ->first();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่พบผู้ใช้งานประเภท NURSING_HOME กรุณาติดต่อผู้ดูแลระบบ',
-                    'errors'  => null,
-                ], 404);
-            }
-
-            // ✅ ตรวจสอบว่ามีข้อมูลซ้ำอยู่แล้วหรือไม่
-            $duplicate = NursingHomeProfile::where('user_id', $user->id)
-                ->where('province_id', $request->province_id)
-                ->where('district_id', $request->district_id)
-                ->where('sub_district_id', $request->sub_district_id)
-                ->exists();
-
-            if ($duplicate) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'มีข้อมูลโปรไฟล์สำหรับพื้นที่นี้อยู่แล้ว ไม่สามารถสร้างซ้ำได้',
-                    'errors'  => null,
-                ], 409); // 409 Conflict
-            }
-
-            DB::beginTransaction();
-
-            $nursinghome = NursingHomeProfile::create([
-                'name' => $user->firstname,
-                'email' => $user->email,
-                'address' => $request->address,
-                'province_id' => $request->province_id,
-                'district_id' => $request->district_id,
-                'sub_district_id' => $request->sub_district_id,
-                'zipcode'  => $request->zipcode,
-                'user_id'  => $user->id,
-                'facebook' => $request->facebook ?? null,
-                'website'  => $request->website ?? null,
-                'main_phone' => $user->phone,
-                'res_phone'  => $request->res_phone ?? null,
+        } catch (\Throwable $e) {
+            Log::error('NursingHome provider registration failed', [
+                'message' => $e->getMessage(),
+                'email' => $request->email,
             ]);
 
-            if (!$nursinghome) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่สามารถสร้างโปรไฟล์ได้ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ',
-                    'errors'  => null,
-                ], 500);
-            }
-
-            $token = $user->createToken('api-token')->plainTextToken;
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'สร้างโปรไฟล์สำเร็จและเข้าสู่ระบบแล้ว',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
-                    ],
-                    'nursing_home' => [
-                        'id' => $nursinghome->id,
-                        'name' => $nursinghome->name,
-                    ],
-                    'access_token' => $token,
-                    'token_type' => 'Bearer',
-                ],
-                'errors' => null,
-            ], 201);
-        } catch (QueryException $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'เกิดข้อผิดพลาดจากฐานข้อมูล',
-                'errors'  => [$e->getMessage()],
-            ], 500);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดไม่คาดคิด',
-                'errors'  => [$e->getMessage()],
+                'message' => 'เกิดข้อผิดพลาด ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง',
+                'errors'  => null,
             ], 500);
         }
     }
@@ -526,6 +458,214 @@ class NursingHomeController extends Controller {
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function compareNursingHome(Request $request)
+    {
+        $data = $request->validate([
+            'nursinghome_profile_ids'   => ['required', 'array', 'min:1', 'max:3'],
+            'nursinghome_profile_ids.*' => ['integer', 'exists:nursing_home_profiles,id'],
+        ]);
+        
+        $ids = $data['nursinghome_profile_ids'];
+        
+        $profiles = NursingHomeProfile::whereIn('id', $ids)
+            ->with([
+                'rates',
+                'coverImage:id,imageable_id,path,is_cover',
+            ])
+            ->whereNull('deleted_at')
+            ->get()
+            ->keyBy('id');
+        
+        // เรียงตาม order ของ IDs ที่ส่งมา
+        $sorted = collect($ids)
+            ->map(fn($id) => $profiles->get($id))
+            ->filter()
+            ->values();
+
+        return NursingHomeProfileCompareResource::collection($sorted)
+            ->additional([
+                'meta' => [
+                    'requested_order' => $ids,
+                ]
+            ]);
+    }
+
+    public function getProfile(Request $request, int $id)
+    {
+        $profile = $this->service->getProfile(
+            $request->user(),
+            $id
+        );
+
+        return new NursingHomeProfileResource($profile);
+    }
+
+    public function updateGeneralProfile(updateGeneralProfileUpdateRequest $request)
+    {
+        try {
+            $user = $request->user();
+            $profile = $this->service->updateGeneralProfile($user, $request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => $profile
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateAboutProfile(updateAboutProfileRequest $request)
+    {
+        try {
+            $user = $request->user();
+
+            $staffAvatars = [];
+            foreach ($request->input('staffs', []) as $index => $item) {
+                if ($request->hasFile("staffs.{$index}.avatar")) {
+                    $staffAvatars[$index] = $request->file("staffs.{$index}.avatar");
+                }
+            }
+
+            $profile = $this->service->updateAboutProfile(
+                $user,
+                $request->except('license_images_upload'),
+                $request->file('license_images_upload') ?? [],
+                $staffAvatars
+            );
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateMoreInfoProfile(updateMoreInfoProfileRequest $request)
+    {
+        try {
+            $user = $request->user();
+            $profile = $this->service->updateMoreInfoProfile(
+                $user,
+                $request->except('detail_images'),
+                $request->file('detail_images') ?? []);
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteImage(int $id)
+    {
+        try {
+            $user = request()->user();
+            $image = Image::where('id', $id)
+                ->where('imageable_type', NursingHomeProfile::class)
+                ->whereHas('imageable', fn($q) => $q->where('user_id', $user->id))
+                ->first();
+
+            if (!$image) {
+                return response()->json(['success' => false, 'message' => 'Image not found'], 404);
+            }
+
+            $filePath = public_path($image->path);
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+
+            if ($image->is_cover) {
+                $nextImage = Image::where('imageable_id', $image->imageable_id)
+                    ->where('imageable_type', NursingHomeProfile::class)
+                    ->where('id', '!=', $id)
+                    ->first();
+                if ($nextImage) {
+                    $nextImage->update(['is_cover' => true]);
+                }
+            }
+
+            $image->delete();
+
+            return response()->json(['success' => true, 'message' => 'Deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteLicenseImage(int $id)
+    {
+        try {
+            $user = request()->user();
+            $license = NursingHomeLicenseImage::where('id', $id)
+                ->whereHas('profile', fn($q) => $q->where('user_id', $user->id))
+                ->first();
+
+            if (!$license) {
+                return response()->json(['success' => false, 'message' => 'License file not found'], 404);
+            }
+
+            $filePath = public_path($license->path);
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+
+            $license->delete();
+
+            return response()->json(['success' => true, 'message' => 'Deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteStaff(int $id)
+    {
+        try {
+            $user = request()->user();
+            $staff = NursingHomeStaff::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$staff) {
+                return response()->json(['success' => false, 'message' => 'Staff not found'], 404);
+            }
+
+            if ($staff->image && File::exists(public_path($staff->image))) {
+                File::delete(public_path($staff->image));
+            }
+
+            $staff->delete();
+
+            return response()->json(['success' => true, 'message' => 'Deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getCollections(Request $request)
+    {
+        $results = $this->service->getCollections($request->all());
+        return response()->json([
+            'success' => true,
+            'data'    => $results
+        ]);
     }
 
 }

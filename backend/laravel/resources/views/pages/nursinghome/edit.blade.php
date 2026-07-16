@@ -317,6 +317,82 @@
                             <path d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
                                 stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
+                        <span class="text-md text-white font-semibold">จุดเด่นของศูนย์</span>
+                    </span>
+
+                    <div class="p-[16px] gap-[16px] flex flex-col bg-[#F8F8F8] rounded-[8px]">
+                        <div class="sub_topic flex flex-row gap-[8px] items-center">
+                            จุดเด่น
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-[32px]">
+
+                            @php
+                                $center_highlight_checked = old('center_highlights') 
+                                    ?? (is_array($nursinghome->center_highlights ?? null) 
+                                        ? array_column($nursinghome->center_highlights, 'key') 
+                                        : []);
+                            @endphp
+
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="RESORT"
+                                    {{ in_array('RESORT', $center_highlight_checked) ? 'checked' : '' }}>
+                                โรงแรมสไตล์รีสอร์ท
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="PHYSICAL_THERAPY"
+                                    {{ in_array('PHYSICAL_THERAPY', $center_highlight_checked) ? 'checked' : '' }}>
+                                กายภาพบำบัดภายในศูนย์
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="SECURITY"
+                                    {{ in_array('SECURITY', $center_highlight_checked) ? 'checked' : '' }}>
+                                รักษาความปลอดภัย 24 ชม
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="SUPPORT24"
+                                    {{ in_array('SUPPORT24', $center_highlight_checked) ? 'checked' : '' }}>
+                                พยาบาล/แพทย์ประจำ 24 ชม.
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="HEALTH_CHECK_YEARLY"
+                                    {{ in_array('HEALTH_CHECK_YEARLY', $center_highlight_checked) ? 'checked' : '' }}>
+                                บริการตรวจสุขภาพประจำปี
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="GARDEN"
+                                    {{ in_array('GARDEN', $center_highlight_checked) ? 'checked' : '' }}>
+                                สวนหย่อม/พื้นที่นันทนาการ
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="CLOSE_TOWN"
+                                    {{ in_array('CLOSE_TOWN', $center_highlight_checked) ? 'checked' : '' }}>
+                                ศูนย์ดูแลใกล้ตัวเมือง
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="MOUTAIN_VIEW"
+                                    {{ in_array('MOUTAIN_VIEW', $center_highlight_checked) ? 'checked' : '' }}>
+                                ใกล้ชิดธรรมชาติ วิวภูเขา
+                            </div>
+                            <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="TRANSPORT"
+                                    {{ in_array('TRANSPORT', $center_highlight_checked) ? 'checked' : '' }}>
+                                เดินทางสะดวก
+                            </div>
+                           <div class="flex flex-row gap-[8px] items-center">
+                                <input type="checkbox" name="center_highlights[]" value="AIRPORT"
+                                    {{ in_array('AIRPORT', $center_highlight_checked) ? 'checked' : '' }}>
+                                ใกล้สนามบิน
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <span class="topic w-full flex flex-row gap-[8px] px-[12px] py-[8px] rounded-lg bg-[#286F51]">
+                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
+                            <path d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <span class="text-md text-white font-semibold">บริการและการดูแล</span>
                     </span>
 
@@ -821,10 +897,6 @@
                         <span class="text-md text-white font-semibold">ข้อมูลเพิ่มเติม</span>
                     </span>
                     <div class="flex flex-col">
-                        <label class="mb-2" for="center_highlights">จุดเด่นของศูนย์</label>
-                        <textarea id="center_highlights" name="center_highlights" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น การดูแลผู้ป่วยหัวใจ, การฉีดยา, การดูแลแผล ฯลฯ">{{ old('center_highlights', $nursinghome->center_highlights ?? '') }}</textarea>
-                    </div>
-                    <div class="flex flex-col">
                         <label class="mb-2" for="patients_target">กลุ่มเป้าหมายผู้ป่วย</label>
                         <textarea id="patients_target" name="patients_target" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="เช่น ผู้สูงอายุทั่วไป ผู้ป่วยโรคเรื้อรัง ผู้ป่วยสมองเสื่อม">{{ old('patients_target', $nursinghome->patients_target ?? '') }}</textarea>
                     </div>
@@ -1028,6 +1100,50 @@
     <script src="{{ asset('flatpickr/monthSelect/index.js') }}"></script>
     <script src="{{ asset('flatpickr/th.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: 'error',
+                title: '{{ session('error') }}'
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: 'success',
+                title: '{{ session('success') }}'
+            });
+        });
+    </script>
+    @endif
 
     <script>
         const mainPhone = document.getElementById('main_phone');

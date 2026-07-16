@@ -17,4 +17,9 @@ trait HasSubscriptions
     {
         return $this->morphOne(UserSubscription::class, 'subscribable')->latestOfMany();
     }
+
+    public function currentActiveSubscription()
+    {
+        return $this->morphOne(UserSubscription::class, 'subscribable')->latestOfMany();
+    }
 }

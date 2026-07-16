@@ -7,7 +7,7 @@ use App\Models\User;
 
 class OtpService
 {
-    public function generate($id, $identifier, $length = 5, $ttl = 60)
+    public function generate($id, $identifier, $length = 5, $ttl = 90)
     {
         $otp = str_pad(
             random_int(0, (int) pow(10, $length) - 1), 
