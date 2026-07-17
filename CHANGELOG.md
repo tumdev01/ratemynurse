@@ -4,6 +4,193 @@
 
 ## 2026-07-17
 
+### แก้ OTP resend ค้างสมัครไม่ได้ถาวร (Member/Nursing/NursingHome ทั้ง 3 ฟอร์ม)
+
+**บั๊ก**: ทั้ง 3 ฟอร์มสมัครสมาชิก (Member, Nursing รายบุคคล, NursingHome) commit user ลงฐานข้อมูลทันที
+แล้วค่อยส่ง OTP แยกต่างหากทีหลัง — ถ้า OTP รอบแรกไม่ถึงมือ (เช่นโทรศัพท์ปิดอยู่) แล้วกด "ขอรับรหัสอีกครั้ง"
+ระบบพยายามสมัครซ้ำด้วยเบอร์เดิม แต่ติด unique constraint ของเบอร์/อีเมลที่ตัวเองสร้างไว้แล้วตั้งแต่รอบแรก
+กลายเป็น "เบอร์นี้มีผู้ใช้แล้ว" ทันที ทั้งที่ยังไม่เคย login สำเร็จเลยสักครั้ง ผู้ใช้ติดค้างสมัครไม่ได้ตลอดกาล
+โดยไม่รู้ตัวว่าสมัครไปแล้วหรือยัง
+
+**แก้**: เพิ่มคอลัมน์ `phone_verified_at` ใน `users` — ยืนยัน OTP สำเร็จครั้งแรกเมื่อไหร่ค่อย stamp ว่า
+verified, ผ่อนปรน unique validation (phone/email/cardid) ให้นับเฉพาะ user ที่ verified แล้วว่า "ซ้ำ",
+ทั้ง 3 controller เช็คก่อนสร้าง user ใหม่ว่ามี record เดิมที่ยัง unverified ไหม ถ้ามีให้ resend OTP ให้ user
+เดิมแทนการสร้างซ้ำ, `/api/check-phone` (เช็คตอนกด "ถัดไป" ในฟอร์ม) ก็ปรับให้ไม่บล็อกเบอร์ที่ยัง unverified
+เช่นกัน — ผู้ใช้กรอกฟอร์มใหม่ได้ปกติ ไม่ติดตั้งแต่ขั้นตอนกลางทาง
+
+**ทดสอบแล้ว**: จำลอง flow เต็มบน local docker — สมัคร → resend OTP 2 รอบ (ยืนยันว่า generate record OTP
+ใหม่จริงทุกครั้ง ไม่สร้าง user ซ้ำ) → verify OTP สำเร็จ → `phone_verified_at` ถูก stamp → สมัครซ้ำด้วยเบอร์
+เดิมรอบที่ 3 ถูกบล็อกถูกต้อง (เพราะ verified แล้วจริง)
+
+### แก้หน้า nursing/create (Laravel admin): ที่อยู่/รูปโปรไฟล์/เบอร์โทร
+
+**ที่อยู่ (จังหวัด/อำเภอ/ตำบล)**: เดิมใช้ select2 — ถ้าบันทึกไม่ผ่านแล้วโหลดหน้าใหม่ ที่อยู่/จังหวัดที่กรอกไว้
+หายหมดและกดค้นหาใหม่ไม่ได้อีกเลย (hidden input เก็บชื่อจังหวัดไม่มี `name` เลยไม่เคยถูกส่งไปกับฟอร์ม,
+district/sub_district select2 ก็ init ใหม่ผ่าน `onchange` เท่านั้น ไม่มีอะไร re-init ให้ตอนโหลดซ้ำ) แก้โดย
+เปลี่ยนไปใช้ Tom Select ทั้งหมด (พอร์ต `RMN_LocationSelector` จาก WP plugin มาเป็น
+`public/js/rmn-location-selector.js`) ที่ auto re-cascade จากค่าเดิมตอนโหลดหน้าใหม่ได้ถูกต้อง
+
+**รูปโปรไฟล์**: ฟอร์ม admin ส่งไฟล์ชื่อ `profile_image` แต่ validation (`NursingCreateRequest`) เช็คหาฟิลด์
+`profile_photo` (คนละชื่อกันเลย เพราะ class นี้ใช้ร่วมกับ WP/API flow ที่ใช้ชื่อฟิลด์ต่างกัน) เลย error
+"ไม่ได้ใส่รูป" ทุกครั้งไม่ว่าจะใส่จริงหรือไม่ก็ตาม แก้โดยแยก validation ตาม route: admin (`nursing.store`)
+เช็คฟิลด์ `profile_image` แบบ nullable, WP/API ยังคงเดิม (`profile_photo` required) ไม่กระทบ
+
+**เบอร์โทรศัพท์**: เพิ่ม normalize ฝั่ง server (`prepareForValidation()`) ตัดอักขระที่ไม่ใช่ตัวเลขออกทั้งหมด
+(`-`, `+66`, วงเล็บ, เว้นวรรค) และแปลง `+66`/`66` นำหน้าเป็น `0`, เอา `maxlength="10"` ออก (นับ character
+รวม `-` ทำให้ paste เบอร์ที่มีขีดแล้วโดนตัดปลายผิด) เพิ่ม live-strip ที่ input ด้วย (ตัดทันทีไม่ต้องรอ submit)
+
+**จังหวัด/อำเภอ/ตำบล/รหัสไปรษณีย์ ไม่บังคับกรอกแล้ว**: เอา `required` ออกจากทั้ง 4 ช่อง (ข้อมูลต้นทางไม่พร้อม
+บางกรณี) — ต้อง migrate คอลัมน์ `zipcode` ใน `nursing_profiles` ให้ nullable ด้วย (เดิม NOT NULL ทำให้ถ้าไม่
+กรอกจะ error 500 ระดับ DB ทันที)
+
+### แก้หน้า nursing-home/create + edit (Laravel admin): ที่อยู่/เบอร์โทร/email/แผนที่/gallery
+
+**ที่อยู่**: บั๊กเดียวกับ nursing/create เป๊ะ (select2 restore ไม่ได้เมื่อบันทึกไม่ผ่าน) แก้ด้วยวิธีเดียวกัน
+(Tom Select) ทั้ง create และ edit
+
+**Asterisk เข้าใจผิด**: assist_name/assist_no/assist_expert/assist_phone/manager_phone มี `<span
+class="req">*</span>` แต่ backend (`NursingHomeCreateRequest`) เป็น `nullable` ทั้งหมดอยู่แล้ว ไม่เคย
+required จริง เอา asterisk ที่ทำให้เข้าใจผิดออก
+
+**เบอร์โทร**: main_phone/res_phone/manager_phone/assist_phone ใช้ sanitizer เดียวกับ nursing/create (ตัด
+สัญลักษณ์เหลือแต่ตัวเลข, ตัด `maxlength` ที่ทำให้ paste เบอร์มีขีดโดนตัดท้าย) — เดิม main_phone ไม่มีการกรอง
+เลขเลยด้วยซ้ำ (มีแต่ validate ข้อความ), manager_phone/assist_phone ไม่มีการจัดการอะไรมาก่อนเลย
+
+**Email ไม่แสดงในหน้า edit (แต่บันทึกจริง)**: หน้า edit อ่านค่าจาก `nursing_home_profiles.email`
+(คอลัมน์ที่ไม่เคยถูกเซ็ตค่าจริงเลยสักครั้ง ทั้งตอน create และ update) แทนที่จะอ่านจาก `users.email` (เจ้าของ
+บัญชีจริงที่เซฟถูกต้องเสมอ) แก้ให้อ่าน `owner->email` แทน + เพิ่มการอัปเดต `users.email` จริงตอนแก้ไข (เดิม
+flow นี้ไม่เคยอัปเดตเลยสักครั้ง เท่ากับแก้อีเมลในหน้า edit ไม่มีผลอะไรกับ users.email มาก่อนหน้านี้เลย) +
+เพิ่ม validation/unique check ให้ฟิลด์ email ตอน edit (เดิมไม่มีเลย)
+
+**แผนที่**: ทดสอบแล้วว่าลิงก์แชร์ Google Maps (ปุ่ม "Send a link") ฝังเป็น iframe ในหน้าตรงๆ ไม่ได้ — Google
+ส่ง `X-Frame-Options: SAMEORIGIN` บล็อกทุกรูปแบบ URL ที่ลอง (รวม `output=embed` ทั้งแบบเก่า/ใหม่) มีแค่โค้ด
+จาก Google "Share > Embed a map" เท่านั้นที่ฝังได้จริง 100% — ตัดฟิลด์ "แผนที่" (ลิงก์แชร์) ออก เหลือใช้แค่
+"ฝังแผนที่ (iframe)" ทางเดียว เพิ่มปุ่ม "!" โชว์ภาพวิธีเอาโค้ด embed จาก Google Maps, แก้ iframe ให้เต็มกรอบ
+(width/height 100%) + overflow-hidden กัน iframe ขนาดคงที่จาก Google ล้นมุมโค้ง
+
+**Gallery**: เพิ่มฟีเจอร์ preview รูปที่กำลังจะอัปโหลดใหม่ (ยังไม่ได้ submit) ให้เรียงแนวนอน, กดลบรูปที่ไม่
+ต้องการออกจากรายการที่จะอัปโหลดได้จริง (ผ่าน `DataTransfer` sync กลับเข้า `<input type="file">` จริง ไม่ใช่
+แค่ซ่อน), ลากสลับตำแหน่งได้ + badge "Cover" บนรูปแรก เพราะ backend ใช้รูปแรกใน `profiles[]` เสมอเป็น cover
+(ยืนยันจากโค้ด `NursingHomeController::store()`) — ทำทั้งหน้า create และ edit ให้เหมือนกัน (edit เดิมเป็น
+เวอร์ชันเก่าที่ preview อย่างเดียว ลบ/สลับไม่ได้เลย)
+
+### Production incident: รูปภาพ permission denied + ไฟล์รูปหาย + MySQL เข้าไม่ได้จาก DBeaver
+
+**copy() permission denied ตอนอัปโหลดรูป**: `public/images` ทั้งต้นไม้ (รวม subdirectory cv/detail/member/
+nursing-home) เจ้าของเป็น uid `197609:197121` ที่ไม่มีอยู่จริงบนเครื่องเลย (ตกค้างจากตอน restore รูปหลัง
+อินซิเดนต์ rsync ลบรูปจริงของ user เมื่อวันก่อน) mode 755 ทำให้ "other" มีแค่ read/execute เขียนไม่ได้ ขณะที่
+php-fpm รันเป็น `www-data` (uid 33) ซึ่งไม่ match ทั้ง owner/group เลย แก้ด้วย `chown -R www-data:www-data`
+ทั้งต้นไม้บน production (bind mount จาก host เลยถาวร ไม่หายตอน container restart)
+
+**รูปภาพหายจากเว็บจริง (404)**: เช็คแล้วพบว่าไฟล์หายไปจากดิสก์ production จริง (คาดว่าเป็นไฟล์ที่ตกหล่นจาก
+รอบกู้คืนหลังอินซิเดนต์ rsync ก่อนหน้า) แต่ยังมีสำรองอยู่ในเครื่อง local ทั้งใน working copy และโฟลเดอร์
+backup — อัปโหลดกลับขึ้น production ผ่าน scp แล้ว chown ให้ถูกต้อง ยืนยันด้วย HTTP 200 จริง
+
+**DBeaver ต่อ production MySQL ไม่ได้**: เช็คฝั่ง server ครบ (container รันปกติ, docker-proxy listen ที่
+`0.0.0.0:3306` ถูกต้อง, ufw/iptables ไม่มีอะไรบล็อก, ทดสอบ connect จากใน droplet เองสำเร็จ) แต่ port 443/22
+ต่อจากเครื่อง local ได้ปกติ มีแค่ 3306 ที่ต่อไม่ได้เลย (timeout ทั้ง TCP และ ping) — สรุปว่าเป็น
+**DigitalOcean Cloud Firewall** (ระดับเครือข่ายของ DO เอง แยกจาก ufw/iptables บนเครื่อง) ที่บล็อกอยู่ ต้อง
+แก้ที่หน้า DO console โดยตรง (ไม่มี doctl token ให้แก้ผ่าน CLI ได้) — แนะนำให้จำกัด IP ที่อนุญาตด้วย ไม่เปิด
+กว้าง 0.0.0.0/0 เพราะ MySQL user เป็น `%` (ทุก host) หมด
+
+### แก้ WordPress plugin: ปุ่มค้นหา mobile nav ไม่ทำงาน + ค้นหาจังหวัดมือถือไม่ตอบสนอง + link hardcode
+
+**ปุ่มค้นหาบน mobile bottom nav กดแล้วไม่มีอะไรเกิดขึ้น**: HTML ของ search panel ถูกอัปโหลดขึ้น production
+แล้วจริง (จาก `Authentication.php`) แต่ไฟล์ `rmn-scripts.js` ที่มี JS click handler คอยเปิด panel นี้ไม่เคย
+ถูกอัปโหลดขึ้น production เลยสักครั้ง (ไม่เคยอยู่ใน `deploy/` หรือ `FILES_TO_UPLOAD.txt` มาก่อนด้วย) — เตรียม
+ไฟล์เข้า deploy/ ให้แล้ว
+
+**ค้นหาจังหวัดบนมือถือกดไม่ตอบสนอง (PC ปกติดี)**: shortcode `[search]` ถูกฝัง 2 จุดในหน้าเดียวกัน (จุดเดิม
+บนหน้า + panel ค้นหาบน mobile bottom nav ที่เพิ่งเพิ่มเข้าไป) แต่ script เดิมใช้ `document.getElementById`
+ซึ่งจับ element แรกในหน้าเสมอไม่ว่าจะเรียกจาก instance ไหน ทำให้ instance ที่ 2 (ของมือถือ บนหน้าส่วนใหญ่)
+ไม่มี event ผูกเลย แก้เป็น scope การค้นหาผ่าน container ของตัวเอง (`document.currentScript.closest(...)`)
+รองรับหลาย instance พร้อมกันในหน้าเดียวได้แล้ว — ระหว่างทางเจอไฟล์ `rmn-search.js` เก่าที่ตายไปแล้ว (อ้างอิง
+`#selectedInfo`/`#section-269-9` ที่ไม่มีอยู่จริงในหน้าปัจจุบันเลย) แต่ยังถูกโหลดอยู่ ชนกับ script ปัจจุบันบน
+element เดียวกัน เลิกโหลดไฟล์นี้ด้วย
+
+**Link hardcode full path production**: `job-post.php`, `job-interview.php`, `Authentication.php` (popup
+สมัครสำเร็จ, ปุ่ม mb_board/mb_home ใน mobile nav) มี `https://ratemynurse.org/...` hardcode ตรงๆ ทำให้
+ทดสอบบน localhost แล้วลิงก์ดันเด้งไป production จริง แก้เป็น `home_url()` ทั้งหมด
+
+**ยังไม่ได้แก้ (ไม่ใช่บั๊กโค้ด)**: ขอให้ mobile bottom nav เป็น sticky ตลอดโดยไม่ต้อง slideUp/slideDown ตอน
+เลื่อนหน้าจอ — เช็คแล้วเป็นฟีเจอร์ "Sticky Header" ของ Oxygen Builder เอง (ตั้งค่าที่ element ในตัว visual
+builder โดยตรง ไม่มีอยู่ในไฟล์โค้ดเลย) ต้องเข้า Oxygen editor ปิด "Sticky Header Upward" เอง แก้จากโค้ด
+ไม่ได้
+
+### แก้ Favorite toggle พังทั้งระบบ + backfill plan/subscription + endpoint nursing-homes/by-ids ใหม่ + แก้ CI/CD ที่พังมานาน
+
+**บั๊ก Favorite ตัวใหญ่**: `FavoriteController::toggle()` เรียก `$profile->toggleFavorite($user)` แต่ method
+นี้มีอยู่แค่ใน `App\Traits\Favoritable` (เขียนไว้ตั้งแต่ commit ก่อนหน้าแต่ไม่เคย wire เข้า model จริง) —
+`NursingProfile`/`NursingHomeProfile` ประกาศ `favorites()`/`isFavoritedBy()` เองซ้ำแทนที่จะ `use Favoritable`
+ทำให้กดถูกใจ/เลิกถูกใจพังทุกครั้ง (BadMethodCallException) แก้โดยเพิ่ม `use Favoritable` ทั้ง 2 model
+ลบ method ที่ประกาศซ้ำออก, เพิ่ม `getFavoriteIds()`/`getFavoritesPaginate()`/`removeAsProvider()`,
+`FavoriteSetRequest` เปลี่ยนรับ `profile_type` เป็น `NURSING`/`NURSING_HOME` (เหมือน `user_type` ทั่วระบบ)
+แทนการรับ namespace class ตรงๆ จาก client, ลบ route เก่าที่ชี้ไป method ที่ไม่มีอยู่จริง
+
+**Backfill ข้อมูล production (`users.plan_start` + `user_subscriptions`)**: พบว่า user เกือบทั้งระบบ
+(1,002/1,256 NURSING_HOME, 43/60 NURSING) ไม่เคยมี `plan_start` เลยตั้งแต่แรก และตาราง
+`user_subscriptions` มีแค่ 15 แถวทั้งระบบ (13 MemberProfile ที่ถูก, 1 NursingProfile + 1
+NursingHomeProfile ที่ดูเหมือนแถวทดสอบที่ลงมือเอง — plan สะกดผิด "ENTERPRIS", วันที่ไม่ตรงกับ
+`users.plan_start`) เพราะมีแค่ `MemberRepository::store()` จุดเดียวที่สร้าง `user_subscriptions` คู่กับ
+profile ถูกต้อง จุดอื่นที่สมัคร Nursing/NursingHome ไม่เคยทำเลย ทำ one-time backfill บน production ตรงๆ
+ผ่าน SQL (`plan_start = DATE(created_at)` สำหรับแถว NULL ทั้งระบบ, สร้าง `user_subscriptions` ให้ครบ —
+NURSING_HOME หลายสาขาใช้กฎ 1 subscription ต่อ user ผูกกับสาขาแรก/เก่าสุด) พร้อม normalize
+`plan = 'Free'` (ค่า default ของ column ที่ไม่มีความหมายจริง) → `'BASIC'` ทั้ง `users`/`user_subscriptions`
+(798 + 795 แถว) 2 แถวทดสอบเดิมปล่อยไว้ตามที่ผู้ใช้ยืนยัน ไม่แตะ
+
+**แก้โค้ดกันบั๊กเกิดซ้ำ**: เพิ่ม `$profile->subscriptions()->create(['plan'=>'BASIC','start_date'=>now()])`
+ให้ครบทุกจุดที่สร้าง Nursing/NursingHome ใหม่ — `NursingApiRepository::createNurse()`,
+`API\NursingHomeController::register()`, `API\NursingHomeController::store()` (จุดนี้เดิมไม่ตั้ง
+`plan`/`plan_start` เลยด้วยซ้ำ), `NursingHomeController::store()` (หน้า admin, มี branch "เพิ่มสาขาให้ user
+เดิม" จึงใส่เงื่อนไข `$isNewUser` กันสร้างซ้ำ), `NursingRepository::createNurse()` (หน้า admin, เดิมก็ไม่ตั้ง
+plan/plan_start เช่นกัน) — ทดสอบผ่าน tinker (wrap `DB::beginTransaction()`/`rollBack()`) ยืนยันครบทุกจุด
+
+**Endpoint ใหม่ `POST /api/nursing-homes/by-ids`** (แยกจาก `/api/nursing-homes` เดิมโดยสิ้นเชิงตามที่ผู้ใช้
+ขอ กันของเดิมพัง): สำหรับ shortcode ใหม่ `nursing-homes-specific` (`[nursing-homes-specific
+ids="9,620,124"]`) ดึงเฉพาะ NursingHome ตาม ids ที่ระบุ เรียงตามลำดับ ids ด้วย `FIELD()` field ที่ดึงตัดเหลือ
+แค่ที่ swiper การ์ดใช้จริง (ไม่ดึง `owner`, `images` ทั้งชุด, `rates.rate_details` ที่ไม่จำเป็นเพราะ
+`average_score`/`review_count` คำนวณจาก subquery/`withCount` อยู่แล้ว) ระหว่างทางเจอบั๊กจริงเพิ่ม:
+`withCount()` เรียกก่อน `select()` จะถูกเขียนทับเงียบๆ กลายเป็น NULL (ยืนยันผ่าน tinker) แก้โดยสลับลำดับ
+เป็น select ก่อนเสมอในทุก method ใหม่ (endpoint เดิมมีบั๊กเดียวกันแต่ไม่ได้แตะ)
+
+**แก้บั๊ก path รูปผิดตอน local dev**: `Image::getFullPathAttribute()` ใช้ `url($this->path)` ซึ่งยึดตาม Host
+header ของ request ปัจจุบัน แทนที่จะเป็น APP_URL คงที่ — ตอน local, WordPress ยิง request ผ่าน mu-plugin ที่
+redirect เข้า container โดยตรง (`http://rmn_laravel_backend/...`) ทำให้ path รูปที่ตอบกลับมาใช้ browser เข้า
+ไม่ได้ แก้เป็น `config('app.url')` เสมอ
+
+**แก้บั๊ก 413 Request Entity Too Large บน production** (`/nursing-home/create` มีฟิลด์รูปเยอะกว่า
+`/nursing/create` เลยเจอก่อน): PHP ไม่เคยมี custom php.ini เลยตั้งแต่แรก ใช้ default `upload_max_filesize=2M`,
+`post_max_size=8M` เพิ่ม `uploads.ini` (20M/80M) + nginx `client_max_body_size 80M` ทั้ง local (ผ่าน
+Dockerfile, rebuild แล้ว) และ production (แก้ตรงบน droplet ผ่าน SSH — เลือก `docker cp` แบบ hotfix แทนแก้
+Dockerfile ตามที่ผู้ใช้ต้องการความเร็ว มีข้อเสียคือไม่ persist ถ้ามี container rebuild ครั้งหน้า)
+
+**เจอ + แก้ปัญหา CI/CD deploy pipeline ที่พังมานาน**: `deploy-backend.yml` (auto-deploy ผ่าน git push)
+ล้มเหลวที่ขั้นตอน "Set up SSH" ทุกครั้งย้อนไปถึง run แรกสุด (ก่อนเซสชันนี้เริ่มด้วยซ้ำ) เพราะ GitHub repo
+secrets (`DO_HOST`/`DO_USER`/`DO_SSH_PRIVATE_KEY`) ไม่เคยถูกตั้งค่าไว้เลย เพิ่มครบแล้ว SSH ผ่านได้ แต่เจอ
+ปัญหาถัดมาทันที: `php artisan migrate --force` พังเพราะ production มี **26 migrations ค้างสถานะ Pending
+ตั้งแต่ ก.ย. 2025** ทั้งที่ table จริงมีอยู่แล้ว (schema ถูกแก้ตรงๆ/จากหลายเครื่องมาก่อนโดยไม่ผ่าน migrate —
+ผู้ใช้ยืนยันว่า local กับ git ไม่ตรงกันมานานเพราะทำงานจากหลายเครื่องและเคยดึงไฟล์ตรงจาก FTP) ตัด
+`migrate --force` ออกจาก workflow ชั่วคราว (ไม่กระทบ เพราะ feature รอบนี้ไม่มี migration ใหม่ที่ต้องรัน) —
+**ยังไม่ได้ audit/แก้ 26 migrations ค้างนี้จริง รอทำต่อ**
+
+**Incident ระหว่างทาง**: ตอนแก้ CI ผู้ใช้เพิ่ม DO Cloud Firewall (rule SSH port 22) ทำให้เว็บทั้งเว็บล่ม
+ชั่วคราว (การผูก firewall ใหม่ครั้งแรกทำให้ port 80/443 ที่เคยเปิดอยู่โดย default ไม่มี firewall เลย
+กลายเป็นถูกบล็อกไปด้วย เพราะ firewall จะ deny ทุก port ที่ไม่ได้ระบุ) แก้โดยเพิ่ม rule HTTP/HTTPS
+(80/443, All IPv4/IPv6) เพิ่มเข้าไปด้วย กลับมาใช้งานได้ปกติ
+
+**เจอบั๊กเก่าที่ยังไม่แก้ (ไม่เกี่ยวกับรอบนี้)**: sidebar admin panel (`layouts/sidebar.blade.php`) มีลิงก์ไป
+`route('subscription.dashboard')` ที่ไม่เคยถูกสร้างจริง (มาจาก commit `49f0ac2c` ก่อนเซสชันนี้) — ยังไม่ได้
+แก้ รอดำเนินการต่อ
+
+**ทดสอบแล้ว**: Favorite endpoints ทั้งหมดผ่าน curl จริงพร้อม token จริง (toggle add/remove,
+getFavoriteIds, getFavoritesPaginate พร้อม eager-load, removeAsProvider ทั้ง 403 ผิดเจ้าของ/200 ถูกต้อง),
+backfill ยืนยันผ่าน Eloquent จริงบน production (`$profile->subscription` resolve ถูกต้อง, HEX() ยืนยัน
+byte ของ subscribable_type ถูกต้องหลังเจอบั๊ก backslash หายจาก escaping ผ่าน SSH heredoc), endpoint by-ids
+ทดสอบผ่าน curl จริงทั้ง local และ production (ยืนยันลำดับ/field/review_count ถูกต้องครบ), Image path fix
+ทดสอบจำลอง Host header ที่เป็นบั๊กจริงแล้วยืนยันได้ URL ถูกต้องทั้ง local/production, deploy pipeline
+ทดสอบจน CI ผ่านจริง (run #6 สำเร็จ) และ route จริงบน production ตอบกลับถูกต้อง — ยังไม่ได้ทดสอบผ่าน
+เบราว์เซอร์จริงสำหรับหน้าที่ใช้ shortcode `nursing-homes-specific` ใหม่
+
 ### เพิ่มเช็คเบอร์ซ้ำก่อนไปขั้นตอนถัดไป + บังคับยืนยัน OTP ก่อน login จริงหลังสมัครสมาชิก (ครอบคลุมทั้ง 3 ฟอร์ม)
 
 **คำขอ:** (1) ระหว่างกรอกฟอร์มสมัครสมาชิกและกรอกเบอร์โทรศัพท์แล้ว ถ้ากด "ถัดไป" ต้องเช็คก่อนว่าเบอร์นี้มี
