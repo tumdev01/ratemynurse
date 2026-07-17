@@ -27,6 +27,10 @@ jobs:
 
       - name: Rsync backend/laravel to server
         run: |
+          # ห้ามลบ --exclude='public/images' ออกเด็ดขาด — โฟลเดอร์นี้เก็บรูปที่ user อัปโหลดจริงบน production
+          # (gitignore ไว้ตั้งแต่แรก ไม่อยู่ใน git เลย) --delete จะลบไฟล์เหล่านี้ทิ้งถ้าไม่ exclude
+          # (เกิดขึ้นจริงแล้ว 2026-07-17: รูปกว่า 4,200 ไฟล์หายไปตอน rsync รันสำเร็จครั้งแรกหลังแก้ SSH
+          # secrets กู้คืนได้เกือบหมดจาก local docker ที่ยังมีไฟล์อยู่ครบ แต่ต้องไม่ให้เกิดซ้ำอีกเด็ดขาด)
           rsync -avz --delete \
             --exclude='.env' \
             --exclude='.env.*' \
@@ -35,6 +39,7 @@ jobs:
             --exclude='node_modules' \
             --exclude='storage' \
             --exclude='bootstrap/cache' \
+            --exclude='public/images' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             backend/laravel/ "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/ratemynurse/backend/laravel/"
 
