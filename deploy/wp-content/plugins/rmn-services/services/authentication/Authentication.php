@@ -12,6 +12,8 @@ class Authentication {
         wp_enqueue_script('flatpickr-month-select');
         wp_enqueue_script('flatpickr-th');
 
+        $jobBoardUrl = home_url('/job-board/');
+
         $html = <<<HTML
             <style>
                 input:focus, textarea:focus {border: 1px solid #D9D8DC;}
@@ -1222,7 +1224,7 @@ class Authentication {
 
                     function createPopUp(title = '', description = '', next = null)
                     {
-                        return '<div class="backdrop-blur-sm w-full h-full flex flex-col justify-center items-center fixed top-0 p-[30px]"><div class="text-center w-full flex flex-col max-w-[461px] h-full max-h-[491px] rounded-lg p-[24px] justify-center items-center gap-[24px] bg-white"><span>X</span><img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png"/><span class="font-semibold text-[18px]">'+title+'</span><span class="text-[15px]">'+description+'</span><div class="grid grid-cols-2 gap-[24px] font-semibold"><button onclick="this.closest(\'.backdrop-blur-sm\').remove()" class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#D9D8DC] bg-white text-[#5A5A5A] rounded-md leading-[48px]">ไว้ทีหลัง</button><a class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#286F51] bg-[#286F51] text-white rounded-md leading-[48px]" href="https://ratemynurse.org/job-board/">ค้นหาเลย</a></div></div></div>';
+                        return '<div class="backdrop-blur-sm w-full h-full flex flex-col justify-center items-center fixed top-0 p-[30px]"><div class="text-center w-full flex flex-col max-w-[461px] h-full max-h-[491px] rounded-lg p-[24px] justify-center items-center gap-[24px] bg-white"><span>X</span><img src="https://ratemynurse.org/wp-content/uploads/2025/10/layer_1_success.png"/><span class="font-semibold text-[18px]">'+title+'</span><span class="text-[15px]">'+description+'</span><div class="grid grid-cols-2 gap-[24px] font-semibold"><button onclick="this.closest(\'.backdrop-blur-sm\').remove()" class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#D9D8DC] bg-white text-[#5A5A5A] rounded-md leading-[48px]">ไว้ทีหลัง</button><a class="px-[30px] h-[48px] max-w-[172px] text-center border border-[#286F51] bg-[#286F51] text-white rounded-md leading-[48px]" href="{$jobBoardUrl}">ค้นหาเลย</a></div></div></div>';
                     }
 
                     // ตรวจสอบตัวเลขเท่านั้น
@@ -2494,6 +2496,8 @@ class Authentication {
             $page_slug = $post->post_name; // slug
         }
         $isHome = $page_slug === 'homepage' ? 'current_active' : '';
+        $homeUrl = home_url('/');
+        $jobBoardUrl = home_url('/job-board/');
 
         // หน้านี้ (รวมทั้ง markup ด้านล่าง) อาจถูก cache ข้าม visitor ได้ เช่น WordPress.com Batcache
         // ที่รู้จักแค่ cookie login มาตรฐานของ WP ไม่รู้จัก access_token/is_auth ที่ระบบนี้ตั้งเอง
@@ -2720,7 +2724,7 @@ class Authentication {
         return <<<HTML
             <div id="mb_nav" class="grid grid-cols-5 px-[8px] rounded-tl-[24px] rounded-tr-[24px] bg-white hover:text-[#286F51] hover:font-medium" style="box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;">
                 <div id="mb_home" class="mb_tab {$isHome} text-[#5A5A5A] hover:text-[#286F51] relative">
-                    <a href="https://ratemynurse.org" class="flex flex-col justify-center items-center gap-[6px] h-[80px]">
+                    <a href="{$homeUrl}" class="flex flex-col justify-center items-center gap-[6px] h-[80px]">
                         <span class="mb_icon w-[24px] h-[24px] mx-auto block"></span>
                         <span class="text-[12px] leading-none text-center">หน้าหลัก</span>
                     </a>
@@ -2729,9 +2733,11 @@ class Authentication {
 
                 {$myFav_Btn}
 
-                <div id="mb_board" class="mb_tab flex flex-col justify-center items-center gap-[6px] h-[80px] text-[#5A5A5A] hover:text-[#286F51] hover:font-medium relative">
-                    <span class="mb_icon w-[24px] h-[24px] mx-auto block"></span>
-                    <span class="text-[12px] leading-none text-center">บอร์ดประกาศ</span>
+                <div id="mb_board" class="mb_tab text-[#5A5A5A] hover:text-[#286F51] hover:font-medium relative">
+                    <a href="{$jobBoardUrl}" class="flex flex-col justify-center items-center gap-[6px] h-[80px]">
+                        <span class="mb_icon w-[24px] h-[24px] mx-auto block"></span>
+                        <span class="text-[12px] leading-none text-center">บอร์ดประกาศ</span>
+                    </a>
                 </div>
                 {$profileBtn}
             </div>

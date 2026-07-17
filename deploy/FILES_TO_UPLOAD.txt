@@ -22,6 +22,26 @@ WordPress (ทุกไฟล์ path เดียวกับใน deploy/wp-c
   local:  deploy/wp-content/plugins/rmn-services/rmn-scripts.js
   server: wp-content/plugins/rmn-services/rmn-scripts.js
 
+- services/search/Search.php [ไฟล์ใหม่ในรายการนี้ — ตัวไฟล์เคยมีบน server อยู่แล้ว แต่ไม่เคยอยู่ใน
+  deploy/ หรือรายการนี้มาก่อน] ← [2026-07-17 รอบถัดมา] แก้บั๊กค้นหาจังหวัดบนมือถือกดไม่ตอบสนอง (PC ปกติดี):
+  shortcode [search] ถูกฝัง 2 จุดในหน้าเดียวกัน (จุดเดิม + panel ค้นหาบน mobile bottom nav ที่เพิ่งทำ)
+  แต่ script เดิมใช้ document.getElementById ซึ่งจับ element แรกในหน้าเสมอ ทำให้ instance ที่ 2
+  (ของมือถือ) ไม่มี event ผูกเลย แก้เป็น scope การค้นหาผ่าน container ของตัวเอง (document.currentScript)
+  รองรับหลาย instance พร้อมกันได้แล้ว — และเลิกโหลด rmn-search.js (ไฟล์เก่าที่ตายไปแล้ว อ้างอิง
+  #selectedInfo/#section-269-9 ที่ไม่มีอยู่จริง แต่ยังโหลดอยู่ ชนกับโค้ดปัจจุบัน) ไม่ต้องลบไฟล์นั้นออกจาก
+  server ก็ได้ (ไม่ได้ error ถ้าไม่ถูกโหลด แค่เลิกอ้างอิงก็พอ)
+  local:  deploy/wp-content/plugins/rmn-services/services/search/Search.php
+  server: wp-content/plugins/rmn-services/services/search/Search.php
+
+- services/board/job-interview.php [ไฟล์ใหม่ในรายการนี้ เหตุผลเดียวกับด้านบน]
+  local:  deploy/wp-content/plugins/rmn-services/services/board/job-interview.php
+  server: wp-content/plugins/rmn-services/services/board/job-interview.php
+
+- services/board/job-post.php (แก้ไขเพิ่มจากรอบเดิม) — job-post.php/job-interview.php/
+  Authentication.php (mb_board, mb_home, popup สมัครสำเร็จ) แก้ hardcode
+  "https://ratemynurse.org/job-board/" เป็น home_url('/job-board/') แทนทั้งหมด (และ mb_home เป็น
+  home_url('/')) กันปัญหาเวลาทดสอบบน localhost แล้วลิงก์ดันเด้งไป production จริง
+
 Laravel backend: **ไม่ต้องอัปโหลดผ่าน deploy/laravel/ อีกต่อไป** ตั้งแต่มี
 `.github/workflows/deploy-backend.yml` (auto-deploy เมื่อ push ขึ้น main) — deploy/laravel/ ที่เคยมี
 ถือเป็นของเก่าก่อนมี pipeline นี้ ไม่ต้องอ้างอิงอีก

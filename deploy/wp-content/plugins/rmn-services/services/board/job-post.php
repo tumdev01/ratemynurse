@@ -54,6 +54,8 @@ class JobPost {
             HTML;
         }
 
+        $jobBoardUrl = home_url('/job-board/');
+
         return <<<HTML
             <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
             <style>
@@ -340,7 +342,7 @@ class JobPost {
                                 icon: 'success',
                                 title: 'ลงประกาศสำเร็จ'
                             }).then(() => {
-                                window.location.href = "https://ratemynurse.org/job-board/";
+                                window.location.href = "{$jobBoardUrl}";
                             });
                         }
                     } catch (err) {

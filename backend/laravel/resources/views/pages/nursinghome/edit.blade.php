@@ -937,7 +937,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="profiles_preview" class="flex flex-row gap-2"></div>
+                        <div id="profiles_preview" class="flex flex-row flex-wrap gap-[12px]"></div>
                         @if($nursinghome->images && count($nursinghome->images) > 0 || $nursinghome->coverImage)
                         <div id="image_listing" class="p-[16px] gap-[16px] bg-[#F8F8F8] rounded-[8px] mt-4">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -1344,28 +1344,97 @@
             document.getElementById('hiddenProfileUpload').click();
         });
 
-        // จับ event เมื่อเลือกไฟล์
+        // เก็บไฟล์ที่เลือกไว้เองใน array แทนการพึ่ง FileList ตรงๆ (แก้ไม่ได้/ลบทีละไฟล์ไม่ได้)
+        // ลำดับใน array นี้คือลำดับที่จะอัปโหลดจริง — รูปแรกสุดจะถูกตั้งเป็น cover เสมอ
+        let selectedProfileFiles = [];
+        let draggedIndex = null;
+
+        // จับ event เมื่อเลือกไฟล์ — เพิ่มเข้า array เดิมแทนการแทนที่ทั้งหมด
         document.getElementById('hiddenProfileUpload').addEventListener('change', (event) => {
-            const files = event.target.files;
-            let preview = document.getElementById('profiles_preview');
-            if (files.length > 0) {
-                Array.from(files).forEach(file => {
-                    if (file.type.startsWith("image/")) {
-                        let reader = new FileReader();
-                        reader.onload = (e) => {
-                            let img = document.createElement("img");
-                            img.src = e.target.result;
-                            img.style.width = "100px";
-                            img.style.height = "100px";
-                            img.style.objectFit = "cover";
-                            img.style.borderRadius = "8px";
-                            preview.appendChild(img); // เพิ่มเข้าไปเรื่อยๆ
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
+            Array.from(event.target.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    selectedProfileFiles.push(file);
+                }
+            });
+            event.target.value = ''; // เคลียร์ native input กันเลือกไฟล์เดิมซ้ำแล้ว change ไม่ fire
+            syncProfileFileInput();
+            renderProfilesPreview();
         });
+
+        // สร้าง FileList ใหม่จาก selectedProfileFiles แล้วใส่กลับเข้า input จริงก่อน submit
+        // (ลำดับ/รายการที่เห็นใน preview คือสิ่งที่จะถูกอัปโหลดจริงเป๊ะๆ)
+        function syncProfileFileInput() {
+            const dataTransfer = new DataTransfer();
+            selectedProfileFiles.forEach(file => dataTransfer.items.add(file));
+            document.getElementById('hiddenProfileUpload').files = dataTransfer.files;
+        }
+
+        function renderProfilesPreview() {
+            const preview = document.getElementById('profiles_preview');
+            preview.innerHTML = '';
+
+            selectedProfileFiles.forEach((file, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative';
+                wrapper.style.width = '100px';
+                wrapper.style.height = '100px';
+                wrapper.draggable = true;
+
+                const img = document.createElement('img');
+                img.style.width = '100px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.cursor = 'grab';
+                wrapper.appendChild(img);
+
+                // สร้าง wrapper + img ทันทีแบบ sync เพื่อคุมลำดับ DOM ให้ตรงกับ array เป๊ะ
+                // (ถ้าไปสร้าง element ตอน reader.onload ลำดับจะสลับได้ถ้าไฟล์ใหญ่เล็กไม่เท่ากันอ่านเสร็จไม่พร้อมกัน)
+                const reader = new FileReader();
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+
+                if (index === 0) {
+                    const badge = document.createElement('span');
+                    badge.textContent = 'Cover';
+                    badge.className = 'absolute top-1 left-1 bg-[#286F51] text-white text-[10px] px-[6px] py-[2px] rounded';
+                    wrapper.appendChild(badge);
+                }
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.title = 'ลบรูปนี้';
+                removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-[20px] h-[20px] leading-none cursor-pointer';
+                removeBtn.addEventListener('click', () => {
+                    selectedProfileFiles.splice(index, 1);
+                    syncProfileFileInput();
+                    renderProfilesPreview();
+                });
+                wrapper.appendChild(removeBtn);
+
+                // ลากสลับตำแหน่งได้ — ลากรูปไหนไปวางทับรูปไหน จะสลับตำแหน่งกัน
+                wrapper.addEventListener('dragstart', () => {
+                    draggedIndex = index;
+                    wrapper.classList.add('opacity-50');
+                });
+                wrapper.addEventListener('dragend', () => {
+                    wrapper.classList.remove('opacity-50');
+                    draggedIndex = null;
+                });
+                wrapper.addEventListener('dragover', (e) => e.preventDefault());
+                wrapper.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedIndex === null || draggedIndex === index) return;
+                    const [moved] = selectedProfileFiles.splice(draggedIndex, 1);
+                    selectedProfileFiles.splice(index, 0, moved);
+                    syncProfileFileInput();
+                    renderProfilesPreview();
+                });
+
+                preview.appendChild(wrapper);
+            });
+        }
     </script>
     <script>
         const nursinghomeId = {{ $nursinghome->id }}; // เอา PHP เป็นค่า JS
