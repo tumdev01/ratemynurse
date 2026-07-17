@@ -28,6 +28,12 @@ class NursingHomeUpdateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->ownerUserId()),
+            ],
             'main_phone' => [
                 'string',
                 'regex:/^\d{10}$/',
@@ -170,6 +176,10 @@ class NursingHomeUpdateRequest extends FormRequest
             'description.string' => 'คำอธิบายต้องเป็นข้อความ',
             'description.max' => 'คำอธิบายต้องไม่เกิน 255 ตัวอักษร',
 
+            'email.required' => 'กรุณาระบุอีเมล',
+            'email.email' => 'อีเมลต้องอยู่ในรูปแบบที่ถูกต้อง',
+            'email.unique' => 'อีเมลนี้มีผู้ใช้งานแล้ว',
+
             // Phone
             'main-phone.required' => 'กรุณาระบุเบอร์โทรหลัก',
             'main-phone.string' => 'เบอร์โทรหลักต้องเป็นข้อความ',
@@ -230,6 +240,15 @@ class NursingHomeUpdateRequest extends FormRequest
         $profile = \App\Models\NursingHomeProfile::where('user_id', $nursingHomeId)->first();
 
         return $profile ? $profile->id : null;
+    }
+
+    // route {id} ของหน้า edit คือ nursing_home_profiles.id (ดู NursingHomeRepository::updateNursingHomeData)
+    // ไม่ใช่ user_id — ต้องหา user_id ของเจ้าของจริงเพื่อ ignore ตอนเช็ค unique email
+    protected function ownerUserId()
+    {
+        $profile = \App\Models\NursingHomeProfile::find($this->route('id'));
+
+        return $profile?->user_id;
     }
 
 }

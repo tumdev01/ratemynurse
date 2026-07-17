@@ -26,7 +26,7 @@ class NursingHomeRepository
     {
         $query = NursingHomeProfile::query()
             ->with([
-                'owner:id,firstname,lastname,user_type,status',
+                'owner:id,firstname,lastname,user_type,status,email',
                 'province:id,name',
                 'district:id,name',
                 'subDistrict:id,name',
@@ -109,7 +109,7 @@ class NursingHomeRepository
 
         $query = NursingHomeProfile::query()
             ->with([
-                'owner:id,firstname,lastname,user_type,status',
+                'owner:id,firstname,lastname,user_type,status,email',
                 'province:id,name',
                 'district:id,name',
                 'subDistrict:id,name',
@@ -238,7 +238,7 @@ class NursingHomeRepository
 
         $query = NursingHomeProfile::query()
             ->with([
-                'owner:id,firstname,lastname,user_type,status',
+                'owner:id,firstname,lastname,user_type,status,email',
                 'province:id,name',
                 'district:id,name',
                 'subDistrict:id,name',
@@ -323,7 +323,7 @@ class NursingHomeRepository
     {
         $nursingHome = NursingHomeProfile::query()
             ->with([
-                'owner:id,firstname,lastname,user_type,status',
+                'owner:id,firstname,lastname,user_type,status,email',
                 'province:id,name',
                 'district:id,name',
                 'subDistrict:id,name',
@@ -362,7 +362,7 @@ class NursingHomeRepository
 
         $query = NursingHomeProfile::query()
             ->with([
-                'owner:id,firstname,lastname,user_type,status',
+                'owner:id,firstname,lastname,user_type,status,email',
                 'province:id,name',
                 'district:id,name',
                 'subDistrict:id,name',
@@ -406,6 +406,12 @@ class NursingHomeRepository
 
             DB::transaction(function () use ($request, $user) {
                 if ($user && $user->id) {
+                    // email อยู่บนตาราง users (เจ้าของบัญชีจริง) ไม่ใช่ nursing_home_profiles —
+                    // เดิม flow นี้ไม่เคยอัปเดต users.email เลย ต้องอัปเดตแยกตรงนี้
+                    if ($request->filled('email') && $user->owner) {
+                        $user->owner->update(['email' => $request->email]);
+                    }
+
                     $home_service_type = null;
 
                     if ($request->home_service_type) {
@@ -486,7 +492,7 @@ class NursingHomeRepository
                         ['id' => $user->id], // เงื่อนไขหา record
                         [
                             'name'    => $request->name,
-                            'email'   => $user->email ?? NULL,
+                            'email'   => $request->email ?? $user->owner->email ?? NULL,
                             'description' => $request->description,
                             'main_phone'  => $request->main_phone,
                             'res_phone'   => $request->res_phone,
@@ -560,7 +566,9 @@ class NursingHomeRepository
                             'zipcode' => $request->zipcode,
                             'certified' => $request->has('certified') ? 1 : 0,
                             'youtube_url' => $request->youtube_url,
-                            'map' => $request->map,
+                            // ฟิลด์ map (ลิงก์แชร์) ถูกปิดออกจากฟอร์มแล้ว (ใช้ map_embed ทางเดียว) —
+                            // เก็บค่าเดิมไว้เฉยๆ กันข้อมูลเก่าหายถ้ามี ไม่ได้ตั้งใจให้แก้ไขได้อีกแล้ว
+                            'map' => $request->map ?? $user->map,
                             'map_embed' => $request->map_embed ?? NULL,
                         ]
                     );

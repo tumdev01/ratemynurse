@@ -48,7 +48,7 @@
             <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                 <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                     <label for="email">อีเมล์ <span class="req">*</span></label>
-                    <input required type="text" name="email" id="email" maxlength="10" placeholder="อีเมล์"
+                    <input required type="text" name="email" id="email" placeholder="อีเมล์"
                         class="border rounded-lg px-3 py-2" value="{{ old('email', $nursinghome->email ?? '') }}"/>
                     <label class="error text-xs text-red-600"></label>
                 </div>

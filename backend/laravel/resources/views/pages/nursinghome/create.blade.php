@@ -161,22 +161,23 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col">
-                        <label for="map">แผนที่</label>
-                        <input  type="text" name="map" id="map"
-                            class="border rounded-lg px-3 py-2" value="{{ old('map') }}"/>
-                    </div>
-
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
-                            <label for="map">ฝังแผนที่ (iframe)</label>
+                            <label for="map_embed" class="flex flex-row items-center gap-[6px]">
+                                ฝังแผนที่ (iframe)
+                                <span id="mapHelpBtn" title="วิธีเอาโค้ด embed จาก Google Maps" class="cursor-pointer w-[18px] h-[18px] rounded-full bg-[#286F51] text-white text-[12px] leading-[18px] text-center font-bold select-none">!</span>
+                            </label>
                             <input  type="text" name="map_embed" id="map_embed"
                                 class="border rounded-lg px-3 py-2" value="{{ old('map_embed') }}"/>
                         </div>
                     </div>
 
                     <div class="flex flex-col">
-                        <div id="map_show"></div>
+                        <div id="map_show" class="bg-gray-100 border rounded-lg h-96 mb-4 overflow-hidden"></div>
+                    </div>
+
+                    <div id="mapHelpModal" class="hidden fixed inset-0 bg-black/50 z-[999999] flex items-center justify-center p-4">
+                        <img src="{{ asset('img/how_to_map.png') }}" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg">
                     </div>
 
                     <span class="topic w-full flex flex-row gap-[8px] px-[12px] py-[8px] rounded-lg bg-[#286F51]">
@@ -1112,7 +1113,8 @@
         .toggle-switch.dark .toggle-input:checked + .toggle-label::before {
         transform: translateX(16px);
         }
-        
+
+        #map_show iframe {width: 100%!important; height: 100% !important;}
     </style>
 @endsection
 @section('javascript')
@@ -1284,23 +1286,25 @@
     </script>
 
     <script>
+        // ใช้โค้ด iframe (map_embed) ทางเดียวเท่านั้น — ต้องได้มาจาก Google "Share > Embed a map"
+        // (ลิงก์แชร์แบบ "Send a link" ฝังเป็น iframe ตรงๆ ไม่ได้ Google บล็อกด้วย X-Frame-Options เลยตัด
+        // ช่องทางนั้นออกไป ให้ใช้ embed code ทางเดียวซึ่งชัวร์สุด)
         function renderMap() {
             const mapShow = document.getElementById('map_show');
             const iframeValue = document.getElementById('map_embed').value.trim();
-
-            mapShow.innerHTML = ''; // ล้างก่อน
-
-            if (iframeValue) {
-                // ถ้ามี iframe ให้ใส่ตรง ๆ
-                mapShow.innerHTML = iframeValue;
-            }
+            mapShow.innerHTML = iframeValue || '';
         }
 
-        // render ตอนโหลดหน้า
         renderMap();
-
-        // render ตอน input change
         document.getElementById('map_embed').addEventListener('input', renderMap);
+
+        // ปุ่ม ! แสดงภาพวิธีเอาโค้ด embed จาก Google Maps
+        document.getElementById('mapHelpBtn').addEventListener('click', () => {
+            document.getElementById('mapHelpModal').classList.remove('hidden');
+        });
+        document.getElementById('mapHelpModal').addEventListener('click', () => {
+            document.getElementById('mapHelpModal').classList.add('hidden');
+        });
     </script>
 
     <script>
