@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasSubscriptions;
+use App\Traits\Favoritable;
 
 class NursingHomeProfile extends Model
 {
-    use HasFactory, SoftDeletes, HasSubscriptions;
+    use HasFactory, SoftDeletes, HasSubscriptions, Favoritable;
 
     protected $table = 'nursing_home_profiles';
 
@@ -260,20 +261,6 @@ class NursingHomeProfile extends Model
     public function licenses()
     {
         return $this->hasmany(NursingHomeLicenseImage::class, 'profile_id', 'id');
-    }
-
-    public function favorites()
-    {
-        return $this->morphMany(Favorite::class, 'profile');
-    }
-
-    public function isFavoritedBy($user)
-    {
-        if (!$user) return false;
-
-        return $this->favorites()
-            ->where('user_id', $user->id)
-            ->exists();
     }
 
     public function favoritedUsers()

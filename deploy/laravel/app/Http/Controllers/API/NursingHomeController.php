@@ -49,6 +49,16 @@ class NursingHomeController extends Controller {
         return response()->json($nursings);
     }
 
+    // Endpoint แยกต่างหาก เบาและจำกัด field เฉพาะที่ swiper การ์ด nursing-homes-specific ใช้จริง
+    // ไม่แตะ getNursingHomes()/repository เดิม กัน carousel เดิมพัง
+    public function getNursingHomesByIds(Request $request)
+    {
+        $ids = array_map('intval', (array) $request->input('ids', []));
+
+        $nursings = $this->nursing_home_repository->getNursingHomesByIds($ids);
+        return response()->json($nursings);
+    }
+
     public function getNuringHomePagination(Request $request)
     {
         $limit = $request->input('limit', 8);
@@ -163,6 +173,11 @@ class NursingHomeController extends Controller {
                     'res_phone'  => $request->res_phone ?? null,
                 ]);
 
+                $nursinghome->subscriptions()->create([
+                    'plan' => 'BASIC',
+                    'start_date' => now(),
+                ]);
+
                 return [
                     'user' => $user,
                     'nursinghome' => $nursinghome,
@@ -214,7 +229,9 @@ class NursingHomeController extends Controller {
                     'password' => Hash::make($request->main_phone),
                     'user_type' => UserType::NURSING_HOME->value,
                     'status' => 1,
-                    'phone' => $request->main_phone
+                    'phone' => $request->main_phone,
+                    'plan' => 'BASIC',
+                    'plan_start' => Carbon::today()->toDateString(),
                 ]);
 
                 if ($user && $user->id) {
@@ -373,6 +390,11 @@ class NursingHomeController extends Controller {
                         'youtube_url' => $request->youtube_url,
                         'map' => $request->map,
                         'map_embed' => $request->map_embed ?? NULL,
+                    ]);
+
+                    $profile->subscriptions()->create([
+                        'plan' => 'BASIC',
+                        'start_date' => now(),
                     ]);
 
                     if ($request->hasFile('profiles')) {

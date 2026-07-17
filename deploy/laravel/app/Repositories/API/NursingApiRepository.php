@@ -61,6 +61,11 @@ class NursingApiRepository
                 throw new \Exception('Failed to create Nursing user.');
             }
 
+            $profile->subscriptions()->create([
+                'plan' => 'BASIC',
+                'start_date' => now(),
+            ]);
+
             // รูปโปรไฟล์ (บังคับอัปโหลดตอนสมัคร) — เก็บในทรานแซคชันเดียวกัน ตาม pattern เดียวกับ
             // updateProfile() ด้านล่าง (ต่างกันแค่ user ใหม่นี้ไม่มีรูปเก่าให้ลบ)
             $photo = Arr::get($input, 'profile_photo');

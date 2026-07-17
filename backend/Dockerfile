@@ -14,3 +14,4 @@ COPY ./laravel /var/www/html
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 COPY ./000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ./uploads.ini /usr/local/etc/php/conf.d/uploads.ini

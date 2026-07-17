@@ -76,8 +76,6 @@ Route::middleware(['auth:sanctum', 'member.role'])->group(function() {
     });
     
     Route::prefix('favorite')->group(function() {
-        Route::post('/add', [FavoriteController::class, 'add']);
-        Route::post('/remove', [FavoriteController::class, 'remove']);
         Route::post('/toggle', [FavoriteController::class, 'toggle']);
 
         Route::get('/ids', [FavoriteController::class, 'getFavoriteIds']);
@@ -94,7 +92,6 @@ Route::middleware(['auth:sanctum', 'nursing.role'])->group(function () {
 
     Route::get('/nursing/contacts', [NursingController::class, 'getContacts']);
 
-    Route::get('nursing/provider/favorites', [FavoriteController::class, 'getFavoritesForProviderPaginate']);
     Route::delete('nursing/provider/favorites/{id}', [FavoriteController::class, 'removeAsProvider'])->where('id', '[0-9]+');
 });
 
@@ -145,7 +142,6 @@ Route::middleware(['auth:sanctum', 'nursing_home.role'])->group (function () {
         return response()->json(['success' => true, 'data' => $result]);
     });
 
-    Route::get('nursing-home/provider/favorites', [FavoriteController::class, 'getFavoritesForProviderPaginate']);
     Route::delete('nursing-home/provider/favorites/{id}', [FavoriteController::class, 'removeAsProvider'])->where('id', '[0-9]+');
 
     Route::get('nursing-home/profile/{id}', [NursingHomeController::class, 'getProfile'])->where('id', '[0-9]+');
@@ -265,6 +261,7 @@ Route::middleware(['verify.internal.token'])->group(function () {
     Route::post('/nursing/compare', [NursingController::class, 'compareNursing']);
     
     Route::post('/nursing-homes', [NursingHomeController::class, 'getNursingHomes']);
+    Route::post('/nursing-homes/by-ids', [NursingHomeController::class, 'getNursingHomesByIds']);
     Route::post('/nursing-homes/collections', [NursingHomeController::class, 'getCollections']);
     Route::post('/nursing-homes-listing', [NursingHomeController::class,'getNuringHomePagination']);
     Route::post('/nursings-listing', [NursingController::class, 'getNursingPagination']);
