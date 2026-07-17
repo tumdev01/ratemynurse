@@ -38,4 +38,12 @@ class SubscriptionController extends Controller
         return redirect()->route('subscription.dashboard')
             ->with('success', 'Payment accepted and subscription activated.');
     }
+
+    public function cancel(int $id)
+    {
+        $this->service->cancelRequest($id, Auth::id());
+
+        return redirect()->route('subscription.dashboard')
+            ->with('success', 'Subscription request cancelled.');
+    }
 }

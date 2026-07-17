@@ -69,10 +69,10 @@ class UserSubmitRenewalServiceTest extends TestCase
     public function test_submit_updates_existing_request_for_same_user_and_type(): void
     {
         $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'BASIC');
-        $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
 
         $this->assertEquals(1, UserSubscriptionRequest::where('user_id', $this->user->id)->count());
-        $this->assertEquals('VIP', UserSubscriptionRequest::where('user_id', $this->user->id)->first()->plan);
+        $this->assertEquals('ENTERPRISE', UserSubscriptionRequest::where('user_id', $this->user->id)->first()->plan);
     }
 
     // =========================================================================
@@ -81,20 +81,20 @@ class UserSubmitRenewalServiceTest extends TestCase
 
     public function test_accept_payment_creates_new_subscription(): void
     {
-        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
 
         $this->service->acceptPayment($request->id, $this->admin->id);
 
         $this->assertDatabaseHas('user_subscriptions', [
             'subscribable_id' => 1,
             'subscribable_type' => 'App\Models\MemberProfile',
-            'plan' => 'VIP',
+            'plan' => 'ENTERPRISE',
         ]);
     }
 
     public function test_accept_payment_updates_request_status(): void
     {
-        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
 
         $result = $this->service->acceptPayment($request->id, $this->admin->id);
 
@@ -103,7 +103,7 @@ class UserSubmitRenewalServiceTest extends TestCase
 
     public function test_accept_payment_logs_action_by_admin(): void
     {
-        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
 
         $this->service->acceptPayment($request->id, $this->admin->id);
 
@@ -125,7 +125,7 @@ class UserSubmitRenewalServiceTest extends TestCase
             'start_date' => now()->subMonth(),
         ]);
 
-        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
         $this->service->acceptPayment($request->id, $this->admin->id);
 
         // Old subscription should be soft deleted
@@ -138,7 +138,7 @@ class UserSubmitRenewalServiceTest extends TestCase
             ->first();
 
         $this->assertNotNull($activeSubscription);
-        $this->assertEquals('VIP', $activeSubscription->plan);
+        $this->assertEquals('ENTERPRISE', $activeSubscription->plan);
     }
 
     // =========================================================================
@@ -199,7 +199,7 @@ class UserSubmitRenewalServiceTest extends TestCase
             'start_date' => now()->subMonths(2),
         ]);
 
-        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'VIP');
+        $request = $this->service->submit($this->user->id, 1, 'App\Models\MemberProfile', 'ENTERPRISE');
         $this->service->acceptPayment($request->id, $this->admin->id);
 
         $history = $this->service->getRequestWithHistory($request->id);

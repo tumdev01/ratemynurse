@@ -103,7 +103,7 @@ class UserSubscriptionSeeder extends Seeder
             ['action' => 'payment_accepted', 'performed_by' => 'admin', 'admin_id' => 1, 'days_ago' => 15],
         ]);
 
-        // NursingHome #2 (user_id=14) - PROFESSIONAL plan, active (upgraded from BASIC)
+        // NursingHome #2 (user_id=14) - PREMIUM plan, active (upgraded from BASIC)
         // Old subscription (soft deleted)
         $oldSub = UserSubscription::create([
             'subscribable_id' => 2,
@@ -117,14 +117,14 @@ class UserSubscriptionSeeder extends Seeder
             'user_id' => 14,
             'profile_id' => 2,
             'type' => 'App\Models\NursingHomeProfile',
-            'plan' => 'PROFESSIONAL',
+            'plan' => 'PREMIUM',
             'status' => 'payment_accepted',
         ]);
 
         UserSubscription::create([
             'subscribable_id' => 2,
             'subscribable_type' => 'App\Models\NursingHomeProfile',
-            'plan' => 'PROFESSIONAL',
+            'plan' => 'PREMIUM',
             'start_date' => Carbon::now()->subDays(3),
         ]);
 

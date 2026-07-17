@@ -25,6 +25,12 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if (! $user->status) {
+            return response()->json([
+                'message' => 'เข้าสู่ระบบไม่สำเร็จ'
+            ], 403);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([

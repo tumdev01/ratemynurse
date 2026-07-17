@@ -7,3 +7,64 @@
     @apply font-body text-[14px];
   }
 }
+
+/*
+ * Custom status toggle switch — deliberately NOT built from Tailwind utility
+ * classes (w-11, h-5, after:translate-x-full, etc). Flowbite's CDN CSS
+ * (loaded after app.css in layouts/app.blade.php) is compiled with Tailwind v4
+ * and redefines those exact same class names via CSS cascade layers, which
+ * silently overrides/breaks the sizing and slide transform here. Using unique
+ * class names avoids the collision entirely instead of fighting it utility by
+ * utility.
+ */
+.status-toggle {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.status-toggle-track {
+  position: absolute;
+  inset: 0;
+  background-color: #d1d5db;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+.status-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.status-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.status-toggle-input:checked ~ .status-toggle-track {
+  background-color: #2563eb;
+}
+
+.status-toggle-input:checked ~ .status-toggle-track::after {
+  transform: translateX(20px);
+  border-color: #ffffff;
+}

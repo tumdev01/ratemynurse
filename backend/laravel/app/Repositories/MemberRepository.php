@@ -9,14 +9,62 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use App\Models\Image;
+use Yajra\DataTables\DataTables;
 
 class MemberRepository
 {
+    public function getMemberDataTable(array $filters = [])
+    {
+        $orderby = Arr::get($filters, 'orderby', 'id') ?: 'id';
+        $order   = Arr::get($filters, 'order', 'DESC');
+
+        $query = Member::query()
+            ->with([
+                'profile:id,user_id,name,province_id',
+                'profile.province:id,name',
+                'profile.subscription',
+                'coverImage:id,user_id,imageable_id,imageable_type,path,is_cover',
+            ])
+            ->select(['id', 'firstname', 'lastname', 'email', 'phone', 'status', 'created_at']);
+
+        return DataTables::of($query)
+            ->addColumn('fullname', fn($m) => trim("{$m->firstname} {$m->lastname}"))
+            ->addColumn('province', fn($m) => optional(optional($m->profile)->province)->name ?? '-')
+            ->addColumn('cover_image', fn($m) => $m->coverImage ? $m->coverImage->full_path : '')
+            ->addColumn('current_package', function ($m) {
+                $subscription = optional($m->profile)->subscription;
+
+                if (!$subscription) {
+                    return '-';
+                }
+
+                if (now()->gt($subscription->end_date)) {
+                    return e($subscription->plan) . ' <span class="text-red-600 font-medium">(หมดอายุ)</span>';
+                }
+
+                return e($subscription->plan);
+            })
+            ->rawColumns(['current_package'])
+            ->orderColumn($orderby, fn($query, $order) => $query->orderBy($orderby, $order))
+            ->make(true);
+    }
+
+    public function updateStatus(int $id, bool $status)
+    {
+        $member = Member::findOrFail($id);
+        $member->status = $status;
+        $member->save();
+        return $member;
+    }
+
     public function getUser(int $id)
     {
         return Member::query()
             ->with([
                 'profile.subscriptions',
+                'profile.province',
+                'profile.district',
+                'profile.subDistrict',
                 'images',
                 'coverImage'
             ])

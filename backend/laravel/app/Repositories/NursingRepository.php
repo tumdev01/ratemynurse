@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Nursing;
 use App\Models\NursingProfile;
+use App\Models\Province;
 use Illuminate\Support\Arr;
 use Yajra\DataTables\DataTables;
 use App\Enums\UserType;
@@ -167,6 +168,110 @@ class NursingRepository
             });
         }
         return $query->get();
+    }
+
+    // เดิมไม่มี method นี้เลย ทั้งที่ API\NursingController::getNursingPagination() เรียกใช้อยู่แล้ว
+    // (พังด้วย BadMethodCallException) มิเรอร์จาก NursingHomeRepository::countByProvince()
+    public function countByProvince(array $filters = [])
+    {
+        $certified = Arr::get($filters, 'certified');
+        $province = Arr::get($filters, 'province');
+        $search = Arr::get($filters, 'search');
+
+        $query = Nursing::query()
+            ->whereNull('deleted_at')
+            ->where('status', '!=', 0)
+            ->whereHas('profile', function ($q) use ($certified, $province, $search) {
+                if (isset($certified)) {
+                    $q->where('certified', (int) $certified);
+                }
+                if (!empty($province)) {
+                    $province_id = Province::where('code', $province)->value('id');
+                    $q->where('province_id', $province_id);
+                }
+                if (!empty($search)) {
+                    $q->where('name', 'like', "%{$search}%");
+                }
+            });
+
+        return $query->count();
+    }
+
+    // เดิมไม่มี method นี้เลยเช่นกัน — API\NursingController::getNursingPagination() เรียกตอนจังหวัดที่เลือก
+    // มีผลลัพธ์น้อย (<=10) เพื่อดึงรายชื่อเพิ่มจากโซนเดียวกันมาแสดงต่อท้าย มิเรอร์จาก
+    // NursingHomeRepository::getNursingHomeWithZone()
+    public function getNursingWithZone(array $filters = [])
+    {
+        $province = Arr::get($filters, 'province');
+        $zone = Arr::get($filters, 'zone');
+        $additionalLimit = Arr::get($filters, 'additional_limit', 10);
+
+        // ถ้าไม่มี zone แต่มี province ให้ดึง zone จาก province
+        if (!$zone && $province) {
+            $zone = Province::where('code', $province)->value('zone');
+        }
+
+        // ดึงข้อมูลจากจังหวัดที่เลือกก่อน
+        $provinceNursings = $this->getNursingsBaseQuery($filters)
+            ->when(!empty($province), function ($q) use ($province) {
+                $province_id = Province::where('code', $province)->value('id');
+                $q->whereHas('profile', function ($pq) use ($province_id) {
+                    $pq->where('province_id', $province_id);
+                });
+            })
+            ->get();
+
+        $provinceNursingIds = $provinceNursings->pluck('id')->toArray();
+
+        // ดึงข้อมูลเพิ่มจาก zone เดียวกัน (ไม่รวมจังหวัดที่เลือกไปแล้ว)
+        $zoneNursings = collect();
+        if ($zone) {
+            $zoneNursings = $this->getNursingsBaseQuery($filters)
+                ->whereHas('profile.province', function ($q) use ($zone) {
+                    $q->where('zone', $zone);
+                })
+                ->when(!empty($province), function ($q) use ($province) {
+                    $province_id = Province::where('code', $province)->value('id');
+                    $q->whereHas('profile', function ($pq) use ($province_id) {
+                        $pq->where('province_id', '!=', $province_id);
+                    });
+                })
+                ->whereNotIn('id', $provinceNursingIds)
+                ->inRandomOrder()
+                ->limit($additionalLimit)
+                ->get();
+        }
+
+        return $provinceNursings->concat($zoneNursings);
+    }
+
+    private function getNursingsBaseQuery(array $filters = [])
+    {
+        $certified = Arr::get($filters, 'certified');
+        $search = Arr::get($filters, 'search');
+
+        return Nursing::query()
+            ->with([
+                'profile:id,user_id,zipcode,province_id,district_id,sub_district_id,cost,name,certified',
+                'profile.province:id,name',
+                'profile.district:id,name',
+                'profile.subDistrict:id,name',
+                'images:user_id,path,is_cover',
+                'coverImage:user_id,path,is_cover',
+            ])
+            ->select(['users.id'])
+            ->whereNull('deleted_at')
+            ->where('status', '!=', 0)
+            ->when(isset($certified), function ($q) use ($certified) {
+                $q->whereHas('profile', function ($pq) use ($certified) {
+                    $pq->where('certified', (int) $certified);
+                });
+            })
+            ->when(!empty($search), function ($q) use ($search) {
+                $q->whereHas('profile', function ($pq) use ($search) {
+                    $pq->where('name', 'like', "%{$search}%");
+                });
+            });
     }
 
     public function getNursingPagination(array $filters = [])

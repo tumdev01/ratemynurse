@@ -27,6 +27,10 @@ class OtpController extends Controller
             // หา user ตามเบอร์
             $user = User::where('phone', $request->phone)->firstOrFail();
 
+            if (!$user->status) {
+                return response()->json(['message' => 'เข้าสู่ระบบไม่สำเร็จ'], 403);
+            }
+
             // สร้าง OTP 5 หลัก หมดอายุ 90 วินาที
             $otp = $this->otp->generate($user->id, $request->phone, 5, 90);
 
@@ -67,6 +71,10 @@ class OtpController extends Controller
         }
 
         $user = $userOrStatus;
+
+        if (!$user->status) {
+            return response()->json(['message' => 'เข้าสู่ระบบไม่สำเร็จ'], 403);
+        }
 
         $token = $user->createToken('api-token')->plainTextToken;
 

@@ -103,26 +103,26 @@ class UserSubscriptionRequestTest extends TestCase
             ->assertJsonValidationErrors(['plan']);
     }
 
-    public function test_member_profile_cannot_use_enterprise_plan(): void
+    public function test_member_profile_cannot_use_vip_plan(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/subscription/submit', [
                 'profile_id' => 1,
                 'type' => 'App\Models\MemberProfile',
-                'plan' => 'ENTERPRISE',
+                'plan' => 'VIP',
             ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['plan']);
     }
 
-    public function test_nursing_profile_cannot_use_vip_plan(): void
+    public function test_nursing_profile_cannot_use_premium_plan(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/subscription/submit', [
                 'profile_id' => 1,
                 'type' => 'App\Models\NursingProfile',
-                'plan' => 'VIP',
+                'plan' => 'PREMIUM',
             ]);
 
         $response->assertStatus(422)
@@ -182,20 +182,20 @@ class UserSubscriptionRequestTest extends TestCase
         ]);
     }
 
-    public function test_member_can_submit_vip_plan(): void
+    public function test_member_can_submit_enterprise_plan(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/subscription/submit', [
                 'profile_id' => 1,
                 'type' => 'App\Models\MemberProfile',
-                'plan' => 'VIP',
+                'plan' => 'ENTERPRISE',
             ]);
 
         $response->assertStatus(200);
 
         $this->assertDatabaseHas('user_subscription_requests', [
             'user_id' => $this->user->id,
-            'plan' => 'VIP',
+            'plan' => 'ENTERPRISE',
             'status' => 'awaiting_payment',
         ]);
     }
@@ -219,6 +219,25 @@ class UserSubscriptionRequestTest extends TestCase
         ]);
     }
 
+    public function test_nursing_can_submit_vip_plan(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/subscription/submit', [
+                'profile_id' => 2,
+                'type' => 'App\Models\NursingProfile',
+                'plan' => 'VIP',
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('user_subscription_requests', [
+            'user_id' => $this->user->id,
+            'type' => 'App\Models\NursingProfile',
+            'plan' => 'VIP',
+            'status' => 'awaiting_payment',
+        ]);
+    }
+
     public function test_nursing_home_can_submit_enterprise_plan(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
@@ -234,6 +253,25 @@ class UserSubscriptionRequestTest extends TestCase
             'user_id' => $this->user->id,
             'type' => 'App\Models\NursingHomeProfile',
             'plan' => 'ENTERPRISE',
+            'status' => 'awaiting_payment',
+        ]);
+    }
+
+    public function test_nursing_home_can_submit_premium_plan(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/subscription/submit', [
+                'profile_id' => 3,
+                'type' => 'App\Models\NursingHomeProfile',
+                'plan' => 'PREMIUM',
+            ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('user_subscription_requests', [
+            'user_id' => $this->user->id,
+            'type' => 'App\Models\NursingHomeProfile',
+            'plan' => 'PREMIUM',
             'status' => 'awaiting_payment',
         ]);
     }
@@ -289,7 +327,7 @@ class UserSubscriptionRequestTest extends TestCase
             ->postJson('/api/subscription/submit', [
                 'profile_id' => 1,
                 'type' => 'App\Models\MemberProfile',
-                'plan' => 'VIP',
+                'plan' => 'ENTERPRISE',
             ]);
 
         // Should still be only 1 request row
@@ -299,7 +337,7 @@ class UserSubscriptionRequestTest extends TestCase
         $this->assertDatabaseHas('user_subscription_requests', [
             'user_id' => $this->user->id,
             'type' => 'App\Models\MemberProfile',
-            'plan' => 'VIP',
+            'plan' => 'ENTERPRISE',
         ]);
 
         // Should have 4 logs total (2 per submission)

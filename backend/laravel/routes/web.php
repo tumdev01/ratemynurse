@@ -10,6 +10,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NursingHomeRoomController;
 use App\Http\Controllers\NursingCvImageController;
+use App\Http\Controllers\SubscriptionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -79,7 +80,18 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('member')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {
+        Route::get('/', [MemberController::class, 'index'])->name('member.index');
+        Route::get('data', [MemberController::class, 'getMemberPagination'])->name('member.data');
         Route::get('create', [MemberController::class, 'create'])->name('member.create');
+        Route::get('/{id}/detail', [MemberController::class, 'detailView'])->where('id', '[0-9]+')->name('member.detail');
+        Route::post('/{id}/status', [MemberController::class, 'updateStatus'])->where('id', '[0-9]+')->name('member.status-update');
+    });
+
+    Route::prefix('subscription')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'dashboard'])->name('subscription.dashboard');
+        Route::get('/{id}', [SubscriptionController::class, 'show'])->where('id', '[0-9]+')->name('subscription.show');
+        Route::post('/{id}/accept', [SubscriptionController::class, 'acceptPayment'])->where('id', '[0-9]+')->name('subscription.accept');
+        Route::post('/{id}/cancel', [SubscriptionController::class, 'cancel'])->where('id', '[0-9]+')->name('subscription.cancel');
     });
 
     Route::get('/jobs', [JobController::class, 'jobPagination'])->name('job.pagination');

@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    use App\Enums\SubscriptionPlan;
+@endphp
+
 @section('content')
 <div class="p-4 sm:ml-64">
     <div class="p-4 mb-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
@@ -28,6 +32,7 @@
                             <th scope="col" class="px-6 py-3">Profile Type</th>
                             <th scope="col" class="px-6 py-3">Profile ID</th>
                             <th scope="col" class="px-6 py-3">Plan</th>
+                            <th scope="col" class="px-6 py-3">ราคา</th>
                             <th scope="col" class="px-6 py-3">Status</th>
                             <th scope="col" class="px-6 py-3">Submitted At</th>
                             <th scope="col" class="px-6 py-3">Action</th>
@@ -44,6 +49,7 @@
                                 <td class="px-6 py-4">{{ class_basename($req->type) }}</td>
                                 <td class="px-6 py-4">{{ $req->profile_id }}</td>
                                 <td class="px-6 py-4">{{ $req->plan }}</td>
+                                <td class="px-6 py-4">{{ number_format(SubscriptionPlan::priceFor($req->type, $req->plan)) }} บาท</td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
                                         {{ $req->status }}
@@ -51,14 +57,17 @@
                                 </td>
                                 <td class="px-6 py-4">{{ $req->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="px-6 py-4" onclick="event.stopPropagation()">
-                                    <form method="POST" action="{{ route('subscription.accept', $req->id) }}"
-                                          onsubmit="return confirm('Accept payment for this request?')">
+                                    <form id="subForm-accept-{{ $req->id }}" method="POST" action="{{ route('subscription.accept', $req->id) }}" class="hidden">
                                         @csrf
-                                        <button type="submit"
-                                                class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
-                                            Accept Payment
-                                        </button>
                                     </form>
+                                    <form id="subForm-cancel-{{ $req->id }}" method="POST" action="{{ route('subscription.cancel', $req->id) }}" class="hidden">
+                                        @csrf
+                                    </form>
+                                    <select class="border rounded-lg px-2 py-1 text-xs" onchange="handleSubscriptionAction(this, {{ $req->id }})">
+                                        <option value="" selected disabled>เลือกการดำเนินการ</option>
+                                        <option value="accept">Accept Payment</option>
+                                        <option value="cancel">Cancelled</option>
+                                    </select>
                                 </td>
                             </tr>
                         @endforeach
@@ -72,4 +81,18 @@
 @endsection
 
 @section('javascript')
+<script>
+    function handleSubscriptionAction(select, id) {
+        const action = select.value;
+        if (!action) return;
+
+        const confirmMsg = action === 'accept' ? 'Accept payment for this request?' : 'Cancel this request?';
+        if (!confirm(confirmMsg)) {
+            select.value = '';
+            return;
+        }
+
+        document.getElementById('subForm-' + action + '-' + id).submit();
+    }
+</script>
 @endsection
