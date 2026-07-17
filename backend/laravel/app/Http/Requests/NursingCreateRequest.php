@@ -9,6 +9,23 @@ use Illuminate\Validation\Rule;
 class NursingCreateRequest extends FormRequest
 {
     /**
+     * ตัดอักขระที่ไม่ใช่ตัวเลขออกจากเบอร์โทรศัพท์ก่อน validate (เช่น "02-xxx-xxxx", "+66-xx-xxx-xxxx")
+     * แล้วแปลงรหัสประเทศ 66 นำหน้า (ถ้ามี แทนเลข 0) กลับให้เป็น 0 นำหน้าตามปกติ
+     */
+    protected function prepareForValidation()
+    {
+        if ($this->filled('phone')) {
+            $digits = preg_replace('/\D+/', '', $this->input('phone'));
+
+            if (str_starts_with($digits, '66') && strlen($digits) === 11) {
+                $digits = '0' . substr($digits, 2);
+            }
+
+            $this->merge(['phone' => $digits]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, mixed>
@@ -28,16 +45,21 @@ class NursingCreateRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+                Rule::unique('users', 'email')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
             'phone' => [
                 'required',
                 'string',
                 'regex:/^\d+$/',
                 'size:10',
-                Rule::unique('users', 'phone')->whereNull('deleted_at'),
+                // เบอร์ที่สมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จ ไม่นับว่าซ้ำ — ให้สมัครซ้ำได้เพื่อ resend OTP
+                Rule::unique('users', 'phone')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
-            'profile_photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            // ฟอร์ม Laravel admin (nursing.store) ส่งไฟล์รูปมาเป็น "profile_image" และไม่บังคับใส่รูป —
+            // ส่วน WP plugin/API ส่งมาเป็น "profile_photo" และยังคงบังคับใส่รูปเหมือนเดิม
+            ...($this->routeIs('nursing.store')
+                ? ['profile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]
+                : ['profile_photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120']]),
             'medical_condition_detail' => ['nullable', 'string'],
             'history_of_drug_allergy_detail' => ['nullable', 'string'],
             // 'address' => ['required', 'string', 'max:255'],
@@ -71,6 +93,9 @@ class NursingCreateRequest extends FormRequest
             'profile_photo.image'    => 'ไฟล์ที่อัปโหลดต้องเป็นรูปภาพ',
             'profile_photo.mimes'    => 'รองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .webp',
             'profile_photo.max'      => 'ขนาดไฟล์ต้องไม่เกิน 5MB',
+            'profile_image.image'   => 'ไฟล์ที่อัปโหลดต้องเป็นรูปภาพ',
+            'profile_image.mimes'   => 'รองรับเฉพาะไฟล์ .jpg, .jpeg, .png, .webp',
+            'profile_image.max'     => 'ขนาดไฟล์ต้องไม่เกิน 5MB',
         ];
     }
 }

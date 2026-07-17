@@ -15,6 +15,12 @@ WordPress (ทุกไฟล์ path เดียวกับใน deploy/wp-c
 - js/rmn-location-selector.js [ไฟล์ใหม่]
 - services/authentication/Authentication.php (แก้ไข)
 - services/board/job-post.php (แก้ไข)
+- rmn-scripts.js (แก้ไข) ← [2026-07-17] ยืนยันแล้วว่า production ยังเป็นเวอร์ชันเก่า ไม่มี handler
+  ของ #mb_search เลย (เทียบ curl production กับ local ต่างกัน 16 บรรทัดตรงจุดนี้พอดี) ทำให้ปุ่มค้นหาบน
+  mobile bottom nav กดแล้วไม่มีอะไรเกิดขึ้น (HTML ของ panel ถูกอัปโหลดไปแล้วจาก Authentication.php แต่
+  ไฟล์นี้ไม่เคยอัปเลยสักครั้ง — ไม่เคยอยู่ใน deploy/ หรือรายการนี้มาก่อนด้วย เพิ่งเพิ่มเข้ามาตอนนี้)
+  local:  deploy/wp-content/plugins/rmn-services/rmn-scripts.js
+  server: wp-content/plugins/rmn-services/rmn-scripts.js
 
 Laravel backend: **ไม่ต้องอัปโหลดผ่าน deploy/laravel/ อีกต่อไป** ตั้งแต่มี
 `.github/workflows/deploy-backend.yml` (auto-deploy เมื่อ push ขึ้น main) — deploy/laravel/ ที่เคยมี

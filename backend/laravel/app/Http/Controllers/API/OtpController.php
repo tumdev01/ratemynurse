@@ -84,8 +84,10 @@ class OtpController extends Controller
     {
         $request->validate(['phone' => 'required|string']);
 
+        // เบอร์ที่สมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จ ไม่นับว่า "มีผู้ใช้แล้ว" —
+        // ให้ผู้ใช้กรอกฟอร์มต่อไปได้ตามปกติ แล้วปล่อยให้ตอน submit จริงไป resend OTP ให้ user เดิมแทน
         return response()->json([
-            'exists' => User::where('phone', $request->phone)->exists(),
+            'exists' => User::where('phone', $request->phone)->whereNotNull('phone_verified_at')->exists(),
         ]);
     }
 

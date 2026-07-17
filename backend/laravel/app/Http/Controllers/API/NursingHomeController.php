@@ -145,6 +145,33 @@ class NursingHomeController extends Controller {
     public function register(NursingHomeRegisterRequest $request, \App\Services\OtpService $otpService)
     {
         try {
+            // เบอร์นี้เคยสมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จเลย (เช่น OTP รอบก่อนไม่มาถึง/หมดอายุ) —
+            // resend OTP ให้ user เดิมแทนที่จะสร้างซ้ำ (ซ้ำไม่ได้อยู่แล้วเพราะ phone/email unique ที่ DB)
+            $pending = $otpService->findResumableUser($request->phone);
+            if ($pending) {
+                $otpService->sendOtp($pending->id, $pending->phone);
+                $pendingProfile = $pending->profiles()->latest()->first();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'พบข้อมูลการสมัครที่ยังไม่ยืนยัน OTP กรุณายืนยัน OTP เพื่อเข้าสู่ระบบ',
+                    'data' => [
+                        'user' => [
+                            'id' => $pending->id,
+                            'name' => $pending->name,
+                            'email' => $pending->email,
+                            'phone' => $pending->phone,
+                        ],
+                        'nursing_home' => $pendingProfile ? [
+                            'id' => $pendingProfile->id,
+                            'name' => $pendingProfile->name,
+                        ] : null,
+                        'otp_required' => true,
+                    ],
+                    'errors' => null,
+                ], 200);
+            }
+
             $result = DB::transaction(function () use ($request) {
                 $user = NursingHome::create([
                     'firstname' => $request->firstname,

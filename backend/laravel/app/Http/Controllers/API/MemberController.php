@@ -35,6 +35,22 @@ class MemberController extends Controller
     public function create(MemberCreateRequest $request, \App\Services\OtpService $otpService)
     {
         try {
+            // เบอร์นี้เคยสมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จเลย (เช่น OTP รอบก่อนไม่มาถึง/หมดอายุ) —
+            // resend OTP ให้ user เดิมแทนที่จะสร้างซ้ำ (ซ้ำไม่ได้อยู่แล้วเพราะ phone/email unique ที่ DB)
+            $pending = $otpService->findResumableUser($request->phone);
+            if ($pending) {
+                $otpService->sendOtp($pending->id, $pending->phone);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'พบข้อมูลการสมัครที่ยังไม่ยืนยัน OTP กรุณายืนยัน OTP เพื่อเข้าสู่ระบบ',
+                    'data' => [
+                        'user' => new MemberResource($pending),
+                        'otp_required' => true,
+                    ],
+                ]);
+            }
+
             $member = $this->member_repository->store($request->all());
             if (!$member || !$member->exists) {
                 return response()->json([

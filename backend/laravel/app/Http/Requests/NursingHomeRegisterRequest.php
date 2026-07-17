@@ -22,13 +22,14 @@ class NursingHomeRegisterRequest extends FormRequest
                 'string',
                 'regex:/^\d+$/',
                 'size:10',
-                Rule::unique('users', 'phone')->whereNull('deleted_at'),
+                // เบอร์ที่สมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จ ไม่นับว่าซ้ำ — ให้สมัครซ้ำได้เพื่อ resend OTP
+                Rule::unique('users', 'phone')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
             'email' => [
                 'required',
                 'string',
                 'email',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+                Rule::unique('users', 'email')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
             'res_phone' => ['nullable', 'string', 'regex:/^\d+$/', 'size:10'],
             'facebook'  => ['nullable', 'string', 'max:255'],

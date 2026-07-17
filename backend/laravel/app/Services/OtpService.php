@@ -62,7 +62,21 @@ class OtpService
         // หา user จาก user_identifier
         $user = User::where('phone', $record->user_identifier)->firstOrFail();
 
+        if (! $user->phone_verified_at) {
+            $user->forceFill(['phone_verified_at' => now()])->save();
+        }
+
         return $user; // คืนค่า user object แทน 'valid'
+    }
+
+    /**
+     * หา user ที่สมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จเลย (ค้างจากรอบก่อน เช่น OTP ไม่มาถึง/หมดอายุ)
+     * ใช้เช็คก่อนสร้าง user ใหม่ตอนสมัครสมาชิก กันไม่ให้ผู้ใช้ติดล็อกด้วย unique constraint ของเบอร์เดิม
+     * ทั้งที่ยังไม่เคย login สำเร็จเลยสักครั้ง — ถ้าเจอ ให้ resend OTP ให้ user เดิมแทนการสร้างซ้ำ
+     */
+    public function findResumableUser($phone)
+    {
+        return User::where('phone', $phone)->whereNull('phone_verified_at')->first();
     }
 
 }

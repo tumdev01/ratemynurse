@@ -23,19 +23,24 @@ class MemberCreateRequest extends FormRequest
                 'string',
                 'regex:/^\d+$/',
                 'size:10',
-                Rule::unique('users', 'phone')->whereNull('deleted_at'),
+                // เบอร์ที่สมัครไปแล้วแต่ยังไม่เคยยืนยัน OTP สำเร็จ ไม่นับว่าซ้ำ — ให้สมัครซ้ำได้เพื่อ resend OTP
+                Rule::unique('users', 'phone')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
             'email' => [
                 'required',
                 'string',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+                Rule::unique('users', 'email')->whereNull('deleted_at')->whereNotNull('phone_verified_at'),
             ],
             'cardid' => [
                 'required',
                 'string',
                 'regex:/^\d+$/',
                 'size:13',
-                Rule::unique('member_profiles', 'cardid')->whereNull('deleted_at'),
+                Rule::unique('member_profiles', 'cardid')->whereNull('deleted_at')->where(function ($query) {
+                    $query->whereIn('user_id', function ($sub) {
+                        $sub->select('id')->from('users')->whereNotNull('phone_verified_at');
+                    });
+                }),
             ],
             'user_type' => ['required', 'string', 'in:MEMBER'],
         ];
