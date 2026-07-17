@@ -54,3 +54,12 @@ jobs:
           '
           # migrate --force ถูกตัดออกชั่วคราว — production มี migration ค้าง 26 ตัวที่ table จริงมีอยู่แล้ว
           # (schema drift สะสมจากการแก้ DB ตรงๆ/หลายเครื่องมาก่อน) ต้อง audit ทีละตัวก่อนเปิดใช้อีกครั้ง
+
+      - name: Run newly-audited migrations (targeted --path only)
+        run: |
+          # เพิ่ม path ทีละไฟล์ตรงนี้เฉพาะ migration ใหม่ที่ตรวจสอบแล้วว่า column ยังไม่มีจริงบน production
+          # และจำเป็นสำหรับโค้ดที่เพิ่ง deploy — ห้ามใช้ migrate --force ทั้งชุดจนกว่าจะ audit 26 ตัวเก่าเสร็จ
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}" '
+            set -e
+            docker exec rmn_laravel_backend php artisan migrate --path=database/migrations/2026_07_18_014421_add_category_to_notifications_table.php --force
+          '
