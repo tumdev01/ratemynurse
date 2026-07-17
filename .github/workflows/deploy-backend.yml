@@ -38,7 +38,7 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             backend/laravel/ "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/ratemynurse/backend/laravel/"
 
-      - name: Post-deploy (composer install, clear caches, migrate)
+      - name: Post-deploy (composer install, clear caches)
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}" '
             set -e
@@ -46,5 +46,6 @@ jobs:
             docker exec rmn_laravel_backend php artisan config:clear
             docker exec rmn_laravel_backend php artisan cache:clear
             docker exec rmn_laravel_backend php artisan route:clear
-            docker exec rmn_laravel_backend php artisan migrate --force
           '
+          # migrate --force ถูกตัดออกชั่วคราว — production มี migration ค้าง 26 ตัวที่ table จริงมีอยู่แล้ว
+          # (schema drift สะสมจากการแก้ DB ตรงๆ/หลายเครื่องมาก่อน) ต้อง audit ทีละตัวก่อนเปิดใช้อีกครั้ง
