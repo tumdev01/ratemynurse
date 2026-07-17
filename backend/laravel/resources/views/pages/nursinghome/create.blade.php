@@ -8,9 +8,9 @@
         <form id="registerNurse" method="post" action="{{ route('nursing-home.store') }}" class="flex flex-col gap-[32px] w-full max-w-[870px] mx-auto" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="coords" value="">
-            <input type="hidden" id="provinceTxt" value="">
-            <input type="hidden" id="districtTxt" value="">
-            <input type="hidden" id="subDistrictTxt" value="">
+            <input type="hidden" id="provinceTxt" name="province_name" value="{{ old('province_name') }}">
+            <input type="hidden" id="districtTxt" name="district_name" value="{{ old('district_name') }}">
+            <input type="hidden" id="subDistrictTxt" name="sub_district_name" value="{{ old('sub_district_name') }}">
             @if(session('error'))
                 <div class="flex flex-col justify-start bg-red-500 p-[16px] rounded-md text-white">
                     <span>
@@ -42,8 +42,8 @@
                         <span class="text-md text-white font-semibold">ข้อมูลทั่วไปของศูนย์</span>
                     </span>
 
-                    <div class="flex flex-col">
-                        <label for="name">เลือกเจ้าของศูนย์ <span class="req">*</span></label>
+                    <div class="flex flex-col hidden">
+                        <label for="name">เลือกเจ้าของศูนย์</label>
                         <select name="user_id" id="user_id"></select>
                     </div>
                     
@@ -62,13 +62,13 @@
                     <div class="flex flex-col md:flex-row gap-[16px] md:gap-[32px] ct-section">
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="main_phone">เบอร์โทรศัพท์หลัก <span class="req">*</span></label>
-                            <input required type="text" name="main_phone" id="main_phone" maxlength="10" placeholder="เบอร์โทรศัพท์หลัก"
+                            <input required type="text" name="main_phone" id="main_phone" placeholder="เบอร์โทรศัพท์หลัก"
                                 class="border rounded-lg px-3 py-2" value="{{ old('main_phone') }}"/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
                         <div class="w-full md:w-[calc(50%-16px)] flex flex-col">
                             <label for="res_phone">เบอร์โทรศัพท์สำรอง</label>
-                            <input type="text" name="res_phone" id="res_phone" maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง"
+                            <input type="text" name="res_phone" id="res_phone" placeholder="เบอร์โทรศัพท์สำรอง"
                                 class="border rounded-lg px-3 py-2" value="{{ old('res_phone') }}"/>
                             <label class="error text-xs text-red-600"></label>
                         </div>
@@ -129,30 +129,30 @@
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="weight">จังหวัด <span class="req">*</span></label>
-                            <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()" required>
+                            <select id="province" name="province_id" class="border rounded-lg px-3 py-2" required>
                                 @if(!empty(old('province_id')))
-                                    <option value="{{ old('province_id') }}" selected></option>
+                                    <option value="{{ old('province_id') }}" selected>{{ old('province_name') }}</option>
                                 @endif
-                            <select>
+                            </select>
                         </div>
                         <div class="flex flex-col">
                             <label for="height">อำเภอ/เขต <span class="req">*</span></label>
-                            <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()" required>
+                            <select id="district" name="district_id" class="border rounded-lg px-3 py-2" required>
                                 @if(!empty(old('district_id')))
-                                    <option value="{{ old('district_id') }}" selected></option>
+                                    <option value="{{ old('district_id') }}" selected>{{ old('district_name') }}</option>
                                 @endif
-                            <select>
+                            </select>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                         <div class="flex flex-col">
                             <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
-                            <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()" required>
+                            <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" required>
                                 @if(!empty(old('sub_district_id')))
-                                    <option value="{{ old('sub_district_id') }}" selected></option>
+                                    <option value="{{ old('sub_district_id') }}" selected>{{ old('sub_district_name') }}</option>
                                 @endif
-                            <select>
+                            </select>
                         </div>
                         <div class="flex flex-col">
                             <label for="zipcode">รหัสไปรษณีย์ <span class="req">*</span></label>
@@ -283,7 +283,7 @@
 
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
-                                <label for="manager_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
+                                <label for="manager_phone">เบอร์โทรติดต่อ</label>
                                 <input type="text" name="manager_phone" id="manager_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('manager_phone') }}"/>
@@ -304,13 +304,13 @@
 
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
-                                <label for="assist_name">ชื่อ-นามสกุล แพทย์	<span class="req">*</span></label>
+                                <label for="assist_name">ชื่อ-นามสกุล แพทย์	</label>
                                 <input type="text" name="assist_name" id="assist_name" placeholder="ชื่อ-นามสกุล แพทย์ประจำ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_name') }}"/>
                             </div>
                             <div class="flex flex-col">
-                                <label for="assist_no">เลขที่ใบอนุญาตแพทย์ <span class="req">*</span></label>
+                                <label for="assist_no">เลขที่ใบอนุญาตแพทย์</label>
                                 <input type="text" name="assist_no" id="assist_no" placeholder="เลขที่ใบอนุญาต"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_no') }}"/>
@@ -319,13 +319,13 @@
 
                         <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                             <div class="flex flex-col">
-                                <label for="assist_expert">ความเชี่ยวชาญ <span class="req">*</span></label>
+                                <label for="assist_expert">ความเชี่ยวชาญ</label>
                                 <input type="text" name="assist_expert" id="assist_expert" placeholder="เช่น อายุรศาสตร์ เวชศาสตร์ผู้สูงอายุ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_expert') }}"/>
                             </div>
                             <div class="flex flex-col">
-                                <label for="assist_phone">เบอร์โทรติดต่อ <span class="req">*</span></label>
+                                <label for="assist_phone">เบอร์โทรติดต่อ</label>
                                 <input type="text" name="assist_phone" id="assist_phone" placeholder="เบอร์โทรติดต่อ"
                                         class="border rounded-lg px-3 py-2"
                                         value="{{ old('assist_phone') }}"/>
@@ -985,7 +985,7 @@
                         @endif
                     </div>
 
-                    <div id="profiles_preview" class="flex flex-col"></div>
+                    <div id="profiles_preview" class="flex flex-row flex-wrap gap-[12px]"></div>
                     
                     <span class="w-full min-h-[1px] divider clear-both"></span>
 
@@ -1003,7 +1003,8 @@
 @endsection
 @section('style')
     <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet" />
     <link href="{{ asset('flatpickr/flatpickr.min.css') }}" rel="stylesheet"/>
     <style>
         .req {color:red}
@@ -1025,6 +1026,18 @@
         .select2-dropdown, .select2-selection {border-color: rgb(229, 231, 235) !important;}
         .select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 38px !important;padding-left:0}
         .select2-container--default .select2-selection--single .select2-selection__arrow {height:38px !important;}
+        .ts-wrapper { position: relative; box-sizing: border-box; border: none !important; padding: 0 !important; }
+        .ts-control { box-sizing: border-box; cursor: pointer; display: flex; align-items: center;
+            min-height: 38px; padding: 0 0.75rem; background-color: #fff; border: 1px solid rgb(229, 231, 235);
+            border-radius: 0.5rem; font-size: 14px; color: #444; }
+        .ts-control input { font-size: 14px; }
+        .ts-wrapper.single .ts-control { padding-right: 24px; }
+        .ts-dropdown { background-color: #fff !important; border: 1px solid rgb(229, 231, 235) !important;
+            border-radius: 0.5rem; box-sizing: border-box; z-index: 999999 !important; }
+        .ts-dropdown .ts-dropdown-content { max-height: 200px; overflow-y: auto; }
+        .ts-dropdown .option { padding: 6px 12px; font-size: 14px; color: #444; cursor: pointer; }
+        .ts-dropdown .option.active { background-color: #5897fb; color: #fff; }
+        .ts-dropdown .no-results { padding: 6px 12px; font-size: 14px; color: #999; }
 
         /* Genel stil */
         .toggle-switch {
@@ -1106,49 +1119,43 @@
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="{{ asset('flatpickr/flatpickr.min.js') }}"></script>
     <script src="{{ asset('flatpickr/monthSelect/index.js') }}"></script>
     <script src="{{ asset('flatpickr/th.js') }}"></script>
+    <script src="{{ asset('js/rmn-location-selector.js') }}"></script>
 
     <script>
-        const mainPhone = document.getElementById('main_phone');
-        const resPhone = document.getElementById('res_phone');
-    
-        mainPhone.addEventListener('input', function () {
+        // ตัดสัญลักษณ์ที่ไม่ใช่ตัวเลขออกทันทีทุกครั้งที่พิมพ์/วาง เหลือแต่ตัวเลขไม่เกิน 10 หลัก
+        // ใช้ร่วมกันทั้งเบอร์หลัก/สำรอง/ผู้จัดการ/แพทย์ที่ปรึกษา
+        function attachPhoneSanitizer(input) {
+            if (!input) return;
             let typingTimer;
-            const doneTypingInterval = 500; // 0.5 วินาที
-            clearTimeout(typingTimer); // reset timer ทุกครั้งที่พิมพ์
-            typingTimer = setTimeout(() => {
-                validatePhone(this);
-            }, doneTypingInterval);
-        });
+            input.addEventListener('input', function () {
+                const cursorFromEnd = this.value.length - this.selectionEnd;
+                this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                this.selectionEnd = this.selectionStart = this.value.length - cursorFromEnd;
 
-        resPhone.addEventListener('input', function () {
-            let typingTimer;
-            const doneTypingInterval = 500; // 0.5 วินาที
-            clearTimeout(typingTimer); // reset timer ทุกครั้งที่พิมพ์
-            typingTimer = setTimeout(() => {
-                validatePhone(this);
-            }, doneTypingInterval);
-        });
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    validatePhone(this);
+                }, 500); // 0.5 วินาที
+            });
+        }
 
-        resPhone.addEventListener('input', function() {
-            // กรองให้เหลือเฉพาะตัวเลข
-            this.value = this.value.replace(/[^0-9]/g, '');
-
-            // ตัดเกิน 10 หลักออกอัตโนมัติ
-            if (this.value.length > 10) {
-                this.value = this.value.slice(0, 10);
-            }
-
-            // ตรวจสอบ pattern: ต้องขึ้นต้นด้วย 0 และมี 10 หลัก
-            const thaiPhonePattern = /^0[0-9]{9}$/;
-
-        });
+        attachPhoneSanitizer(document.getElementById('main_phone'));
+        attachPhoneSanitizer(document.getElementById('res_phone'));
+        attachPhoneSanitizer(document.getElementById('manager_phone'));
+        attachPhoneSanitizer(document.getElementById('assist_phone'));
 
         ajaxCallUserOption();
 
-        ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
+        new RMN_LocationSelector({
+            provinceSelector: '#province',
+            districtSelector: '#district',
+            subDistrictSelector: '#sub_district',
+            baseUrl: '/api',
+        });
 
         function validatePhone(input) {
             const thaiPhonePattern = /^0[0-9]{9}$/;
@@ -1164,24 +1171,6 @@
         }
 
         let provinceTxt = '', districtTxt = '', subDistrictTxt = '', zipcodeTxt = '';
-        function handleSelectProvince() {
-            let province = $('#province option:selected');
-            provinceTxt = province.text() ?? '';
-            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
-            //getGoogleMap();
-        }
-        function handleSelectDistrict() {
-            let district = $('#district');
-            districtTxt = $('#district option:selected').text() ?? '';
-            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
-            //getGoogleMap();
-        }
-
-        function handleSelectSubDistrict() {
-            let subDistrict = $('#sub_district');
-            subDistrictTxt = $('#sub_district option:selected').text() ?? '';
-            //getGoogleMap();
-        }
 
         function handleSelectZipcode() {
             let zipcode = $('#zipcode');
@@ -1209,46 +1198,6 @@
             } catch (err) {
                 console.log("Geocode failed:", err);
             }
-        }
-
-        function ajaxCallDropdownOption(id, url, placeholder) {
-            $(id).select2({
-                placeholder: placeholder,
-                ajax: {
-                    transport: function (params, success, failure) {
-                        axios.get(url, {
-                            params: params.data // ส่ง query ไปกับ request เช่น search, pagination
-                        })
-                        .then(function (response) {
-                            const results = response.data.data.map(function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.id
-                                };
-                            });
-
-                            // ถ้าอยากเซ็ตค่า textbox ตอนเลือก dropdown ให้ทำใน event ของ select2
-                            $(id).on('select2:select', function (e) {
-                                const data = e.params.data;
-                                if(id === '#province') {
-                                    $('#provinceTxt').val(data.text);
-                                } else if (id === '#district') {
-                                    $('#districtTxt').val(data.text);
-                                } else if(id === '#sub_district') {
-                                    $('#subDistrictTxt').val(data.text);
-                                }
-                            });
-
-                            success({ results: results });
-                        })
-                        .catch(function (error) {
-                            failure(error);
-                        });
-                    },
-                    delay: 250,
-                    cache: true
-                }
-            });
         }
 
         function ajaxCallUserOption() {
@@ -1331,17 +1280,8 @@
                     month = null
                 },
             });
-
-            let provinceTxt = $('#provinceTxt').val() ?? '';
-            $('#province:selected').html(provinceTxt);
-
-            let districtTxt = $('#districtTxt').val() ?? '';
-            $('#district:selected').html(districtTxt);
-
-            let subDistrictTxt = $('#subDistrictTxt').val() ?? '';
-            $('#sub_district:selected').html(subDistrictTxt);
         })
-    </script>    
+    </script>
 
     <script>
         function renderMap() {
@@ -1368,27 +1308,96 @@
             document.getElementById('hiddenProfileUpload').click();
         });
 
-        // จับ event เมื่อเลือกไฟล์
+        // เก็บไฟล์ที่เลือกไว้เองใน array แทนการพึ่ง FileList ตรงๆ (แก้ไม่ได้/ลบทีละไฟล์ไม่ได้)
+        // ลำดับใน array นี้คือลำดับที่จะอัปโหลดจริง — รูปแรกสุดจะถูกตั้งเป็น cover เสมอ
+        let selectedProfileFiles = [];
+        let draggedIndex = null;
+
+        // จับ event เมื่อเลือกไฟล์ — เพิ่มเข้า array เดิมแทนการแทนที่ทั้งหมด
         document.getElementById('hiddenProfileUpload').addEventListener('change', (event) => {
-            const files = event.target.files;
-            let preview = document.getElementById('profiles_preview');
-            if (files.length > 0) {
-                Array.from(files).forEach(file => {
-                    if (file.type.startsWith("image/")) {
-                        let reader = new FileReader();
-                        reader.onload = (e) => {
-                            let img = document.createElement("img");
-                            img.src = e.target.result;
-                            img.style.width = "100px";
-                            img.style.height = "100px";
-                            img.style.objectFit = "cover";
-                            img.style.borderRadius = "8px";
-                            preview.appendChild(img); // เพิ่มเข้าไปเรื่อยๆ
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
+            Array.from(event.target.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    selectedProfileFiles.push(file);
+                }
+            });
+            event.target.value = ''; // เคลียร์ native input กันเลือกไฟล์เดิมซ้ำแล้ว change ไม่ fire
+            syncProfileFileInput();
+            renderProfilesPreview();
         });
+
+        // สร้าง FileList ใหม่จาก selectedProfileFiles แล้วใส่กลับเข้า input จริงก่อน submit
+        // (ลำดับ/รายการที่เห็นใน preview คือสิ่งที่จะถูกอัปโหลดจริงเป๊ะๆ)
+        function syncProfileFileInput() {
+            const dataTransfer = new DataTransfer();
+            selectedProfileFiles.forEach(file => dataTransfer.items.add(file));
+            document.getElementById('hiddenProfileUpload').files = dataTransfer.files;
+        }
+
+        function renderProfilesPreview() {
+            const preview = document.getElementById('profiles_preview');
+            preview.innerHTML = '';
+
+            selectedProfileFiles.forEach((file, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative';
+                wrapper.style.width = '100px';
+                wrapper.style.height = '100px';
+                wrapper.draggable = true;
+
+                const img = document.createElement('img');
+                img.style.width = '100px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.cursor = 'grab';
+                wrapper.appendChild(img);
+
+                // สร้าง wrapper + img ทันทีแบบ sync เพื่อคุมลำดับ DOM ให้ตรงกับ array เป๊ะ
+                // (ถ้าไปสร้าง element ตอน reader.onload ลำดับจะสลับได้ถ้าไฟล์ใหญ่เล็กไม่เท่ากันอ่านเสร็จไม่พร้อมกัน)
+                const reader = new FileReader();
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+
+                if (index === 0) {
+                    const badge = document.createElement('span');
+                    badge.textContent = 'Cover';
+                    badge.className = 'absolute top-1 left-1 bg-[#286F51] text-white text-[10px] px-[6px] py-[2px] rounded';
+                    wrapper.appendChild(badge);
+                }
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.title = 'ลบรูปนี้';
+                removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-[20px] h-[20px] leading-none cursor-pointer';
+                removeBtn.addEventListener('click', () => {
+                    selectedProfileFiles.splice(index, 1);
+                    syncProfileFileInput();
+                    renderProfilesPreview();
+                });
+                wrapper.appendChild(removeBtn);
+
+                // ลากสลับตำแหน่งได้ — ลากรูปไหนไปวางทับรูปไหน จะสลับตำแหน่งกัน
+                wrapper.addEventListener('dragstart', () => {
+                    draggedIndex = index;
+                    wrapper.classList.add('opacity-50');
+                });
+                wrapper.addEventListener('dragend', () => {
+                    wrapper.classList.remove('opacity-50');
+                    draggedIndex = null;
+                });
+                wrapper.addEventListener('dragover', (e) => e.preventDefault());
+                wrapper.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedIndex === null || draggedIndex === index) return;
+                    const [moved] = selectedProfileFiles.splice(draggedIndex, 1);
+                    selectedProfileFiles.splice(index, 0, moved);
+                    syncProfileFileInput();
+                    renderProfilesPreview();
+                });
+
+                preview.appendChild(wrapper);
+            });
+        }
     </script>
 @endsection
