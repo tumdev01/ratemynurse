@@ -276,7 +276,7 @@ window.addEventListener("load", async () => {
       <div class="profile-img">
         <a href="https://ratemynurse.org/nursing-info/${nurseId}">
           <img src="${coverImagePath}"
-               style="width:100%;height:100%;object-fit:cover"
+               style="width:100%;height:100%;object-fit:cover;object-position:top;"
                loading="lazy"
                onerror="this.src='https://via.placeholder.com/300x400?text=No+Image'">
         </a>

@@ -101,6 +101,11 @@ window.addEventListener('load', async () => {
 
       let skillHTML = "";
 
+      let certifiedIcon = "";
+      if (nurse?.profile?.certified === 1) {
+        certifiedIcon = `<img src="https://ratemynurse.org/wp-content/uploads/2025/12/certified_green-1.webp" width="24" height="24" loading="lazy">`;
+      }
+
       if (Array.isArray(skills) && skills.length > 0) {
         const displaySkills = skills.slice(0, 2);
         const moreCount = skills.length > 2 ? skills.length - 2 : 0;
@@ -134,7 +139,7 @@ window.addEventListener('load', async () => {
                 : ""
             }
             <div class="profile-img">
-              <a href="https://ratemynurse.org/nursing-info/${nurse?.id}"><img style="width:100%;height:100%;object-fit:cover;" src="${nurse.cover_image.full_path}" width="306" height="240" loading="lazy"></a>
+              <a href="https://ratemynurse.org/nursing-info/${nurse?.id}"><img style="width:100%;height:100%;object-fit:cover;object-position:top;" src="${nurse.cover_image.full_path}" width="306" height="240" loading="lazy"></a>
             </div>
             <div class="profile-info">
               <div class="profile-location">
@@ -143,7 +148,7 @@ window.addEventListener('load', async () => {
                 </svg>
                 <span>${nurse.profile?.district?.name ?? "-"} ${displayProvince}</span>
               </div>
-              <h3 class="profile-name"><a href="https://ratemynurse.org/nursing-info/${nurse.id}">${nurse.profile?.name}</a></h3>
+              <h3 class="profile-name"><a href="https://ratemynurse.org/nursing-info/${nurse.id}" class="flex flex-row gap-[8px] items-center">${nurse.profile?.name}${certifiedIcon}</a></h3>
               <div class="profile-rate text-[#8C8A94] text-left flex flex-row gap-[8px] items-center">    
                 <div class="star-rating" style="--rating-percent: ${avg_percentage}%"></div>
                 <span class="text-[12px] sm:text-[14px]">(${review_count})</span>

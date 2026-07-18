@@ -108,6 +108,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const review_count = nurse?.review_count ?? 0;
       const avg_percentage = (avg_score_raw / 5) * 100;
 
+      let certifiedIcon = "";
+      if (nurse?.certified === 1) {
+        certifiedIcon = `<img src="https://ratemynurse.org/wp-content/uploads/2025/12/certified_green-1.webp" width="24" height="24" loading="lazy">`;
+      }
+
       html += `
         <div class="swiper-slide">
           <div class="nurse-item">
@@ -124,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div class="profile-img">
                 <a href="https://ratemynurse.org/nursing-home-info/${nurse.id}">
                   <img 
-                    style="width:100%;height:100%;object-fit:cover;" 
+                    style="width:100%;height:100%;object-fit:cover;object-position:top;" 
                     src="${
                       nurse?.cover_image?.full_path &&
                       nurse.cover_image.full_path.trim() !== ""
@@ -144,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                   </svg>
                   <span>${subDistrictName}${displayDistrict}${displayProvince}</span>
                 </div>
-                <h3 class="profile-name"><a href="https://ratemynurse.org/nursing-home-info/${nurse.id}">${nurse?.name}</a></h3>
+                <h3 class="profile-name"><a href="https://ratemynurse.org/nursing-home-info/${nurse.id}" class="flex flex-row gap-[8px] items-center">${nurse?.name}${certifiedIcon}</a></h3>
                 <p>${shortDescription}</p>
                 <div class="profile-rate text-[#8C8A94] text-left flex flex-row gap-[8px] items-center">
                   <div class="star-rating" style="--rating-percent: ${avg_percentage}%"></div>

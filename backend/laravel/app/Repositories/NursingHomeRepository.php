@@ -35,7 +35,7 @@ class NursingHomeRepository
                 'rates.rate_details',
             ])
             ->withCount(['rates as review_count'])
-            ->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month'])
+            ->select(['id', 'user_id', 'name', 'zipcode', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month', 'certified'])
             ->selectSub(function ($q) {
                 $q->from('rate_details')
                 ->join('rates', 'rate_details.rate_id', '=', 'rates.id')
@@ -80,7 +80,7 @@ class NursingHomeRepository
             ])
             // select() ต้องมาก่อน withCount() เสมอ — สลับกันแล้ว withCount จะถูกเขียนทับเงียบๆ
             // (ทดสอบยืนยันแล้วผ่าน tinker: select ก่อน -> review_count ได้ 0 ถูกต้อง, select หลัง -> ได้ NULL)
-            ->select(['id', 'name', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month'])
+            ->select(['id', 'name', 'province_id', 'district_id', 'sub_district_id', 'description', 'cost_per_month', 'certified'])
             ->withCount(['rates as review_count'])
             ->selectSub(function ($q) {
                 $q->from('rate_details')
