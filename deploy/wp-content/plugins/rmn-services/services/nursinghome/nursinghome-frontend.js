@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const avg_percentage = (avg_score_raw / 5) * 100;
 
       let certifiedIcon = "";
-      if (nurse?.certified === 1) {
+      if (nurse?.certified) {
         certifiedIcon = `<img src="https://ratemynurse.org/wp-content/uploads/2025/12/certified_green-1.webp" width="24" height="24" loading="lazy">`;
       }
 

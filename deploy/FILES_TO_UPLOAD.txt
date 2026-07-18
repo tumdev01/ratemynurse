@@ -444,6 +444,10 @@ Backend (deploy ผ่าน git push main):
     local:  deploy/wp-content/plugins/rmn-services/services/nursinghome/nursinghome-frontend.js
     server: wp-content/plugins/rmn-services/services/nursinghome/nursinghome-frontend.js
     แก้: เหมือนข้อ 41 ทุกประการ (certified icon + object-position:top) เฉพาะฝั่ง nursing-home
+    **แก้เพิ่ม (เจอตอนทดสอบจริงว่า certified icon ยังไม่ขึ้น)**: เช็ค `nurse?.certified === 1` เดิมใช้
+    ไม่ได้กับฝั่ง nursing-home เพราะ `NursingHomeProfile` model cast `certified` เป็น boolean (`true`/`false`
+    ใน JSON ไม่ใช่ `1`/`0` แบบฝั่ง Nursing ที่ไม่ได้ cast) `true === 1` เป็น false เสมอใน JS เปลี่ยนเป็นเช็ค
+    truthy เฉยๆ (`if (nurse?.certified)`) รองรับได้ทั้ง boolean และ integer
 
 43. services/nursing/nursing-grid-frontend.js (แก้ไขเพิ่มจากรอบเดิม — certified icon มีอยู่แล้ว
     เพิ่มแค่ object-position:top)
