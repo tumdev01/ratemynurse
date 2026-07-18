@@ -247,6 +247,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 
 Route::middleware(['verify.internal.token'])->group(function () {
     Route::post('/nursings', [NursingController::class, 'getNursing']);
+    Route::post('/nursings/by-ids', [NursingController::class, 'getNursingsByIds']);
     Route::prefix('nursing-home')->group(function() {
         Route::post('/create', [NursingHomeController::class, 'store']);
     });

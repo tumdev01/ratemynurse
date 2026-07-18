@@ -392,3 +392,31 @@ curl พร้อม token จริง, backfill บน production ยืนย
 หมายเหตุรอบนี้: bug จุดเดียว บรรทัดเดียว ไม่มีจุดอื่นที่ต้องแก้ร่วม — ยังไม่ได้ทดสอบผ่านเบราว์เซอร์จริงบน
 production (local ไม่มีข้อมูล nursing จริงให้ทดสอบ list เต็มหน้า) หลัง deploy ให้เปิด
 https://ratemynurse.org/nursing-info/ เช็คว่า id ในลิงก์เป็นตัวเลขจริงแล้ว ไม่ใช่ "undefined"
+
+=== รอบ 2026-07-19 (2): เพิ่ม shortcode nursings-specific (มิเรอร์จาก nursing-homes-specific) ===
+
+Backend (deploy ผ่าน git push main แล้วเหมือนเดิม ไม่ต้องผ่าน deploy/laravel/):
+- เพิ่ม endpoint ใหม่ POST /api/nursings/by-ids (NursingController::getNursingsByIds() +
+  NursingRepository::getNursingsByIds()) แยกต่างหากจาก /api/nursings เดิมโดยสิ้นเชิง (กันของเดิมพัง)
+  สำหรับ shortcode ใหม่ nursings-specific — ต่าง จาก nursing-homes-specific ตรงที่ query root เป็น
+  users (Nursing::class) ไม่ใช่ profile ตรงๆ เพราะ nursing-info/{id} ฝั่ง frontend อ้างอิง users.id
+  เสมอ คำนวณ review_count/average_score ผ่าน selectSub join rate_details+rates ให้ถูกต้อง (endpoint
+  /api/nursings เดิมไม่เคยคำนวณ 2 field นี้จริงเลย เป็นบั๊กเดิมที่ปล่อยไว้ไม่แตะ) ทดสอบผ่าน tinker +
+  curl จริงแล้วว่า ordering ตาม ids ที่ส่งมาถูกต้อง (FIELD()) และ field ครบตามที่การ์ดใช้จริง
+
+39. services/nursing/NursingHandler.php (แก้ไข)
+    local:  deploy/wp-content/plugins/rmn-services/services/nursing/NursingHandler.php
+    server: wp-content/plugins/rmn-services/services/nursing/NursingHandler.php
+    แก้: เพิ่ม shortcode nursings-specific ใช้งาน [nursings-specific ids="9,620,124"] มิเรอร์จาก
+    NursingHomeHandler::nursingHomeSpecific()/fetchAndCacheSpecificNursingHomes() ทุกประการ (cache
+    transient 2 นาที, container id="nursing-list" ตัวเดียวกับ carousel ทั่วไป แยกด้วย data-ids)
+
+40. services/nursing/nursing-frontend.js (แก้ไข)
+    local:  deploy/wp-content/plugins/rmn-services/services/nursing/nursing-frontend.js
+    server: wp-content/plugins/rmn-services/services/nursing/nursing-frontend.js
+    แก้: เพิ่ม branch เช็ค container.dataset.ids ก่อน — ถ้ามีให้ยิง /api/nursings/by-ids แทน
+    /api/nursings ปกติ มิเรอร์จาก nursinghome-frontend.js ทุกประการ
+
+หมายเหตุรอบนี้: ทดสอบ backend ผ่าน tinker + curl จริงครบแล้ว (ordering, field ครบ) — ยังไม่ได้ทดสอบ
+shortcode ผ่านเบราว์เซอร์จริงบนหน้า WordPress (ต้องสร้างเพจทดสอบใส่ [nursings-specific ids="..."]
+ก่อน) หลัง deploy ให้ลองใส่ shortcode จริงเช็คว่าการ์ดขึ้นตามลำดับ ids ที่ระบุ

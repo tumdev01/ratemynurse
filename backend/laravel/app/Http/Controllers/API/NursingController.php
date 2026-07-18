@@ -80,6 +80,16 @@ class NursingController extends Controller {
         return response()->json($nursings);
     }
 
+    // Endpoint แยกต่างหากสำหรับ shortcode nursings-specific — มิเรอร์จาก
+    // NursingHomeController::getNursingHomesByIds()
+    public function getNursingsByIds(Request $request)
+    {
+        $ids = array_map('intval', (array) $request->input('ids', []));
+
+        $nursings = $this->nursing_repository->getNursingsByIds($ids);
+        return response()->json($nursings);
+    }
+
     public function getNursingPagination(Request $request)
     {
         try {

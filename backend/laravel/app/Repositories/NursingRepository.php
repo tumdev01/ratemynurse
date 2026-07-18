@@ -173,6 +173,54 @@ class NursingRepository
         return $query->get();
     }
 
+    // สำหรับ shortcode nursings-specific เท่านั้น — มิเรอร์จาก
+    // NursingHomeRepository::getNursingHomesByIds() แต่ query root เป็น users (Nursing::class)
+    // ต่างจาก NursingHomeProfile ที่ query root เป็น profile ตรงๆ เพราะ nursing-info/{id} ใน frontend
+    // อ้างอิง users.id เสมอ ไม่ใช่ nursing_profiles.id — review_count/average_score ของ getNursing()
+    // เดิมไม่เคยถูกคำนวณเลย (ไม่มี field นี้จริงในผลลัพธ์) เลยคำนวณให้ถูกต้องในนี้แทน
+    public function getNursingsByIds(array $ids)
+    {
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return Nursing::query()
+            ->select(['users.id'])
+            ->with([
+                'profile:id,user_id,zipcode,province_id,district_id,sub_district_id,cost,name,skill,certified',
+                'profile.province:id,name',
+                'profile.district:id,name',
+                'profile.subDistrict:id,name',
+                'profile.costs',
+                'coverImage:user_id,path,is_cover',
+            ])
+            ->selectSub(function ($q) {
+                $q->from('nursing_profiles')
+                    ->join('rates', function ($join) {
+                        $join->on('rates.rateable_id', '=', 'nursing_profiles.id')
+                            ->where('rates.rateable_type', NursingProfile::class);
+                    })
+                    ->join('rate_details', 'rate_details.rate_id', '=', 'rates.id')
+                    ->selectRaw('COUNT(rate_details.id)')
+                    ->whereColumn('nursing_profiles.user_id', 'users.id');
+            }, 'review_count')
+            ->selectSub(function ($q) {
+                $q->from('nursing_profiles')
+                    ->join('rates', function ($join) {
+                        $join->on('rates.rateable_id', '=', 'nursing_profiles.id')
+                            ->where('rates.rateable_type', NursingProfile::class);
+                    })
+                    ->join('rate_details', 'rate_details.rate_id', '=', 'rates.id')
+                    ->selectRaw('AVG(rate_details.scores)')
+                    ->whereColumn('nursing_profiles.user_id', 'users.id');
+            }, 'average_score')
+            ->whereNull('deleted_at')
+            ->where('status', '!=', 0)
+            ->whereIn('users.id', $ids)
+            ->orderByRaw('FIELD(users.id, ' . implode(',', $ids) . ')')
+            ->get();
+    }
+
     // เดิมไม่มี method นี้เลย ทั้งที่ API\NursingController::getNursingPagination() เรียกใช้อยู่แล้ว
     // (พังด้วย BadMethodCallException) มิเรอร์จาก NursingHomeRepository::countByProvince()
     public function countByProvince(array $filters = [])
