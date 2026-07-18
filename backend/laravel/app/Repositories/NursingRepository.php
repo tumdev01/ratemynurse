@@ -23,15 +23,33 @@ class NursingRepository
     private const COVER_IMAGE_WIDTH = 314;
     private const COVER_IMAGE_HEIGHT = 240;
 
-    // crop แบบ 'top' แทน default 'center' — รูปคนส่วนใหญ่เป็นแนวตั้ง (portrait) ถ้า crop กึ่งกลาง
-    // มักโดนตัดหัวออกเวลาบีบให้เป็นสัดส่วนแนวนอน (314x240) การ crop จากด้านบนไว้ก่อนช่วยให้เห็นหน้าครบ
-    // กว่า (ไม่ได้แก้ทุกกรณี แต่ดีกว่า center อย่างชัดเจนสำหรับภาพถ่ายบุคคลทั่วไป)
+    // ตำแหน่งแนวตั้งที่จะเก็บไว้หลัง crop: 0 = ชิดขอบบนสุด (ตัดหัวติดขอบ เจอปัญหาจริงว่าเหลือแต่หัว), 0.5 =
+    // กึ่งกลางภาพ (บั๊กเดิมที่ตัดหัวหายไปเลยสำหรับภาพคนแนวตั้ง) ค่านี้อยู่กึ่งกลางระหว่างสองอย่าง เก็บหัว+
+    // ไหล่+อกส่วนบนไว้แทนที่จะเหลือแต่หน้า — ยังเป็นค่าประมาณ ไม่ใช่ face detection จริง ถ้าเจอภาพที่ยัง
+    // ครอปไม่สวยอีกให้ปรับค่านี้ต่อได้
+    private const COVER_IMAGE_VERTICAL_BIAS = 0.35;
+
+    // resize ให้ด้านที่พอดี (คล้าย CSS background-size:cover) แล้ว crop ส่วนเกินออกเอง แทนการใช้
+    // fit()+position ของ Intervention เพราะ position รับได้แค่ชื่อ preset (top/center/bottom) ปรับละเอียด
+    // ไม่ได้ ส่วนนี้คำนวณ offset เองเพื่อคุมตำแหน่ง crop แนวตั้งแบบเป็นเปอร์เซ็นต์ได้
     private function saveCroppedCoverImage($file, string $hashedName): void
     {
         $destination = public_path('images/' . $hashedName);
+        $targetWidth = self::COVER_IMAGE_WIDTH;
+        $targetHeight = self::COVER_IMAGE_HEIGHT;
 
-        InterventionImage::make($file->getRealPath())
-            ->fit(self::COVER_IMAGE_WIDTH, self::COVER_IMAGE_HEIGHT, function ($constraint) {}, 'top')
+        $image = InterventionImage::make($file->getRealPath());
+
+        $scale = max($targetWidth / $image->width(), $targetHeight / $image->height());
+        $scaledWidth = (int) round($image->width() * $scale);
+        $scaledHeight = (int) round($image->height() * $scale);
+
+        $image->resize($scaledWidth, $scaledHeight);
+
+        $cropX = (int) max(0, round(($scaledWidth - $targetWidth) / 2));
+        $cropY = (int) max(0, round(self::COVER_IMAGE_VERTICAL_BIAS * ($scaledHeight - $targetHeight)));
+
+        $image->crop($targetWidth, $targetHeight, $cropX, $cropY)
             ->save($destination, 90);
     }
 
