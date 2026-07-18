@@ -375,3 +375,20 @@ curl พร้อม token จริง, backfill บน production ยืนย
 ถูกต้อง), registration fix ทดสอบผ่าน tinker (wrap transaction + rollback), endpoint by-ids ทดสอบผ่าน curl
 จริงยืนยันลำดับ/field/review_count ถูกต้องครบ, Image path fix ทดสอบจำลอง Host header ที่เป็นบั๊กจริงแล้ว
 ยืนยันได้ URL ถูกต้อง — ยังไม่ได้ทดสอบผ่านเบราว์เซอร์จริงทั้งหมด (โดยเฉพาะหน้าที่ใช้ shortcode ใหม่)
+
+=== รอบ 2026-07-19: แก้ลิงก์ในหน้า /nursing/ (#nursing_grid_results) พาไป nursing-info/undefined ===
+
+38. services/nursing/nursing-grid-frontend.js (ไฟล์นี้มีอยู่บน production แล้ว แต่ไม่เคยอยู่ใน deploy/
+    หรือรายการนี้มาก่อน — เพิ่งเพิ่มเข้ามาตอนนี้)
+    local:  deploy/wp-content/plugins/rmn-services/services/nursing/nursing-grid-frontend.js
+    server: wp-content/plugins/rmn-services/services/nursing/nursing-grid-frontend.js
+    แก้: `renderNurse()` เดิมอ่าน `nurseId = nurse.user_id` แต่ endpoint `/api/nursings-listing`
+    (`NursingRepository::getNursingPagination()`/`getNursingsBaseQuery()`) select เฉพาะ `users.id` เป็น
+    top-level field ของแต่ละ nurse ไม่เคยมี `user_id` เลย ทำให้ nurseId เป็น `undefined` เสมอ ลิงก์ทุกจุด
+    (รูป, ชื่อ, ปุ่ม "ดูรายละเอียดเพิ่มเติม", data-nurseid ของ compare/favorite icon) เลยพาไป
+    `nursing-info/undefined` แก้เป็น `nurse.id` ให้ตรงกับ field จริง (เทียบ/มิเรอร์จาก
+    nursing-homes-grid-frontend.js ที่ใช้ `nurse.id` ถูกต้องอยู่แล้วสำหรับ nursing-home)
+
+หมายเหตุรอบนี้: bug จุดเดียว บรรทัดเดียว ไม่มีจุดอื่นที่ต้องแก้ร่วม — ยังไม่ได้ทดสอบผ่านเบราว์เซอร์จริงบน
+production (local ไม่มีข้อมูล nursing จริงให้ทดสอบ list เต็มหน้า) หลัง deploy ให้เปิด
+https://ratemynurse.org/nursing-info/ เช็คว่า id ในลิงก์เป็นตัวเลขจริงแล้ว ไม่ใช่ "undefined"
