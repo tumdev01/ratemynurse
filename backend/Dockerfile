@@ -2,7 +2,9 @@ FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
     zip unzip curl git libonig-dev libxml2-dev libzip-dev default-mysql-client \
-    && docker-php-ext-install pdo_mysql mbstring zip \
+    libjpeg62-turbo-dev libpng-dev libwebp-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+    && docker-php-ext-install pdo_mysql mbstring zip gd \
     && a2enmod rewrite
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

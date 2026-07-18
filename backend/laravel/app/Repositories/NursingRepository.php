@@ -14,9 +14,27 @@ use Illuminate\Support\Facades\File;
 use App\Http\Requests\NursingUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\Facades\Image as InterventionImage;
 
 class NursingRepository
 {
+    // ขนาดรูปปกที่การ์ดพยาบาลใช้แสดงผลจริง (nursing-frontend.js/nursing-grid-frontend.js) — crop
+    // ให้พอดีตอนอัปโหลดเลย กันภาพอัตราส่วนแปลกๆ ถูก browser ยืด/บีบไม่สวยตอนแสดงผล
+    private const COVER_IMAGE_WIDTH = 314;
+    private const COVER_IMAGE_HEIGHT = 240;
+
+    // crop แบบ 'top' แทน default 'center' — รูปคนส่วนใหญ่เป็นแนวตั้ง (portrait) ถ้า crop กึ่งกลาง
+    // มักโดนตัดหัวออกเวลาบีบให้เป็นสัดส่วนแนวนอน (314x240) การ crop จากด้านบนไว้ก่อนช่วยให้เห็นหน้าครบ
+    // กว่า (ไม่ได้แก้ทุกกรณี แต่ดีกว่า center อย่างชัดเจนสำหรับภาพถ่ายบุคคลทั่วไป)
+    private function saveCroppedCoverImage($file, string $hashedName): void
+    {
+        $destination = public_path('images/' . $hashedName);
+
+        InterventionImage::make($file->getRealPath())
+            ->fit(self::COVER_IMAGE_WIDTH, self::COVER_IMAGE_HEIGHT, function ($constraint) {}, 'top')
+            ->save($destination, 90);
+    }
+
     public function createNurse(array $input)
     {
         $user = Nursing::create([
@@ -41,7 +59,10 @@ class NursingRepository
                 'province_id'   => Arr::get($input, 'province_id'),
                 'district_id'   => Arr::get($input, 'district_id'),
                 'sub_district_id'  => Arr::get($input, 'sub_district_id'),
-                'zipcode'       => Arr::get($input, 'zipcode')
+                'zipcode'       => Arr::get($input, 'zipcode'),
+                'address'       => Arr::get($input, 'address'),
+                'certified'     => filter_var(Arr::get($input, 'certified', false), FILTER_VALIDATE_BOOLEAN),
+                'care_type'     => Arr::get($input, 'care_type'),
             ]);
 
             $profile->subscriptions()->create([
@@ -53,7 +74,7 @@ class NursingRepository
                 if ($file->isValid()) {
                     $extension = $file->getClientOriginalExtension();
                     $hashedName = md5(uniqid($user->id, true)) . '.' . $extension;
-                    $file->move(public_path('images'), $hashedName);
+                    $this->saveCroppedCoverImage($file, $hashedName);
 
                     Image::create([
                         'user_id'  => $user->id,
@@ -125,7 +146,7 @@ class NursingRepository
 
                     /** upload ใหม่ */
                     $hashedName = md5(uniqid($user->id, true)) . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path('images'), $hashedName);
+                    $this->saveCroppedCoverImage($file, $hashedName);
 
                     /** save db */
                     Image::create([
