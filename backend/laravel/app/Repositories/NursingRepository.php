@@ -35,6 +35,7 @@ class NursingRepository
             $profile = NursingProfile::create([
                 'user_id'   => $user->id,
                 'name'      => sprintf('%s %s (%s)', $user->firstname, $user->lastname, Arr::get($input, 'nickname')),
+                'nickname'  => Arr::get($input, 'nickname'),
                 'gender'    => Arr::get($input, 'gender'),
                 'date_of_birth' => Arr::get($input, 'date_of_birth'),
                 'province_id'   => Arr::get($input, 'province_id'),

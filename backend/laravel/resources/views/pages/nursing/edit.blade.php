@@ -167,37 +167,41 @@
                 <textarea id="address" name="address" class="min-h-[90px] border rounded-lg px-3 py-2" placeholder="ระบุที่อยู่">{{ old('address', $nursing->profile->address ?? '') }}</textarea>
             </div>
 
+            <input type="hidden" id="provinceTxt" name="province_name" value="{{ old('province_name', $nursing->profile->province->name ?? '') }}">
+            <input type="hidden" id="districtTxt" name="district_name" value="{{ old('district_name', $nursing->profile->district->name ?? '') }}">
+            <input type="hidden" id="subDistrictTxt" name="sub_district_name" value="{{ old('sub_district_name', $nursing->profile->subDistrict->name ?? '') }}">
+
             <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                 <div class="flex flex-col gap-[8px]">
-                    <label for="weight">จังหวัด <span class="req">*</span></label>
-                    <select id="province" name="province_id" class="border rounded-lg px-3 py-2" onchange="handleSelectProvince()">
+                    <label for="weight">จังหวัด</label>
+                    <select id="province" name="province_id" class="border rounded-lg px-3 py-2">
                         @if(isset($nursing->profile) && isset($nursing->profile->province) && isset($nursing->profile->province->id))
                             <option value="{{ $nursing->profile->province->id }}" selected>{{ $nursing->profile->province->name }}</option>
                         @endif
-                    <select>
+                    </select>
                 </div>
                 <div class="flex flex-col gap-[8px]">
-                    <label for="height">อำเภอ/เขต <span class="req">*</span></label>
-                    <select id="district" name="district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectDistrict()">
+                    <label for="height">อำเภอ/เขต</label>
+                    <select id="district" name="district_id" class="border rounded-lg px-3 py-2">
                         @if(isset($nursing->profile) && isset($nursing->profile->district) && isset($nursing->profile->district->id))
                             <option value="{{  $nursing->profile->district->id }}" selected>{{ $nursing->profile->district->name }}</option>
                         @endif
-                    <select>
+                    </select>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-[15px] md:gap-[32px]">
                 <div class="flex flex-col gap-[8px]">
-                    <label for="weight">ตำบล/แขวง <span class="req">*</span></label>
-                    <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2" onchange="handleSelectSubDistrict()">
+                    <label for="weight">ตำบล/แขวง</label>
+                    <select id="sub_district" name="sub_district_id" class="border rounded-lg px-3 py-2">
                         @if(isset($nursing->profile) && isset($nursing->profile->subDistrict) && isset($nursing->profile->subDistrict->id))
                             <option value="{{  $nursing->profile->subDistrict->id }}" selected>{{ $nursing->profile->subDistrict->name }}</option>
                         @endif
-                    <select>
+                    </select>
                 </div>
                 <div class="flex flex-col gap-[8px]">
-                    <label for="zipcode">รหัสไปรษณีย์ <span class="req">*</span></label>
-                    <input required type="text" name="zipcode" id="zipcode" placeholder="รหัสไปรษณีย์"
+                    <label for="zipcode">รหัสไปรษณีย์</label>
+                    <input type="text" name="zipcode" id="zipcode" placeholder="รหัสไปรษณีย์"
                         class="border rounded-lg px-3 py-2" value="{{ old('zipcode', $nursing->profile->zipcode ?? '') }}"/>
                 </div>
             </div>
@@ -213,7 +217,7 @@
 @endsection
 @section('style')
     <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet" />
     <link href="{{ asset('flatpickr/flatpickr.min.css') }}" rel="stylesheet"/>
     <style>
         .req {color:red}
@@ -224,17 +228,18 @@
             border-radius: 4px;
             background-color: #286F51;
         }
-        .select2-selection {
-            border-radius: 0.5rem;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            padding-top: 0;
-            padding-bottom: 0;
-            height: 38px !important;
-        }
-        .select2-dropdown, .select2-selection {border-color: rgb(229, 231, 235) !important;}
-        .select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 38px !important;padding-left:0}
-        .select2-container--default .select2-selection--single .select2-selection__arrow {height:38px !important;}
+        .ts-wrapper { position: relative; box-sizing: border-box; border: none !important; padding: 0 !important; }
+        .ts-control { box-sizing: border-box; cursor: pointer; display: flex; align-items: center;
+            min-height: 38px; padding: 0 0.75rem; background-color: #fff; border: 1px solid rgb(229, 231, 235);
+            border-radius: 0.5rem; font-size: 14px; color: #444; }
+        .ts-control input { font-size: 14px; }
+        .ts-wrapper.single .ts-control { padding-right: 24px; }
+        .ts-dropdown { background-color: #fff !important; border: 1px solid rgb(229, 231, 235) !important;
+            border-radius: 0.5rem; box-sizing: border-box; z-index: 999999 !important; }
+        .ts-dropdown .ts-dropdown-content { max-height: 200px; overflow-y: auto; }
+        .ts-dropdown .option { padding: 6px 12px; font-size: 14px; color: #444; cursor: pointer; }
+        .ts-dropdown .option.active { background-color: #5897fb; color: #fff; }
+        .ts-dropdown .no-results { padding: 6px 12px; font-size: 14px; color: #999; }
 
         /* Genel stil */
         .toggle-switch {
@@ -317,12 +322,12 @@
 @endsection
 @section('javascript')
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="{{ asset('flatpickr/flatpickr.min.js') }}"></script>
     <script src="{{ asset('flatpickr/monthSelect/index.js') }}"></script>
     <script src="{{ asset('flatpickr/th.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/rmn-location-selector.js') }}"></script>
 
     <script>
 
@@ -406,29 +411,12 @@
             }, doneTypingInterval);
         });
 
-        ajaxCallDropdownOption('#province', '/api/provinces_list', 'กรุณาเลือกจังหวัด');
-
-        function setOldValue(id, oldValue, oldText) {
-            if(oldValue && oldText) {
-                const option = new Option(oldText, oldValue, true, true);
-                $(id).append(option).trigger('change');
-            }
-        }
-
-        // เรียกหลัง initialize Select2
-        setOldValue('#province', "{{ old('province_id') }}", "{{ old('province_name') }}");
-        setOldValue('#district', "{{ old('district_id') }}", "{{ old('district_name') }}");
-        setOldValue('#sub_district', "{{ old('sub_district_id') }}", "{{ old('sub_district_name') }}");
-    
-        let provinceTxt = $('#provinceTxt').val() ?? '';
-        $('#province:selected').html(provinceTxt);
-
-        let districtTxt = $('#districtTxt').val() ?? '';
-        $('#district:selected').html(districtTxt);
-
-        let subDistrictTxt = $('#subDistrictTxt').val() ?? '';
-        $('#sub_district:selected').html(subDistrictTxt);
-        
+        new RMN_LocationSelector({
+            provinceSelector: '#province',
+            districtSelector: '#district',
+            subDistrictSelector: '#sub_district',
+            baseUrl: '/api',
+        });
 
         function validatePhone(input) {
             const thaiPhonePattern = /^0[0-9]{9}$/;
@@ -443,61 +431,6 @@
             }
         }
 
-        function ajaxCallDropdownOption(id, url, placeholder) {
-            $(id).select2({
-                placeholder: placeholder,
-                ajax: {
-                    transport: function (params, success, failure) {
-                        axios.get(url, {
-                            params: params.data // ส่ง query ไปกับ request เช่น search, pagination
-                        })
-                        .then(function (response) {
-                            const results = response.data.data.map(function (item) {
-                                return {
-                                    text: item.name,
-                                    id: item.id
-                                };
-                            });
-
-                            // ถ้าอยากเซ็ตค่า textbox ตอนเลือก dropdown ให้ทำใน event ของ select2
-                            $(id).on('select2:select', function (e) {
-                                const data = e.params.data;
-                                if(id === '#province') {
-                                    $('#provinceTxt').val(data.text);
-                                } else if (id === '#district') {
-                                    $('#districtTxt').val(data.text);
-                                } else if(id === '#sub_district') {
-                                    $('#subDistrictTxt').val(data.text);
-                                }
-                            });
-
-                            success({ results: results });
-                        })
-                        .catch(function (error) {
-                            failure(error);
-                        });
-                    },
-                    delay: 250,
-                    cache: true
-                }
-            });
-        }
-
-        function handleSelectProvince() {
-            let province = $('#province option:selected');
-            provinceTxt = province.text() ?? '';
-            ajaxCallDropdownOption('#district', '/api/districts_list/' + $('#province').val() , 'เลือกอำเภอ/เขต');
-        }
-        function handleSelectDistrict() {
-            let district = $('#district');
-            districtTxt = $('#district option:selected').text() ?? '';
-            ajaxCallDropdownOption('#sub_district', '/api/sub_districts_list/' + $('#district').val(), 'เลือกตำบล/แขวง');
-        }
-
-        function handleSelectSubDistrict() {
-            let subDistrict = $('#sub_district');
-            subDistrictTxt = $('#sub_district option:selected').text() ?? '';
-        }
     </script>
 
     @if(session('success'))
