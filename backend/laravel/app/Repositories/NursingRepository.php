@@ -98,6 +98,8 @@ class NursingRepository
                     'sub_district_id' => $request->sub_district_id,
                     'zipcode' => $request->zipcode,
                     'blood' => $request->blood,
+                    'certified' => $request->boolean('certified'),
+                    'care_type' => $request->care_type,
                 ]);
             }
 
