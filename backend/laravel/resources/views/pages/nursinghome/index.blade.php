@@ -16,7 +16,9 @@
                     <th class="px-6 py-3">คะแนนเฉลี่ย</th>
                     <th class="px-6 py-3">จำนวนรีวิว</th>
                     <th class="px-6 py-3">ผู้ใช้งาน</th>
+                    <th class="px-6 py-3 w-[140px]">สถานะ เปิด/ปิด</th>
                     <th class="px-6 py-3"><span class="sr-only">แก้ไข</span></th>
+                    <th class="px-6 py-3"></th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
@@ -30,6 +32,7 @@
 @section('javascript')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
     $('#nursingHomesTable').DataTable({
@@ -86,10 +89,30 @@ $(function() {
                 }
             },
             {
+                data: null, name: 'status', searchable: false, orderable: false, render: function (data, type, row) {
+                    let checked = row.owner && row.owner.status == 1 ? 'checked' : '';
+                    return `<label class="status-toggle">
+                        <input type="checkbox" class="status-toggle-input" ${checked} onchange="toggleNursingHomeStatus(${row.id}, this)">
+                        <span class="status-toggle-track"></span>
+                    </label>`;
+                }
+            },
+            {
                 data: 'id', name: 'id', searchable: false, orderable: false, render: function (data, type, row) {
                     let url = "{{ route('nursing-home.edit', ':id') }}"; // ใส่ placeholder
                     url = url.replace(':id', data); // แทนที่ด้วยค่าจริง
                     return `<a href="${url}">แก้ไข</a>`;
+                }
+            },
+            {
+                data: 'id', name: 'id', searchable: false, orderable: false, render: function (data, type, row) {
+                    let url = "{{ route('nursing-home.delete', ':id') }}";
+                    url = url.replace(':id', data);
+                    return `<button type="button" class="btn btn-danger delete-btn" data-id="${data}" data-url="${url}">
+                                <svg class="w-6 h-6 text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+                                </svg>
+                                </button>`;
                 }
             },
         ],
@@ -162,5 +185,80 @@ $(function() {
     });
 });
 
+</script>
+
+<script>
+function toggleNursingHomeStatus(id, checkbox) {
+    let url = "{{ route('nursing-home.status-update', ':id') }}";
+    url = url.replace(':id', id);
+    let newStatus = checkbox.checked ? 1 : 0;
+
+    axios.post(url, {
+        status: newStatus
+    }).then(res => {
+        Swal.fire({
+            toast: true,
+            position: 'bottom-end',
+            icon: 'success',
+            title: res.data.message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+    }).catch(err => {
+        checkbox.checked = !checkbox.checked;
+        Swal.fire({
+            toast: true,
+            position: 'bottom-end',
+            icon: 'error',
+            title: 'ไม่สามารถอัพเดทสถานะได้',
+            showConfirmButton: false,
+            timer: 2000
+        });
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-btn')) {
+        const btn = e.target.closest('.delete-btn');
+        const id = btn.dataset.id;
+        const url = btn.dataset.url;
+
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'ยืนยันการลบ',
+            text: "ข้อมูลของผู้ใช้รายนี้จะหายไปทั้งหมด",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
+            didOpen: (modal) => {
+                const confirmBtn = modal.querySelector('.swal2-confirm');
+                const cancelBtn = modal.querySelector('.swal2-cancel');
+
+                if (confirmBtn) {
+                    confirmBtn.style.backgroundColor = '#dc2626';
+                    confirmBtn.style.color = 'white';
+                }
+                if (cancelBtn) {
+                    cancelBtn.style.backgroundColor = '#d1d5db';
+                    cancelBtn.style.color = '#374151';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                form.innerHTML = `
+                    @csrf
+                    @method('DELETE')
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+});
 </script>
 @endsection

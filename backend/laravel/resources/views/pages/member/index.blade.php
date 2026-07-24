@@ -18,6 +18,7 @@
                     <th class="px-6 py-3">แพ็กเกจปัจจุบัน</th>
                     <th class="px-6 py-3">สถานะ</th>
                     <th class="px-6 py-3"><span class="sr-only">รายละเอียด</span></th>
+                    <th class="px-6 py-3"></th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
@@ -93,6 +94,17 @@ $(function() {
                     let url = "{{ route('member.detail', ':id') }}";
                     url = url.replace(':id', data);
                     return `<a href="${url}">ดูรายละเอียด</a>`;
+                }
+            },
+            {
+                data: 'id', name: 'id', searchable: false, orderable: false, render: function (data, type, row) {
+                    let url = "{{ route('member.delete', ':id') }}";
+                    url = url.replace(':id', data);
+                    return `<button type="button" class="btn btn-danger delete-btn" data-id="${data}" data-url="${url}">
+                                <svg class="w-6 h-6 text-red" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+                                </svg>
+                                </button>`;
                 }
             },
         ],
@@ -174,5 +186,51 @@ $(function() {
             });
         });
     }
+</script>
+
+<script>
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-btn')) {
+        const btn = e.target.closest('.delete-btn');
+        const id = btn.dataset.id;
+        const url = btn.dataset.url;
+
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'ยืนยันการลบ',
+            text: "ข้อมูลของผู้ใช้รายนี้จะหายไปทั้งหมด",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ยืนยัน',
+            cancelButtonText: 'ยกเลิก',
+            didOpen: (modal) => {
+                const confirmBtn = modal.querySelector('.swal2-confirm');
+                const cancelBtn = modal.querySelector('.swal2-cancel');
+
+                if (confirmBtn) {
+                    confirmBtn.style.backgroundColor = '#dc2626';
+                    confirmBtn.style.color = 'white';
+                }
+                if (cancelBtn) {
+                    cancelBtn.style.backgroundColor = '#d1d5db';
+                    cancelBtn.style.color = '#374151';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                form.innerHTML = `
+                    @csrf
+                    @method('DELETE')
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+});
 </script>
 @endsection

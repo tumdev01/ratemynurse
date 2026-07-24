@@ -56,4 +56,10 @@ class MemberController extends Controller {
     {
         return view('pages.member.create');
     }
+
+    public function delete(int $id)
+    {
+        $this->member_repository->softDeleteMember($id);
+        return redirect()->route('member.index')->with('success', 'ลบเรียบร้อยแล้ว');
+    }
 }

@@ -391,6 +391,33 @@ class NursingHomeController extends Controller {
         return response()->json(['success' => true]);
     }
 
+    public function updateStatus(Request $request, int $id)
+    {
+        $request->validate([
+            'status' => 'required|boolean',
+        ]);
+
+        $profile = NursingHomeProfile::findOrFail($id);
+        $owner = $profile->owner;
+        $owner->status = (bool) $request->status;
+        $owner->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "อัพเดทสถานะ #{$id} สำเร็จ",
+        ]);
+    }
+
+    public function delete(int $id)
+    {
+        $profile = NursingHomeProfile::findOrFail($id);
+        $owner = $profile->owner;
+        $owner->deleted_at = now();
+        $owner->save();
+
+        return redirect()->route('nursinghome.index')->with('success', 'ลบเรียบร้อยแล้ว');
+    }
+
     public function review($id) 
     {
         $choices = NursingHomeRateType::list();

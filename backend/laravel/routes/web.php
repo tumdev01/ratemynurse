@@ -42,7 +42,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/create', [NursingHomeController::class, 'store'])->name('nursing-home.store');
         Route::post('/image/{id}/cover', [NursingHomeController::class, 'updateCover'])->name('nursinghome.image.cover');
         Route::post('/image/{id}/delete', [NursingHomeController::class, 'deleteImage'])->name('nursinghome.image.delete');
-        
+
+        Route::post('/{id}/status', [NursingHomeController::class, 'updateStatus'])->where('id', '[0-9]+')->name('nursing-home.status-update');
+        Route::delete('/{id}/delete', [NursingHomeController::class, 'delete'])->where('id', '[0-9]+')->name('nursing-home.delete');
+
         Route::get('/{id}/rate', [NursingHomeController::class, 'review'])->where('id', '[0-9]+')->name('nursing-home.edit-rate');
         Route::post('/{id}/rate', [NursingHomeController::class, 'reviewCreate'])->where('id', '[0-9]+')->name('nursing-home.edit-rate.save');
     
@@ -71,6 +74,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/cost', [NursingController::class, 'costView'])->where('id', '[0-9]+')->name('nursing.cost');
         Route::post('/{id}/cost', [NursingController::class, 'updateCost'])->where('id', '[0-9]+')->name('nursing.cost.update');
         Route::delete('/cv/{id}/delete', [NursingCvImageController::class, 'delete']);
+        Route::delete('{id}/delete', [NursingController::class, 'delete'])->where('id', '[0-9]+')->name('nursing.delete');
+        Route::post('/{id}/status', [NursingController::class, 'updateStatus'])->where('id', '[0-9]+')->name('nursing.status-update');
     });
 
     Route::prefix('employee')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function() {
@@ -85,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('create', [MemberController::class, 'create'])->name('member.create');
         Route::get('/{id}/detail', [MemberController::class, 'detailView'])->where('id', '[0-9]+')->name('member.detail');
         Route::post('/{id}/status', [MemberController::class, 'updateStatus'])->where('id', '[0-9]+')->name('member.status-update');
+        Route::delete('/{id}/delete', [MemberController::class, 'delete'])->where('id', '[0-9]+')->name('member.delete');
     });
 
     Route::prefix('subscription')->middleware('checkUserType:SUPERADMIN,ADMIN')->group(function () {

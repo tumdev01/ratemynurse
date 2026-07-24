@@ -78,6 +78,28 @@ class NursingController extends Controller
         return view('pages.nursing.edit', compact('nursing'));
     }
 
+    /**
+     * SoftDelete the specified resource from storage.
+     */
+    public function delete(Int $id, NursingRepository $repo)
+    {
+        $repo->softDeleteNurse($id);
+        return redirect()->route('nursing.index')->with('success', 'ลบเรียบร้อยแล้ว');
+    }
+
+    public function updateStatus(Request $request, int $id, NursingRepository $repo)
+    {
+        $request->validate([
+            'status' => 'required|boolean',
+        ]);
+
+        $repo->updateStatus($id, (bool) $request->status);
+
+        return response()->json([
+            'success' => true,
+            'message' => "อัพเดทสถานะ #{$id} สำเร็จ",
+        ]);
+    }
 
     /**
      * Remove the specified resource from storage.

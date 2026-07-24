@@ -474,7 +474,7 @@ class NursingRepository
                 'rates',
                 'rates.rate_details:rate_id,scores,scores_for',
             ])
-            ->select(['users.id','users.status'])
+            ->select(['users.id','users.status', 'users.phone', 'users.email'])
             ->whereNull('users.deleted_at')
             ->where('users.user_type', 'NURSING');
 
@@ -610,5 +610,20 @@ class NursingRepository
 
         return true;
 
+    }
+
+    public function softDeleteNurse(int $id)
+    {
+        $nurse = Nursing::findOrFail($id);
+        $nurse->deleted_at = now();
+        $nurse->save();
+    }
+
+    public function updateStatus(int $id, bool $status)
+    {
+        $nurse = Nursing::findOrFail($id);
+        $nurse->status = $status;
+        $nurse->save();
+        return $nurse;
     }
 }

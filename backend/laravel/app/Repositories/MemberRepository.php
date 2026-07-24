@@ -57,6 +57,12 @@ class MemberRepository
         return $member;
     }
 
+    public function softDeleteMember(int $id)
+    {
+        $member = Member::findOrFail($id);
+        $member->delete();
+    }
+
     public function getUser(int $id)
     {
         return Member::query()
